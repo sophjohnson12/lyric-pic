@@ -64,21 +64,22 @@ export function useGame(artistSlug: string) {
     async (artist: Artist, excludeIds: number[]) => {
       setState((prev) => ({ ...prev, loading: true }))
 
-      const song = await getRandomSong(artist.id, excludeIds)
-      if (!song) {
-        setState((prev) => ({ ...prev, loading: false, allSongsPlayed: true, currentSong: null }))
-        return
-      }
+      try {
+        const song = await getRandomSong(artist.id, excludeIds)
+        if (!song) {
+          setState((prev) => ({ ...prev, loading: false, allSongsPlayed: true, currentSong: null }))
+          return
+        }
 
-      const wordVariations = await getSongWordVariations(song.id)
-      const selected = selectPuzzleWords(wordVariations)
+        const wordVariations = await getSongWordVariations(song.id)
+        const selected = selectPuzzleWords(wordVariations)
 
-      if (selected.length < 3) {
-        // Skip this song, try another
-        const newExclude = [...excludeIds, song.id]
-        await loadNewSong(artist, newExclude)
-        return
-      }
+        if (selected.length < 3) {
+          // Skip this song, try another
+          const newExclude = [...excludeIds, song.id]
+          await loadNewSong(artist, newExclude)
+          return
+        }
 
       // Fetch images in parallel
       const imageResults = await Promise.all(
@@ -122,6 +123,10 @@ export function useGame(artistSlug: string) {
         loading: false,
         allSongsPlayed: false,
       }))
+      } catch (err) {
+        console.error('Error loading song:', err)
+        setState((prev) => ({ ...prev, loading: false }))
+      }
     },
     []
   )

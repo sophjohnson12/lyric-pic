@@ -82,7 +82,15 @@ export default function GamePage() {
   if (!game.currentSong || !game.artist) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="text-text/60">No song found.</div>
+        <div className="text-center">
+          <div className="text-text/60 mb-4">Something went wrong loading a song.</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
