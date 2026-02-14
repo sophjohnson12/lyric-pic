@@ -3,6 +3,11 @@ import type { PexelsImage } from '../types/game'
 const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY
 
 export async function searchImages(query: string, count: number = 5): Promise<PexelsImage[]> {
+  if (!PEXELS_API_KEY) {
+    console.error('VITE_PEXELS_API_KEY is not set')
+    return []
+  }
+
   const response = await fetch(
     `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=square`,
     {
