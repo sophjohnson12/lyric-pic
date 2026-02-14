@@ -20,6 +20,9 @@ export interface Album {
   theme_primary_color: string | null
   theme_secondary_color: string | null
   theme_background_color: string | null
+  is_playable: boolean
+  unplayable_reason: string | null
+  canonical_album_id: number | null
   created_at: string
 }
 

@@ -95,8 +95,8 @@ export default function GamePage() {
     )
   }
 
-  const correctAlbumForModal = game.correctAlbum ||
-    (game.albums.find((a) => a.id === game.currentSong?.album_id) || null)
+  // Use the guessed album if available, otherwise fall back to the display album from game state
+  const correctAlbumForModal = game.correctAlbum
 
   return (
     <div className="min-h-screen bg-bg">

@@ -8,7 +8,8 @@ import {
   getSongWordVariations,
   getArtistAlbums,
   getArtistSongs,
-  getSongsByAlbum,
+  getSongsByDisplayAlbum,
+  getDisplayAlbumForSong,
   getVariationByWord,
   getSongLyricVariationIds,
   getLyricIdForVariation,
@@ -49,6 +50,7 @@ export function useGame(artistSlug: string) {
 
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songVariationIdsRef = useRef<number[]>([])
+  const currentDisplayAlbumRef = useRef<Album | null>(null)
 
   // Keep state.playedSongIds in sync
   useEffect(() => {
@@ -100,7 +102,10 @@ export function useGame(artistSlug: string) {
       // Pre-fetch song variation IDs for validation
       songVariationIdsRef.current = await getSongLyricVariationIds(song.id)
 
-      // Load albums and songs
+      // Resolve the display album for this song
+      currentDisplayAlbumRef.current = await getDisplayAlbumForSong(song.album_id)
+
+      // Load display albums and songs
       const [albumData, songData] = await Promise.all([
         getArtistAlbums(artist.id),
         getArtistSongs(artist.id, excludeIds),
@@ -293,10 +298,12 @@ export function useGame(artistSlug: string) {
         return 'already_guessed'
       }
 
+      // Compare against the display album for this song
+      const displayAlbum = currentDisplayAlbumRef.current
       const isCorrect =
         albumId === null
-          ? state.currentSong.album_id === null
-          : state.currentSong.album_id === albumId
+          ? displayAlbum === null
+          : displayAlbum?.id === albumId
 
       if (isCorrect) {
         const album = albums.find((a) => a.id === albumId) || null
@@ -304,13 +311,13 @@ export function useGame(artistSlug: string) {
 
         if (album) {
           applyAlbumTheme(album)
-          // Filter songs to this album
-          getSongsByAlbum(state.artist!.id, albumId, playedSongIds).then((songs) => {
+          // Filter songs to all songs under this display album
+          getSongsByDisplayAlbum(state.artist!.id, albumId, playedSongIds).then((songs) => {
             setFilteredSongs(songs)
           })
         } else {
           // "No Album" - filter to songs with no album
-          getSongsByAlbum(state.artist!.id, null, playedSongIds).then((songs) => {
+          getSongsByDisplayAlbum(state.artist!.id, null, playedSongIds).then((songs) => {
             setFilteredSongs(songs)
           })
         }
@@ -336,7 +343,12 @@ export function useGame(artistSlug: string) {
       }
 
       if (songId === state.currentSong.id) {
-        setState((prev) => ({ ...prev, songGuessed: true }))
+        setState((prev) => ({
+          ...prev,
+          songGuessed: true,
+          // Set correctAlbum from display album if not already guessed
+          correctAlbum: prev.correctAlbum || currentDisplayAlbumRef.current,
+        }))
         return 'correct'
       }
 
