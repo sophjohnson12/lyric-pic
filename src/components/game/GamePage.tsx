@@ -127,7 +127,7 @@ export default function GamePage() {
         </div>
 
         {/* Album and Song dropdowns */}
-        {game.allWordsGuessed && (
+        {(
           <div className="max-w-lg mx-auto space-y-4">
             <AlbumDropdown
               albums={game.albums}
