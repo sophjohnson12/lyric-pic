@@ -1,13 +1,24 @@
 import type { WordVariationWithStats } from '../types/game'
 import { PUZZLE_WORD_COUNT, TOP_DISTINCTIVE_WORDS } from '../utils/constants'
 
+function isValidWord(word: string): boolean {
+  // Filter out garbage from lyrics scraping
+  if (word.length > 20) return false
+  if (word.length < 2) return false
+  if (!/^[a-zA-Z'-]+$/.test(word)) return false
+  return true
+}
+
 export function selectPuzzleWords(wordVariations: WordVariationWithStats[]): WordVariationWithStats[] {
-  if (wordVariations.length <= PUZZLE_WORD_COUNT) {
-    return wordVariations
+  // Filter to only valid English-looking words
+  const valid = wordVariations.filter((w) => isValidWord(w.variation))
+
+  if (valid.length <= PUZZLE_WORD_COUNT) {
+    return valid
   }
 
   // Sort by song_count ascending (most distinctive first)
-  const sorted = [...wordVariations].sort((a, b) => a.song_count - b.song_count)
+  const sorted = [...valid].sort((a, b) => a.song_count - b.song_count)
 
   // Take top N most distinctive
   const topWords = sorted.slice(0, Math.min(TOP_DISTINCTIVE_WORDS, sorted.length))
