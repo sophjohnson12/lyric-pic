@@ -68,7 +68,7 @@ export async function getArtistAlbums(artistId: number): Promise<Album[]> {
     .from('albums')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('album_type', 'display')
+    .eq('is_playable', true)
     .order('release_year', { ascending: false })
   if (error) throw error
   return data
