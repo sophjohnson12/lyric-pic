@@ -128,22 +128,24 @@ export default function GamePage() {
 
         {/* Album and Song dropdowns */}
         {(
-          <div className="max-w-xl mx-auto mb-4">
-            <AlbumButtons
-              albums={game.albums}
-              incorrectAlbumIds={game.incorrectAlbumIds}
-              albumGuessed={game.albumGuessed}
-              correctAlbumId={game.correctAlbum?.id || null}
-              onGuess={game.guessAlbum}
-            />
-          </div>
-          <div className="max-w-lg mx-auto">
-            <SongDropdown
-              songs={game.allSongs}
-              incorrectGuesses={game.incorrectSongGuesses}
-              songGuessed={game.songGuessed}
-              onGuess={game.guessSong}
-            />
+          <div>
+            <div className="max-w-xl mb-4">
+              <AlbumButtons
+                albums={game.albums}
+                incorrectAlbumIds={game.incorrectAlbumIds}
+                albumGuessed={game.albumGuessed}
+                correctAlbumId={game.correctAlbum?.id || null}
+                onGuess={game.guessAlbum}
+              />
+            </div>
+            <div className="max-w-lg mx-auto">
+              <SongDropdown
+                songs={game.allSongs}
+                incorrectGuesses={game.incorrectSongGuesses}
+                songGuessed={game.songGuessed}
+                onGuess={game.guessSong}
+              />
+            </div>
           </div>
         )}
       </main>
