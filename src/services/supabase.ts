@@ -9,7 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export async function getArtistBySlug(slug: string): Promise<Artist> {
   const { data, error } = await supabase
-    .from('artists')
+    .from('artist')
     .select('*')
     .eq('slug', slug)
     .single()
@@ -19,7 +19,7 @@ export async function getArtistBySlug(slug: string): Promise<Artist> {
 
 export async function getAllArtists(): Promise<Artist[]> {
   const { data, error } = await supabase
-    .from('artists')
+    .from('artist')
     .select('*')
     .order('name')
   if (error) throw error
@@ -28,20 +28,20 @@ export async function getAllArtists(): Promise<Artist[]> {
 
 export async function getTotalPlayableSongCount(artistId: number): Promise<number> {
   const { count, error } = await supabase
-    .from('songs')
+    .from('song')
     .select('*', { count: 'exact', head: true })
     .eq('artist_id', artistId)
-    .eq('is_playable', true)
+    .eq('is_selectable', true)
   if (error) throw error
   return count ?? 0
 }
 
 export async function getRandomSong(artistId: number, excludeIds: number[]): Promise<Song | null> {
   let query = supabase
-    .from('songs')
+    .from('song')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_playable', true)
+    .eq('is_selectable', true)
 
   if (excludeIds.length > 0) {
     query = query.not('id', 'in', `(${excludeIds.join(',')})`)
@@ -65,59 +65,30 @@ export async function getSongWordVariations(songId: number): Promise<WordVariati
 
 export async function getArtistAlbums(artistId: number): Promise<Album[]> {
   const { data, error } = await supabase
-    .from('albums')
+    .from('album')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_playable', true)
     .order('release_year', { ascending: false })
   if (error) throw error
   return data
 }
 
-// Get the display album for a song's album_id (resolve through canonical_album_id)
-export async function getDisplayAlbumForSong(albumId: number | null): Promise<Album | null> {
-  if (albumId === null) return null
-
-  const { data: songAlbum, error } = await supabase
-    .from('albums')
+export async function getAlbumById(albumId: number): Promise<Album | null> {
+  const { data, error } = await supabase
+    .from('album')
     .select('*')
     .eq('id', albumId)
     .single()
-  if (error || !songAlbum) return null
-
-  // If this album is already a display album, return it
-  if (songAlbum.album_type === 'display') return songAlbum
-
-  // Otherwise, follow canonical_album_id to get the display album
-  if (songAlbum.canonical_album_id) {
-    const { data: canonical, error: cErr } = await supabase
-      .from('albums')
-      .select('*')
-      .eq('id', songAlbum.canonical_album_id)
-      .single()
-    if (!cErr && canonical) return canonical
-  }
-
-  return null
-}
-
-// Get all raw album IDs that belong to a display album (for filtering songs)
-export async function getAlbumIdsForDisplayAlbum(displayAlbumId: number): Promise<number[]> {
-  const { data, error } = await supabase
-    .from('albums')
-    .select('id')
-    .eq('canonical_album_id', displayAlbumId)
-  if (error) throw error
-  // Include the display album ID itself plus all albums pointing to it
-  return [displayAlbumId, ...data.map((d: { id: number }) => d.id)]
+  if (error) return null
+  return data
 }
 
 export async function getArtistSongs(artistId: number, excludeIds: number[]): Promise<Song[]> {
   let query = supabase
-    .from('songs')
+    .from('song')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_playable', true)
+    .eq('is_selectable', true)
     .order('name')
 
   if (excludeIds.length > 0) {
@@ -129,38 +100,23 @@ export async function getArtistSongs(artistId: number, excludeIds: number[]): Pr
   return data
 }
 
-export async function getSongsByDisplayAlbum(
+export async function getSongsByAlbum(
   artistId: number,
-  displayAlbumId: number | null,
+  albumId: number | null,
   excludeIds: number[]
 ): Promise<Song[]> {
-  if (displayAlbumId === null) {
-    // "No Album" songs
-    let query = supabase
-      .from('songs')
-      .select('*')
-      .eq('artist_id', artistId)
-      .eq('is_playable', true)
-      .is('album_id', null)
-      .order('name')
-    if (excludeIds.length > 0) {
-      query = query.not('id', 'in', `(${excludeIds.join(',')})`)
-    }
-    const { data, error } = await query
-    if (error) throw error
-    return data
-  }
-
-  // Get all raw album IDs that map to this display album
-  const albumIds = await getAlbumIdsForDisplayAlbum(displayAlbumId)
-
   let query = supabase
-    .from('songs')
+    .from('song')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_playable', true)
-    .in('album_id', albumIds)
+    .eq('is_selectable', true)
     .order('name')
+
+  if (albumId === null) {
+    query = query.is('album_id', null)
+  } else {
+    query = query.eq('album_id', albumId)
+  }
 
   if (excludeIds.length > 0) {
     query = query.not('id', 'in', `(${excludeIds.join(',')})`)
@@ -173,7 +129,7 @@ export async function getSongsByDisplayAlbum(
 
 export async function checkVariationExists(variation: string): Promise<boolean> {
   const { data, error } = await supabase
-    .from('lyric_variations')
+    .from('lyric_variation')
     .select('id')
     .ilike('variation', variation)
     .limit(1)
@@ -183,7 +139,7 @@ export async function checkVariationExists(variation: string): Promise<boolean> 
 
 export async function getVariationByWord(word: string) {
   const { data, error } = await supabase
-    .from('lyric_variations')
+    .from('lyric_variation')
     .select('id, lyric_id, variation')
     .ilike('variation', word)
     .limit(1)
@@ -193,7 +149,7 @@ export async function getVariationByWord(word: string) {
 
 export async function getSongLyricVariationIds(songId: number): Promise<number[]> {
   const { data, error } = await supabase
-    .from('song_lyric_variations')
+    .from('song_lyric_variation')
     .select('lyric_variation_id')
     .eq('song_id', songId)
   if (error) throw error
@@ -202,7 +158,7 @@ export async function getSongLyricVariationIds(songId: number): Promise<number[]
 
 export async function getLyricIdForVariation(variationId: number): Promise<number | null> {
   const { data, error } = await supabase
-    .from('lyric_variations')
+    .from('lyric_variation')
     .select('lyric_id')
     .eq('id', variationId)
     .single()
@@ -213,7 +169,7 @@ export async function getLyricIdForVariation(variationId: number): Promise<numbe
 export async function getPlayedSongNames(songIds: number[]): Promise<string[]> {
   if (songIds.length === 0) return []
   const { data, error } = await supabase
-    .from('songs')
+    .from('song')
     .select('name')
     .in('id', songIds)
     .order('name')

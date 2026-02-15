@@ -8,9 +8,8 @@ import {
   getSongWordVariations,
   getArtistAlbums,
   getArtistSongs,
-  getSongsByDisplayAlbum,
-  getAlbumIdsForDisplayAlbum,
-  getDisplayAlbumForSong,
+  getSongsByAlbum,
+  getAlbumById,
   getVariationByWord,
   getSongLyricVariationIds,
   getLyricIdForVariation,
@@ -52,7 +51,7 @@ export function useGame(artistSlug: string) {
 
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songVariationIdsRef = useRef<number[]>([])
-  const currentDisplayAlbumRef = useRef<Album | null>(null)
+  const currentAlbumRef = useRef<Album | null>(null)
 
   // Keep state.playedSongIds in sync
   useEffect(() => {
@@ -79,7 +78,6 @@ export function useGame(artistSlug: string) {
         const selected = selectPuzzleWords(wordVariations)
 
         if (selected.length < 3) {
-          // Skip this song, try another
           const newExclude = [...excludeIds, song.id]
           await loadNewSong(artist, newExclude)
           return
@@ -104,10 +102,10 @@ export function useGame(artistSlug: string) {
       // Pre-fetch song variation IDs for validation
       songVariationIdsRef.current = await getSongLyricVariationIds(song.id)
 
-      // Resolve the display album for this song
-      currentDisplayAlbumRef.current = await getDisplayAlbumForSong(song.album_id)
+      // Get the display album for this song (direct FK now)
+      currentAlbumRef.current = song.album_id ? await getAlbumById(song.album_id) : null
 
-      // Load display albums and songs
+      // Load albums and songs
       const [albumData, songData] = await Promise.all([
         getArtistAlbums(artist.id),
         getArtistSongs(artist.id, excludeIds),
@@ -169,21 +167,18 @@ export function useGame(artistSlug: string) {
       const puzzleWord = state.puzzleWords[wordIndex]
       if (!puzzleWord || puzzleWord.guessed || puzzleWord.revealed) return
 
-      // Check if already guessed this exact word for this slot
       const prevGuesses = state.incorrectWordGuesses[wordIndex] || []
       if (prevGuesses.map((g) => g.toLowerCase()).includes(trimmed)) {
         showToast('Already guessed!')
         return 'already_guessed'
       }
 
-      // Check if this variation's root word matches any already-guessed puzzle word
       const variationData = await getVariationByWord(trimmed)
       if (!variationData) {
         showToast('Not a valid word')
         return 'invalid'
       }
 
-      // Check if this root is already guessed
       for (const pw of state.puzzleWords) {
         if (pw.guessed && pw.lyricId === variationData.lyric_id) {
           showToast('Already guessed!')
@@ -191,15 +186,12 @@ export function useGame(artistSlug: string) {
         }
       }
 
-      // Check if variation is in this song
       if (!songVariationIdsRef.current.includes(variationData.id)) {
-        // Check by lyric_id too - any variation of this root in the song?
         const lyricId = variationData.lyric_id
         let matchesSongByRoot = false
         for (const pw of state.puzzleWords) {
           if (pw.lyricId === lyricId) {
             matchesSongByRoot = true
-            // This is the correct root word - mark it guessed!
             setState((prev) => {
               const newPuzzleWords = [...prev.puzzleWords]
               const idx = newPuzzleWords.findIndex((w) => w.lyricId === lyricId)
@@ -224,7 +216,6 @@ export function useGame(artistSlug: string) {
         }
       }
 
-      // Check if this variation's lyric_id matches the puzzle word
       const lyricIdForGuess = await getLyricIdForVariation(variationData.id)
       if (lyricIdForGuess === puzzleWord.lyricId) {
         setState((prev) => {
@@ -236,7 +227,6 @@ export function useGame(artistSlug: string) {
         return 'correct'
       }
 
-      // Check other puzzle words - maybe the guess matches a different word slot
       for (let i = 0; i < state.puzzleWords.length; i++) {
         if (i === wordIndex) continue
         const pw = state.puzzleWords[i]
@@ -252,7 +242,6 @@ export function useGame(artistSlug: string) {
         }
       }
 
-      // Not matching any puzzle word
       setState((prev) => {
         const newIncorrect = { ...prev.incorrectWordGuesses }
         const existing = newIncorrect[wordIndex] || []
@@ -295,14 +284,12 @@ export function useGame(artistSlug: string) {
     (albumId: number | null, albumName: string) => {
       if (!state.currentSong) return 'incorrect'
 
-      // Check already guessed
       if (state.incorrectAlbumGuesses.map((g) => g.toLowerCase()).includes(albumName.toLowerCase())) {
         showToast('Already guessed!')
         return 'already_guessed'
       }
 
-      // Compare against the display album for this song
-      const displayAlbum = currentDisplayAlbumRef.current
+      const displayAlbum = currentAlbumRef.current
       const isCorrect =
         albumId === null
           ? displayAlbum === null
@@ -314,13 +301,11 @@ export function useGame(artistSlug: string) {
 
         if (album) {
           applyAlbumTheme(album)
-          // Filter songs to all songs under this display album
-          getSongsByDisplayAlbum(state.artist!.id, albumId, playedSongIds).then((songs) => {
+          getSongsByAlbum(state.artist!.id, albumId, playedSongIds).then((songs) => {
             setFilteredSongs(songs)
           })
         } else {
-          // "No Album" - filter to songs with no album
-          getSongsByDisplayAlbum(state.artist!.id, null, playedSongIds).then((songs) => {
+          getSongsByAlbum(state.artist!.id, null, playedSongIds).then((songs) => {
             setFilteredSongs(songs)
           })
         }
@@ -335,9 +320,7 @@ export function useGame(artistSlug: string) {
 
       // Remove songs from this incorrect album from the song dropdown
       if (albumId !== null) {
-        getAlbumIdsForDisplayAlbum(albumId).then((albumIds) => {
-          setFilteredSongs((prev) => prev.filter((s) => !albumIds.includes(s.album_id!)))
-        })
+        setFilteredSongs((prev) => prev.filter((s) => s.album_id !== albumId))
       }
 
       return 'incorrect'
@@ -358,8 +341,7 @@ export function useGame(artistSlug: string) {
         setState((prev) => ({
           ...prev,
           songGuessed: true,
-          // Set correctAlbum from display album if not already guessed
-          correctAlbum: prev.correctAlbum || currentDisplayAlbumRef.current,
+          correctAlbum: prev.correctAlbum || currentAlbumRef.current,
         }))
         return 'correct'
       }

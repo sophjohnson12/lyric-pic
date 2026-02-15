@@ -8,6 +8,9 @@ export interface Artist {
   theme_background_color: string
   theme_text_color: string
   theme_font_heading: string
+  genius_artist_id: number | null
+  updated_at: string | null
+  refreshed_at: string | null
   created_at: string
 }
 
@@ -16,12 +19,18 @@ export interface Album {
   artist_id: number
   name: string
   release_year: number | null
-  album_type: string | null
   theme_primary_color: string | null
   theme_secondary_color: string | null
   theme_background_color: string | null
-  is_playable: boolean
-  unplayable_reason: string | null
+  image_url: string | null
+  created_at: string
+}
+
+export interface AlbumImport {
+  id: number
+  artist_id: number
+  name: string
+  album_type: string | null
   canonical_album_id: number | null
   created_at: string
 }
@@ -29,14 +38,17 @@ export interface Album {
 export interface Song {
   id: number
   artist_id: number
+  album_import_id: number | null
   album_id: number | null
   name: string
-  is_playable: boolean
-  unplayable_reason: string | null
-  release_date: string | null
+  is_selectable: boolean
   featured_artists: string[] | null
   lyrics_full_text: string | null
   canonical_song_id: number | null
+  genius_song_id: number | null
+  load_status_id: number
+  updated_at: string | null
+  refreshed_at: string | null
   created_at: string
 }
 
@@ -44,7 +56,7 @@ export interface Lyric {
   id: number
   root_word: string
   is_blocklisted: boolean
-  blocklist_reason: string | null
+  blocklist_reason: number | null
   created_at: string
 }
 
@@ -68,4 +80,14 @@ export interface SongLyricVariation {
   count: number
   is_selectable: boolean
   is_in_title: boolean
+}
+
+export interface BlocklistReason {
+  id: number
+  reason: string
+}
+
+export interface LoadStatus {
+  id: number
+  status: string
 }
