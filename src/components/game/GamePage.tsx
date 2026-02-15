@@ -129,7 +129,7 @@ export default function GamePage() {
         {/* Album and Song dropdowns */}
         {(
           <div>
-            <div className="max-w-xl mb-4">
+            <div className="max-w-xxl mb-4">
               <AlbumButtons
                 albums={game.albums}
                 incorrectAlbumIds={game.incorrectAlbumIds}
