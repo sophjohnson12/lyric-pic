@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import Header from '../layout/Header'
 import WordInput from './WordInput'
-import AlbumDropdown from './AlbumDropdown'
+import AlbumButtons from './AlbumDropdown'
 import SongDropdown from './SongDropdown'
 import SuccessModal from './SuccessModal'
 import InfoModal from './InfoModal'
@@ -129,11 +129,11 @@ export default function GamePage() {
         {/* Album and Song dropdowns */}
         {(
           <div className="max-w-lg mx-auto space-y-4">
-            <AlbumDropdown
+            <AlbumButtons
               albums={game.albums}
-              incorrectGuesses={game.incorrectAlbumGuesses}
+              incorrectAlbumIds={game.incorrectAlbumIds}
               albumGuessed={game.albumGuessed}
-              correctAlbumName={game.correctAlbum?.name || null}
+              correctAlbumId={game.correctAlbum?.id || null}
               onGuess={game.guessAlbum}
             />
             <SongDropdown

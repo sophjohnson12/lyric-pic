@@ -9,6 +9,7 @@ import {
   getArtistAlbums,
   getArtistSongs,
   getSongsByDisplayAlbum,
+  getAlbumIdsForDisplayAlbum,
   getDisplayAlbumForSong,
   getVariationByWord,
   getSongLyricVariationIds,
@@ -36,6 +37,7 @@ export function useGame(artistSlug: string) {
     albumGuessed: false,
     correctAlbum: null,
     incorrectAlbumGuesses: [],
+    incorrectAlbumIds: [],
     songGuessed: false,
     incorrectSongGuesses: [],
     playedSongIds: [],
@@ -123,6 +125,7 @@ export function useGame(artistSlug: string) {
         albumGuessed: false,
         correctAlbum: null,
         incorrectAlbumGuesses: [],
+        incorrectAlbumIds: [],
         songGuessed: false,
         incorrectSongGuesses: [],
         loading: false,
@@ -327,7 +330,16 @@ export function useGame(artistSlug: string) {
       setState((prev) => ({
         ...prev,
         incorrectAlbumGuesses: [...prev.incorrectAlbumGuesses, albumName].sort(),
+        incorrectAlbumIds: albumId !== null ? [...prev.incorrectAlbumIds, albumId] : prev.incorrectAlbumIds,
       }))
+
+      // Remove songs from this incorrect album from the song dropdown
+      if (albumId !== null) {
+        getAlbumIdsForDisplayAlbum(albumId).then((albumIds) => {
+          setFilteredSongs((prev) => prev.filter((s) => !albumIds.includes(s.album_id!)))
+        })
+      }
+
       return 'incorrect'
     },
     [state.currentSong, state.incorrectAlbumGuesses, state.artist, albums, playedSongIds, showToast, applyAlbumTheme]

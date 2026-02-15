@@ -29,6 +29,7 @@ export interface GameState {
   albumGuessed: boolean
   correctAlbum: Album | null
   incorrectAlbumGuesses: string[]
+  incorrectAlbumIds: number[]
   songGuessed: boolean
   incorrectSongGuesses: string[]
   playedSongIds: number[]

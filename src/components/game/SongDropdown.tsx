@@ -39,7 +39,6 @@ export default function SongDropdown({
   return (
     <div className="w-full">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-text/70 shrink-0">Song:</span>
         <Dropdown
           options={options}
           placeholder="Select song..."
