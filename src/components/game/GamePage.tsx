@@ -128,7 +128,7 @@ export default function GamePage() {
 
         {/* Album and Song dropdowns */}
         {(
-          <div className="max-w-lg mx-auto space-y-4">
+          <div className="max-w-xl mx-auto mb-4">
             <AlbumButtons
               albums={game.albums}
               incorrectAlbumIds={game.incorrectAlbumIds}
@@ -136,6 +136,8 @@ export default function GamePage() {
               correctAlbumId={game.correctAlbum?.id || null}
               onGuess={game.guessAlbum}
             />
+          </div>
+          <div className="max-w-lg mx-auto">
             <SongDropdown
               songs={game.allSongs}
               incorrectGuesses={game.incorrectSongGuesses}
