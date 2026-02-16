@@ -75,7 +75,7 @@ export function useGame(artistSlug: string) {
         }
 
         const wordVariations = await getSongWordVariations(song.id)
-        const selected = selectPuzzleWords(wordVariations)
+        const selected = selectPuzzleWords(wordVariations, song.name)
 
         if (selected.length < 3) {
           const newExclude = [...excludeIds, song.id]

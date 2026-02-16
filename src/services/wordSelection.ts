@@ -9,9 +9,14 @@ function isValidWord(word: string): boolean {
   return true
 }
 
-export function selectPuzzleWords(wordVariations: WordVariationWithStats[]): WordVariationWithStats[] {
-  // Filter to only valid English-looking words
-  const valid = wordVariations.filter((w) => isValidWord(w.variation))
+export function selectPuzzleWords(wordVariations: WordVariationWithStats[], songName: string): WordVariationWithStats[] {
+  // Extract words from the song title to exclude them
+  const titleWords = new Set(
+    songName.toLowerCase().replace(/[^a-z']/g, ' ').split(/\s+/).filter((w) => w.length >= 2)
+  )
+
+  // Filter to only valid English-looking words that aren't in the title
+  const valid = wordVariations.filter((w) => isValidWord(w.variation) && !titleWords.has(w.variation.toLowerCase()))
 
   if (valid.length <= PUZZLE_WORD_COUNT) {
     return valid
