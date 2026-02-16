@@ -28,20 +28,18 @@ export async function getAllArtists(): Promise<Artist[]> {
 
 export async function getTotalPlayableSongCount(artistId: number): Promise<number> {
   const { count, error } = await supabase
-    .from('song')
+    .from('playable_song')
     .select('*', { count: 'exact', head: true })
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
   if (error) throw error
   return count ?? 0
 }
 
 export async function getRandomSong(artistId: number, excludeIds: number[]): Promise<Song | null> {
   let query = supabase
-    .from('song')
+    .from('playable_song')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
 
   if (excludeIds.length > 0) {
     query = query.not('id', 'in', `(${excludeIds.join(',')})`)
@@ -85,10 +83,9 @@ export async function getAlbumById(albumId: number): Promise<Album | null> {
 
 export async function getArtistSongs(artistId: number, excludeIds: number[]): Promise<Song[]> {
   let query = supabase
-    .from('song')
+    .from('playable_song')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
     .order('name')
 
   if (excludeIds.length > 0) {
@@ -106,10 +103,9 @@ export async function getSongsByAlbum(
   excludeIds: number[]
 ): Promise<Song[]> {
   let query = supabase
-    .from('song')
+    .from('playable_song')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
     .order('name')
 
   if (albumId === null) {
