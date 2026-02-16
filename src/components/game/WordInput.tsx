@@ -47,7 +47,7 @@ export default function WordInput({
 
   const handleFlag = () => {
     if (flagged) return
-    if (!confirm(`Flag "${puzzleWord.variation}" as a bad word? This will blocklist it.`)) return
+    if (!confirm(`Flag "${puzzleWord.word}" as a bad word? This will blocklist it.`)) return
     setFlagged(true)
     onFlag?.(puzzleWord.lyricId)
   }
@@ -95,7 +95,7 @@ export default function WordInput({
       {isGuessed ? (
         <div className="flex items-center gap-1 text-green-600 font-semibold font-[Quicksand]">
           <span>✓</span>
-          <span>{puzzleWord.variation}</span>
+          <span>{puzzleWord.word}</span>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="w-full">

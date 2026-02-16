@@ -111,8 +111,8 @@ async function recalculateIsSelectable() {
   console.log(`  Marked ${markedPlayable} songs as playable`)
 
   // Final stats
-  const [{ count: totalPlayable }] = await sql`SELECT COUNT(*) as count FROM playable_song`
-  console.log(`\n  Total playable songs (via view): ${totalPlayable}`)
+  const [{ count: totalPlayable }] = await sql`SELECT COUNT(*) as count FROM song WHERE is_selectable = true`
+  console.log(`\n  Total playable songs: ${totalPlayable}`)
 
   console.log('\n✅ Recalculation complete!')
   await sql.end()

@@ -56,7 +56,7 @@ export async function getRandomSong(artistId: number, excludeIds: number[]): Pro
 }
 
 export async function getSongWordVariations(songId: number): Promise<WordVariationWithStats[]> {
-  const { data, error } = await supabase.rpc('get_song_word_variations', {
+  const { data, error } = await supabase.rpc('get_song_words', {
     p_song_id: songId,
   })
   if (error) throw error
@@ -127,43 +127,23 @@ export async function getSongsByAlbum(
   return data
 }
 
-export async function checkVariationExists(variation: string): Promise<boolean> {
+export async function getLyricByWord(word: string) {
   const { data, error } = await supabase
-    .from('lyric_variation')
+    .from('lyric')
     .select('id')
-    .ilike('variation', variation)
+    .ilike('root_word', word)
     .limit(1)
   if (error) throw error
-  return data.length > 0
+  return data.length > 0 ? { lyric_id: data[0].id } : null
 }
 
-export async function getVariationByWord(word: string) {
+export async function getSongLyricIds(songId: number): Promise<number[]> {
   const { data, error } = await supabase
-    .from('lyric_variation')
-    .select('id, lyric_id, variation')
-    .ilike('variation', word)
-    .limit(1)
-  if (error) throw error
-  return data.length > 0 ? data[0] : null
-}
-
-export async function getSongLyricVariationIds(songId: number): Promise<number[]> {
-  const { data, error } = await supabase
-    .from('song_lyric_variation')
-    .select('lyric_variation_id')
+    .from('song_lyric')
+    .select('lyric_id')
     .eq('song_id', songId)
   if (error) throw error
-  return data.map((d: { lyric_variation_id: number }) => d.lyric_variation_id)
-}
-
-export async function getLyricIdForVariation(variationId: number): Promise<number | null> {
-  const { data, error } = await supabase
-    .from('lyric_variation')
-    .select('lyric_id')
-    .eq('id', variationId)
-    .single()
-  if (error) return null
-  return data.lyric_id
+  return data.map((d: { lyric_id: number }) => d.lyric_id)
 }
 
 export async function flagWord(lyricId: number): Promise<void> {

@@ -60,13 +60,6 @@ export interface Lyric {
   created_at: string
 }
 
-export interface LyricVariation {
-  id: number
-  lyric_id: number
-  variation: string
-  created_at: string
-}
-
 export interface ArtistLyric {
   artist_id: number
   lyric_id: number
@@ -74,9 +67,9 @@ export interface ArtistLyric {
   total_count: number
 }
 
-export interface SongLyricVariation {
+export interface SongLyric {
   song_id: number
-  lyric_variation_id: number
+  lyric_id: number
   count: number
   is_selectable: boolean
   is_in_title: boolean

@@ -1,10 +1,8 @@
 import type { Artist, Album, Song } from './database'
 
 export interface PuzzleWord {
-  lyricVariationId: number
-  variation: string
-  rootWord: string
   lyricId: number
+  word: string
   imageUrls: string[]
   currentImageIndex: number
   guessed: boolean
@@ -12,10 +10,8 @@ export interface PuzzleWord {
 }
 
 export interface WordVariationWithStats {
-  lyric_variation_id: number
-  variation: string
-  root_word: string
   lyric_id: number
+  word: string
   song_count: number
 }
 

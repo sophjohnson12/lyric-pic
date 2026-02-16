@@ -16,7 +16,7 @@ export function selectPuzzleWords(wordVariations: WordVariationWithStats[], song
   )
 
   // Filter to only valid English-looking words that aren't in the title
-  const valid = wordVariations.filter((w) => isValidWord(w.variation) && !titleWords.has(w.variation.toLowerCase()))
+  const valid = wordVariations.filter((w) => isValidWord(w.word) && !titleWords.has(w.word.toLowerCase()))
 
   if (valid.length <= PUZZLE_WORD_COUNT) {
     return valid

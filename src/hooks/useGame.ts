@@ -10,9 +10,8 @@ import {
   getArtistSongs,
   getSongsByAlbum,
   getAlbumById,
-  getVariationByWord,
-  getSongLyricVariationIds,
-  getLyricIdForVariation,
+  getLyricByWord,
+  getSongLyricIds,
 } from '../services/supabase'
 import { searchImages } from '../services/pexels'
 import { selectPuzzleWords } from '../services/wordSelection'
@@ -50,7 +49,7 @@ export function useGame(artistSlug: string) {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
-  const songVariationIdsRef = useRef<number[]>([])
+  const songLyricIdsRef = useRef<number[]>([])
   const currentAlbumRef = useRef<Album | null>(null)
 
   // Keep state.playedSongIds in sync
@@ -85,22 +84,20 @@ export function useGame(artistSlug: string) {
 
       // Fetch images in parallel
       const imageResults = await Promise.all(
-        selected.map((w) => searchImages(w.variation, IMAGES_PER_WORD))
+        selected.map((w) => searchImages(w.word, IMAGES_PER_WORD))
       )
 
       const puzzleWords: PuzzleWord[] = selected.map((w, i) => ({
-        lyricVariationId: w.lyric_variation_id,
-        variation: w.variation,
-        rootWord: w.root_word,
         lyricId: w.lyric_id,
+        word: w.word,
         imageUrls: imageResults[i].map((img) => img.url),
         currentImageIndex: 0,
         guessed: false,
         revealed: false,
       }))
 
-      // Pre-fetch song variation IDs for validation
-      songVariationIdsRef.current = await getSongLyricVariationIds(song.id)
+      // Pre-fetch song lyric IDs for validation
+      songLyricIdsRef.current = await getSongLyricIds(song.id)
 
       // Get the display album for this song (direct FK now)
       currentAlbumRef.current = song.album_id ? await getAlbumById(song.album_id) : null
@@ -173,65 +170,38 @@ export function useGame(artistSlug: string) {
         return 'already_guessed'
       }
 
-      const variationData = await getVariationByWord(trimmed)
-      if (!variationData) {
+      const lyricData = await getLyricByWord(trimmed)
+      if (!lyricData) {
         showToast('Not a valid word')
         return 'invalid'
       }
 
+      const lyricId = lyricData.lyric_id
+
+      // Check if this lyric was already guessed
       for (const pw of state.puzzleWords) {
-        if (pw.guessed && pw.lyricId === variationData.lyric_id) {
+        if (pw.guessed && pw.lyricId === lyricId) {
           showToast('Already guessed!')
           return 'already_guessed'
         }
       }
 
-      if (!songVariationIdsRef.current.includes(variationData.id)) {
-        const lyricId = variationData.lyric_id
-        let matchesSongByRoot = false
-        for (const pw of state.puzzleWords) {
-          if (pw.lyricId === lyricId) {
-            matchesSongByRoot = true
-            setState((prev) => {
-              const newPuzzleWords = [...prev.puzzleWords]
-              const idx = newPuzzleWords.findIndex((w) => w.lyricId === lyricId)
-              if (idx !== -1) {
-                newPuzzleWords[idx] = { ...newPuzzleWords[idx], guessed: true }
-              }
-              const allGuessed = newPuzzleWords.every((w) => w.guessed || w.revealed)
-              return { ...prev, puzzleWords: newPuzzleWords, allWordsGuessed: allGuessed }
-            })
-            return 'correct'
-          }
-        }
-
-        if (!matchesSongByRoot) {
-          setState((prev) => {
-            const newIncorrect = { ...prev.incorrectWordGuesses }
-            const existing = newIncorrect[wordIndex] || []
-            newIncorrect[wordIndex] = [...existing, trimmed].sort()
-            return { ...prev, incorrectWordGuesses: newIncorrect }
-          })
-          return 'incorrect'
-        }
-      }
-
-      const lyricIdForGuess = await getLyricIdForVariation(variationData.id)
-      if (lyricIdForGuess === puzzleWord.lyricId) {
+      // Check if this lyric is in the song
+      if (!songLyricIdsRef.current.includes(lyricId)) {
         setState((prev) => {
-          const newPuzzleWords = [...prev.puzzleWords]
-          newPuzzleWords[wordIndex] = { ...newPuzzleWords[wordIndex], guessed: true }
-          const allGuessed = newPuzzleWords.every((w) => w.guessed || w.revealed)
-          return { ...prev, puzzleWords: newPuzzleWords, allWordsGuessed: allGuessed }
+          const newIncorrect = { ...prev.incorrectWordGuesses }
+          const existing = newIncorrect[wordIndex] || []
+          newIncorrect[wordIndex] = [...existing, trimmed].sort()
+          return { ...prev, incorrectWordGuesses: newIncorrect }
         })
-        return 'correct'
+        return 'incorrect'
       }
 
+      // Check if it matches any puzzle word by lyric_id
       for (let i = 0; i < state.puzzleWords.length; i++) {
-        if (i === wordIndex) continue
         const pw = state.puzzleWords[i]
         if (pw.guessed || pw.revealed) continue
-        if (lyricIdForGuess === pw.lyricId) {
+        if (pw.lyricId === lyricId) {
           setState((prev) => {
             const newPuzzleWords = [...prev.puzzleWords]
             newPuzzleWords[i] = { ...newPuzzleWords[i], guessed: true }
@@ -242,6 +212,7 @@ export function useGame(artistSlug: string) {
         }
       }
 
+      // Word is in song but not one of the puzzle words
       setState((prev) => {
         const newIncorrect = { ...prev.incorrectWordGuesses }
         const existing = newIncorrect[wordIndex] || []
