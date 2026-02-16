@@ -9,6 +9,9 @@ import SuccessModal from './SuccessModal'
 import InfoModal from './InfoModal'
 import HistoryModal from './HistoryModal'
 import Toast from '../common/Toast'
+import { flagWord } from '../../services/supabase'
+
+const DEBUG_MODE = true
 
 export default function GamePage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
@@ -121,6 +124,8 @@ export default function GamePage() {
               onGuess={game.guessWord}
               onReveal={game.revealWord}
               onRefresh={game.refreshImage}
+              onFlag={(lyricId) => flagWord(lyricId)}
+              debugMode={DEBUG_MODE}
               autoFocus={index === autoFocusIndex}
             />
           ))}

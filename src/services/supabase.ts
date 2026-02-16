@@ -162,6 +162,11 @@ export async function getLyricIdForVariation(variationId: number): Promise<numbe
   return data.lyric_id
 }
 
+export async function flagWord(lyricId: number): Promise<void> {
+  const { error } = await supabase.rpc('flag_word', { p_lyric_id: lyricId })
+  if (error) throw error
+}
+
 export async function getPlayedSongNames(songIds: number[]): Promise<string[]> {
   if (songIds.length === 0) return []
   const { data, error } = await supabase

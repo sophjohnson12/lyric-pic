@@ -9,7 +9,9 @@ interface WordInputProps {
   onGuess: (wordIndex: number, guess: string) => Promise<string | undefined>
   onReveal: (wordIndex: number) => void
   onRefresh: (wordIndex: number) => void
+  onFlag?: (lyricId: number) => void
   autoFocus?: boolean
+  debugMode?: boolean
 }
 
 export default function WordInput({
@@ -19,9 +21,12 @@ export default function WordInput({
   onGuess,
   onReveal,
   onRefresh,
+  onFlag,
   autoFocus = false,
+  debugMode = false,
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
+  const [flagged, setFlagged] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -40,14 +45,33 @@ export default function WordInput({
     }
   }
 
+  const handleFlag = () => {
+    if (flagged) return
+    if (!confirm(`Flag "${puzzleWord.variation}" as a bad word? This will blocklist it.`)) return
+    setFlagged(true)
+    onFlag?.(puzzleWord.lyricId)
+  }
+
   const isGuessed = puzzleWord.guessed || puzzleWord.revealed
 
   return (
     <div className="flex flex-col items-center gap-2 w-full">
-      <ImageDisplay
-        imageUrls={puzzleWord.imageUrls}
-        currentIndex={puzzleWord.currentImageIndex}
-      />
+      <div className="relative w-full">
+        <ImageDisplay
+          imageUrls={puzzleWord.imageUrls}
+          currentIndex={puzzleWord.currentImageIndex}
+        />
+        {debugMode && (
+          <button
+            onClick={handleFlag}
+            disabled={flagged}
+            className={`absolute top-2 right-2 text-lg cursor-pointer transition-opacity ${flagged ? 'opacity-40' : 'hover:scale-110'}`}
+            title={flagged ? 'Flagged' : 'Flag this word'}
+          >
+            {flagged ? '🚩' : '🏳️'}
+          </button>
+        )}
+      </div>
 
       {!isGuessed && (
         <div className="flex gap-2 justify-center">
