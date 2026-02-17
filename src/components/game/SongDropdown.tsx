@@ -40,6 +40,7 @@ export default function SongDropdown({
     <div className="w-full">
       <div className="flex items-center gap-2">
         <Dropdown
+          key={incorrectGuesses.length}
           options={options}
           placeholder="Select song..."
           onSelect={handleSelect}
@@ -54,13 +55,13 @@ export default function SongDropdown({
         </button>
       </div>
       {incorrectGuesses.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1 ml-12">
-          {incorrectGuesses.map((guess) => (
-            <span key={guess} className="text-red-500 text-xs">
-              ❌ {guess}
-            </span>
-          ))}
-        </div>
+        <p className="text-xs text-primary mt-1 ml-1">
+          But who's counting? (
+          {incorrectGuesses.length <= 5
+            ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
+            : `1, 2, 3, ..., ${incorrectGuesses.length}`}
+          )
+        </p>
       )}
     </div>
   )
