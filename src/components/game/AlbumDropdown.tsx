@@ -50,7 +50,14 @@ export default function AlbumButtons({
               opacity: isDisabled && !isCorrect ? 0.5 : (isHoveringAlbum ? 0.8 : 1),
             }}
           >
-            {getInitials(album.name)}
+            {album.image_url !== null ? 
+              <img 
+                src={window.location.origin + album.image_url} 
+                alt={album.name} 
+                style={{ width: '30px', height: '30px' }} 
+              />      
+              : getInitials(album.name)
+            }
           </button>
         )
       })}

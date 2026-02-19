@@ -19,7 +19,7 @@ export default function Header({
 }: HeaderProps) {
   const progressPercentage = totalSongs > 0 ? (playedCount / totalSongs) * 100 : 0;
   return (
-    <header className="w-full px-4 py-3">
+    <header className="sticky bg-bg top-0 z-50 px-4 py-3">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-primary">
@@ -32,7 +32,7 @@ export default function Header({
           )}
         </div>
 
-        <div className="flex-1 mx-8 max-w-md flex flex-col gap-1">
+        <div className="hidden md:flex flex-1 mx-8 max-w-md flex-col gap-1">
           <div className="h-2 w-full bg-gray-100  bg-primary/10 rounded-full overflow-hidden mt-5">
             <div 
               className="h-full bg-primary transition-all duration-500" 
