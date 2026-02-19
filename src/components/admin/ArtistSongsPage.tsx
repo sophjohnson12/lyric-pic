@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
-import { getAdminSongs, getAdminArtistById, toggleSongSelectable } from '../../services/adminService'
+import Toast from '../common/Toast'
+import { getAdminSongs, getAdminArtistById, toggleSongSelectable, fetchNewSongs } from '../../services/adminService'
 import type { AdminSongRow } from '../../services/adminService'
 
 export default function ArtistSongsPage() {
@@ -15,6 +16,8 @@ export default function ArtistSongsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
+  const [fetching, setFetching] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     getAdminArtistById(aid).then((a) => {
@@ -41,6 +44,21 @@ export default function ArtistSongsPage() {
     loadSongs()
   }, [loadSongs])
 
+  async function handleFetchNewSongs() {
+    setFetching(true)
+    setToast(null)
+    try {
+      const result = await fetchNewSongs(aid)
+      setToast(`${result.created} new songs added, ${result.updated} updated, ${result.skipped} skipped`)
+      loadSongs()
+    } catch (err) {
+      setToast(`Error: ${err instanceof Error ? err.message : 'Failed to fetch songs'}`)
+    } finally {
+      setFetching(false)
+      setTimeout(() => setToast(null), 5000)
+    }
+  }
+
   async function handleToggle(id: number, value: boolean) {
     await toggleSongSelectable(id, value)
     setSongs((prev) => prev.map((s) => (s.id === id ? { ...s, is_selectable: value } : s)))
@@ -50,12 +68,21 @@ export default function ArtistSongsPage() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Songs</h1>
-        <Link
-          to={`/admin/artists/${aid}/songs/new`}
-          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
-        >
-          Add Song
-        </Link>
+        <div className="flex gap-2">
+          <button
+            onClick={handleFetchNewSongs}
+            disabled={fetching}
+            className="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            {fetching ? 'Fetching...' : 'Fetch New Songs'}
+          </button>
+          <Link
+            to={`/admin/artists/${aid}/songs/new`}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
+          >
+            Add Song
+          </Link>
+        </div>
       </div>
       <AdminTable
         data={songs}
@@ -102,6 +129,7 @@ export default function ArtistSongsPage() {
           },
         ]}
       />
+      <Toast message={toast} />
     </div>
   )
 }

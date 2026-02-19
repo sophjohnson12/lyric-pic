@@ -394,3 +394,94 @@ export async function getAdminSongLyrics(
 
   return { rows, total: count ?? 0 }
 }
+
+// ─── Fetch New Songs from Genius ─────────────────────────
+
+interface GeniusSongResult {
+  genius_song_id: number
+  title: string
+}
+
+export async function fetchNewSongs(
+  artistId: number,
+): Promise<{ created: number; updated: number; skipped: number }> {
+  // 1. Get the artist's genius_artist_id
+  const artist = await getAdminArtistById(artistId)
+  if (!artist.genius_artist_id) {
+    throw new Error('Artist does not have a Genius Artist ID configured.')
+  }
+
+  // 2. Call edge function
+  const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+    'genius-artist-songs',
+    { body: { genius_artist_id: artist.genius_artist_id } },
+  )
+  if (edgeError) {
+    const msg = edgeError.message ?? 'Edge function failed'
+    const detail = typeof edgeData === 'object' && edgeData?.error ? `: ${edgeData.error}` : ''
+    throw new Error(msg + detail)
+  }
+  if (edgeData?.error) throw new Error(edgeData.error)
+
+  const geniusSongs: GeniusSongResult[] = edgeData.songs
+
+  // 3. Get existing songs for this artist
+  const { data: existingSongs, error: songsError } = await supabase
+    .from('song')
+    .select('id, genius_song_id, name')
+    .eq('artist_id', artistId)
+  if (songsError) throw songsError
+
+  // 4. Get the 'new' load_status ID
+  const loadStatuses = await getLoadStatuses()
+  const newStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'new')
+  if (!newStatus) throw new Error("Could not find 'new' load status")
+  const newStatusId = newStatus.id
+
+  // 5. Build lookup maps
+  const byGeniusId = new Map(
+    existingSongs.filter((s) => s.genius_song_id).map((s) => [s.genius_song_id, s]),
+  )
+  const byNameLower = new Map(existingSongs.map((s) => [s.name.toLowerCase(), s]))
+
+  let created = 0
+  let updated = 0
+  let skipped = 0
+
+  for (const gs of geniusSongs) {
+    // Match by genius_song_id → skip
+    if (byGeniusId.has(gs.genius_song_id)) {
+      skipped++
+      continue
+    }
+
+    // Match by name (case-insensitive) → update genius_song_id
+    const nameMatch = byNameLower.get(gs.title.toLowerCase())
+    if (nameMatch) {
+      await supabase
+        .from('song')
+        .update({
+          genius_song_id: gs.genius_song_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', nameMatch.id)
+      updated++
+      continue
+    }
+
+    // No match → create new song
+    const { error: insertError } = await supabase.from('song').insert({
+      artist_id: artistId,
+      name: gs.title,
+      genius_song_id: gs.genius_song_id,
+      is_selectable: false,
+      load_status_id: newStatusId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    if (insertError) throw insertError
+    created++
+  }
+
+  return { created, updated, skipped }
+}

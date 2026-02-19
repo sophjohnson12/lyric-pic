@@ -74,7 +74,7 @@ export default function ArtistFormPage() {
         name,
         slug,
         success_message: successMessage,
-        genius_artist_id: Number(geniusArtistId),
+        genius_artist_id: geniusArtistId ? Number(geniusArtistId) : null,
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
         theme_background_color: bgColor,
@@ -88,6 +88,8 @@ export default function ArtistFormPage() {
       }
       setToast('Artist saved')
       setTimeout(() => navigate('/admin'), 1000)
+    } catch (err) {
+      setToast(`Error: ${err instanceof Error ? err.message : 'Save failed'}`)
     } finally {
       setSaving(false)
     }
