@@ -7,6 +7,7 @@ import type { PuzzleWord } from '../../types/game'
 interface WordInputProps {
   puzzleWord: PuzzleWord
   wordIndex: number
+  incorrectGuesses: string[]
   onGuess: (wordIndex: number, guess: string) => Promise<string | undefined>
   onReveal: (wordIndex: number) => void
   onRefresh: (wordIndex: number) => void
