@@ -112,9 +112,9 @@ export default function GamePage() {
         onSkip={game.skipSong}
       />
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 md:py-6">
         {/* Word puzzles */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="overflow-x-scroll snap-x snap-mandatory md:snap-none flex md:grid md:grid-cols-3 gap-4 md:gap-6 mb-2 md:mb-9">
           {game.puzzleWords.map((word, index) => (
             <WordInput
               key={`${game.currentSong!.id}-${index}`}
