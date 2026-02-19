@@ -56,7 +56,7 @@ export default function SongDropdown({
       </div>
       {incorrectGuesses.length > 0 && (
         <p className="text-xs text-primary mt-1 ml-1">
-          But who's counting? (
+          Who's counting? (
           {incorrectGuesses.length <= 5
             ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
             : `1, 2, 3, ..., ${incorrectGuesses.length}`}
