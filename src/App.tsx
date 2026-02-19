@@ -2,8 +2,15 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LandingPage from './components/landing/LandingPage'
 import GamePage from './components/game/GamePage'
 import LoginPage from './components/admin/LoginPage'
-import AdminPage from './components/admin/AdminPage'
 import ProtectedRoute from './components/admin/ProtectedRoute'
+import AdminLayout from './components/admin/AdminLayout'
+import ArtistsPage from './components/admin/ArtistsPage'
+import ArtistFormPage from './components/admin/ArtistFormPage'
+import ArtistAlbumsPage from './components/admin/ArtistAlbumsPage'
+import AlbumFormPage from './components/admin/AlbumFormPage'
+import ArtistSongsPage from './components/admin/ArtistSongsPage'
+import SongFormPage from './components/admin/SongFormPage'
+import SongLyricsPage from './components/admin/SongLyricsPage'
 
 export default function App() {
   return (
@@ -11,7 +18,18 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/admin/login" element={<LoginPage />} />
-        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<ArtistsPage />} />
+          <Route path="artists/new" element={<ArtistFormPage />} />
+          <Route path="artists/:id" element={<ArtistFormPage />} />
+          <Route path="artists/:artistId/albums" element={<ArtistAlbumsPage />} />
+          <Route path="artists/:artistId/albums/new" element={<AlbumFormPage />} />
+          <Route path="artists/:artistId/albums/:id" element={<AlbumFormPage />} />
+          <Route path="artists/:artistId/songs" element={<ArtistSongsPage />} />
+          <Route path="artists/:artistId/songs/new" element={<SongFormPage />} />
+          <Route path="artists/:artistId/songs/:id" element={<SongFormPage />} />
+          <Route path="artists/:artistId/songs/:songId/lyrics" element={<SongLyricsPage />} />
+        </Route>
         <Route path="/:artistSlug" element={<GamePage />} />
       </Routes>
     </BrowserRouter>

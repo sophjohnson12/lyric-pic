@@ -3,6 +3,7 @@ export interface Artist {
   name: string
   slug: string
   success_message: string | null
+  is_selectable: boolean
   theme_primary_color: string
   theme_secondary_color: string
   theme_background_color: string
@@ -19,10 +20,12 @@ export interface Album {
   artist_id: number
   name: string
   release_year: number | null
+  is_selectable: boolean
   theme_primary_color: string | null
   theme_secondary_color: string | null
   theme_background_color: string | null
   image_url: string | null
+  updated_at: string | null
   created_at: string
 }
 
@@ -41,6 +44,7 @@ export interface Song {
   album_import_id: number | null
   album_id: number | null
   name: string
+  track_number: number | null
   is_selectable: boolean
   featured_artists: string[] | null
   lyrics_full_text: string | null
