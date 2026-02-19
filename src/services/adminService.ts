@@ -1,5 +1,15 @@
 import { supabase } from './supabase'
 
+// ─── Genius API (via Edge Function) ───────────────────────
+
+export async function searchGeniusArtistId(name: string): Promise<number | null> {
+  const { data, error } = await supabase.functions.invoke('genius-search', {
+    body: { name },
+  })
+  if (error) return null
+  return data.artist_id ?? null
+}
+
 // ─── Artists ──────────────────────────────────────────────
 
 export interface AdminArtistRow {

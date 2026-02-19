@@ -5,7 +5,7 @@ import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
 import ColorField from './ColorField'
 import Toast from '../common/Toast'
-import { getAdminArtistById, createArtist, updateArtist } from '../../services/adminService'
+import { getAdminArtistById, createArtist, updateArtist, searchGeniusArtistId } from '../../services/adminService'
 
 export default function ArtistFormPage() {
   const { id } = useParams()
@@ -23,6 +23,8 @@ export default function ArtistFormPage() {
   const [textColor, setTextColor] = useState('#2D1F2D')
   const [font, setFont] = useState('')
   const [saving, setSaving] = useState(false)
+  const [findingGenius, setFindingGenius] = useState(false)
+  const [geniusError, setGeniusError] = useState('')
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
@@ -48,6 +50,22 @@ export default function ArtistFormPage() {
     }
   }, [id, isEdit])
 
+  async function handleFindGeniusId() {
+    if (!name.trim()) return
+    setGeniusError('')
+    setFindingGenius(true)
+    try {
+      const id = await searchGeniusArtistId(name.trim())
+      if (id) {
+        setGeniusArtistId(id.toString())
+      } else {
+        setGeniusError('Unable to find Genius ID for the provided artist name.')
+      }
+    } finally {
+      setFindingGenius(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
@@ -56,7 +74,7 @@ export default function ArtistFormPage() {
         name,
         slug,
         success_message: successMessage,
-        genius_artist_id: geniusArtistId ? Number(geniusArtistId) : null,
+        genius_artist_id: Number(geniusArtistId),
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
         theme_background_color: bgColor,
@@ -75,12 +93,14 @@ export default function ArtistFormPage() {
     }
   }
 
+  const canSubmit = !!(name.trim() && slug.trim() && successMessage.trim() && geniusArtistId)
+
   const inputClass = 'w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm'
 
   return (
     <>
       <Toast message={toast} />
-      <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} loading={saving}>
+      <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} loading={saving} canSubmit={canSubmit}>
         <FormField label="Name" required>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
         </FormField>
@@ -90,8 +110,19 @@ export default function ArtistFormPage() {
         <FormField label="Success Message" required>
           <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} required className={inputClass} />
         </FormField>
-        <FormField label="Genius Artist Id">
-          <input type="number" value={geniusArtistId} onChange={(e) => setGeniusArtistId(e.target.value)} className={inputClass} />
+        <FormField label="Genius Artist ID" required>
+          <div className="flex items-center gap-2">
+            <input type="number" value={geniusArtistId} readOnly required className={`${inputClass} bg-gray-100 cursor-not-allowed`} />
+            <button
+              type="button"
+              onClick={handleFindGeniusId}
+              disabled={findingGenius || !name.trim()}
+              className="shrink-0 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {findingGenius ? 'Finding...' : 'Find ID'}
+            </button>
+          </div>
+          {geniusError && <p className="text-red-500 text-sm mt-1">{geniusError}</p>}
         </FormField>
         <FormField label="Primary Color">
           <ColorField value={primaryColor} onChange={setPrimaryColor} />
