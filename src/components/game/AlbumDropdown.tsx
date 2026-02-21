@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Album } from '../../types/database'
 
 interface AlbumButtonsProps {
@@ -31,6 +32,7 @@ export default function AlbumButtons({
         const isIncorrect = incorrectAlbumIds.includes(album.id)
         const isCorrect = albumGuessed && correctAlbumId === album.id
         const isDisabled = albumGuessed || isIncorrect
+        const [isHoveringAlbum, setIsHoveringAlbum] = useState(false);
 
         return (
           <button
@@ -38,16 +40,24 @@ export default function AlbumButtons({
             onClick={() => onGuess(album.id, album.name)}
             disabled={isDisabled}
             title={album.name}
-            className="w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white transition-all duration-300 cursor-pointer disabled:cursor-not-allowed shrink-0"
+            onMouseEnter={() => setIsHoveringAlbum(true)}
+            onMouseLeave={() => setIsHoveringAlbum(false)}
+            className="w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 cursor-pointer disabled:cursor-not-allowed shrink-0"
             style={{
               backgroundColor: isDisabled && !isCorrect
                 ? '#9ca3af'
                 : album.theme_primary_color || '#6b7280',
-              opacity: isDisabled && !isCorrect ? 0.5 : 1,
-              border: isCorrect ? '2px solid white' : '2px solid transparent',
+              opacity: isDisabled && !isCorrect ? 0.5 : (isHoveringAlbum ? 0.8 : 1),
             }}
           >
-            {getInitials(album.name)}
+            {album.image_url !== null ? 
+              <img 
+                src={window.location.origin + album.image_url} 
+                alt={album.name} 
+                style={{ width: '30px', height: '30px' }} 
+              />      
+              : getInitials(album.name)
+            }
           </button>
         )
       })}

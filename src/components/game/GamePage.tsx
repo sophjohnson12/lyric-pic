@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import Header from '../layout/Header'
@@ -20,6 +20,21 @@ export default function GamePage() {
   const [showInfo, setShowInfo] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
 
+  // Carousel state
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [activeSlide, setActiveSlide] = useState(0)
+  // Deferred focus index: immediate on first load, 500ms delayed on guess/reveal
+  const [deferredFocusIndex, setDeferredFocusIndex] = useState(0)
+  const focusInitialized = useRef(false)
+  const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const handler = (e: MediaQueryListEvent) => setIsMd(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   // Update meta tags
   useEffect(() => {
     if (game.artist) {
@@ -33,10 +48,71 @@ export default function GamePage() {
     }
   }, [game.artist])
 
-  // Find first non-guessed word index for auto-focus
+  // Find first non-guessed word index
   const autoFocusIndex = useMemo(() => {
-    return game.puzzleWords.findIndex((w) => !w.guessed && !w.revealed)
+    if (!game.puzzleWords) return -1
+    return game.puzzleWords.findIndex((w: any) => !w.guessed && !w.revealed)
   }, [game.puzzleWords])
+
+  // Count solved words — used to detect any solve event, even when autoFocusIndex doesn't change
+  const guessedCount = useMemo(() => {
+    return game.puzzleWords.filter((w: any) => w.guessed || w.revealed).length
+  }, [game.puzzleWords])
+  const guessCountInitialized = useRef(false)
+  const [focusTrigger, setFocusTrigger] = useState(0)
+
+  const scrollToSlide = (index: number) => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current
+      const width = container.clientWidth
+      container.scrollTo({ left: width * index, behavior: 'smooth' })
+      setActiveSlide(index)
+    }
+  }
+
+  // Handle scroll to update active slide (for manual swipes)
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current
+      const scrollLeft = container.scrollLeft
+      const width = container.clientWidth
+      if (width === 0) return
+      const index = Math.round(scrollLeft / width)
+      setActiveSlide(index)
+    }
+  }
+
+  // Attach scroll listener after loading completes (container doesn't exist during loading state)
+  useEffect(() => {
+    if (game.loading) return
+    const container = scrollContainerRef.current
+    if (!container) return
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [game.loading])
+
+  // Set deferredFocusIndex on initial load only
+  useEffect(() => {
+    if (autoFocusIndex < 0 || focusInitialized.current) return
+    focusInitialized.current = true
+    setDeferredFocusIndex(autoFocusIndex)
+  }, [autoFocusIndex])
+
+  // When any word is solved, update focus target and trigger focus (md+ only)
+  useEffect(() => {
+    if (!guessCountInitialized.current) {
+      guessCountInitialized.current = true
+      return
+    }
+    if (!isMd || autoFocusIndex < 0) return
+    const timer = setTimeout(() => {
+      setDeferredFocusIndex(autoFocusIndex)
+      setFocusTrigger((n) => n + 1)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [guessedCount])
+
 
   if (game.loading) {
     return (
@@ -112,29 +188,48 @@ export default function GamePage() {
         onSkip={game.skipSong}
       />
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 md:py-6 h-dvh">
         {/* Word puzzles */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {game.puzzleWords.map((word, index) => (
-            <WordInput
+        <div
+          ref={scrollContainerRef}
+          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:grid md:grid-cols-3 gap-0 md:gap-6 mb-3 md:mb-9 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+          >
+          {game.puzzleWords.map((word: any, index: number) => (
+            <div
               key={`${game.currentSong!.id}-${index}`}
-              puzzleWord={word}
-              wordIndex={index}
-              incorrectGuesses={game.incorrectWordGuesses[index] || []}
-              onGuess={game.guessWord}
-              onReveal={game.revealWord}
-              onRefresh={game.refreshImage}
-              onFlag={(lyricId) => flagWord(lyricId)}
-              debugMode={DEBUG_MODE}
-              autoFocus={index === autoFocusIndex}
+              className="w-full flex-shrink-0 md:w-auto snap-center px-1 md:px-0"
+            >
+              <WordInput
+                key={`${game.currentSong!.id}-${index}`}
+                puzzleWord={word}
+                wordIndex={index}
+                incorrectGuesses={game.incorrectWordGuesses[index] || []}
+                onGuess={game.guessWord}
+                onReveal={game.revealWord}
+                onRefresh={game.refreshImage}
+                onFlag={(lyricId) => flagWord(lyricId)}
+                debugMode={DEBUG_MODE}
+                autoFocus={isMd && index === deferredFocusIndex}
+                focusTrigger={focusTrigger}
+              />
+            </div>
+          ))}
+        </div>
+        {/* Carousel Dots (Mobile Only) */}
+        <div className="flex justify-center gap-2 mb-12 md:hidden">
+          {game.puzzleWords.map((_: any, index: number) => (
+            <button
+              key={index}
+              onClick={() => scrollToSlide(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-primary/20 hover:bg-gray-400'}`}
+              aria-label={`Go to image ${index + 1}`}
             />
           ))}
         </div>
-
         {/* Album and Song dropdowns */}
         {(
           <div>
-            <div className="max-w-xxl mb-4">
+            <div className="max-w-xxl mb-12 md:mb-9">
               <AlbumButtons
                 albums={game.albums}
                 incorrectAlbumIds={game.incorrectAlbumIds}

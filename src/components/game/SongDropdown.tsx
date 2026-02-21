@@ -49,14 +49,14 @@ export default function SongDropdown({
         <button
           onClick={handleSubmit}
           disabled={selectedId === undefined}
-          className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed shrink-0"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed shrink-0"
         >
           Submit
         </button>
       </div>
       {incorrectGuesses.length > 0 && (
         <p className="text-xs text-primary mt-1 ml-1">
-          But who's counting? (
+          Who's counting? (
           {incorrectGuesses.length <= 5
             ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
             : `1, 2, 3, ..., ${incorrectGuesses.length}`}
