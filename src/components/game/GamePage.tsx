@@ -35,6 +35,19 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
+  // Prevent iOS Safari from scrolling the window when a word input is focused
+  useEffect(() => {
+    const resetScroll = () => window.scrollTo(0, 0)
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    window.addEventListener('scroll', resetScroll)
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+      window.removeEventListener('scroll', resetScroll)
+    }
+  }, [])
+
   // Update meta tags
   useEffect(() => {
     if (game.artist) {
