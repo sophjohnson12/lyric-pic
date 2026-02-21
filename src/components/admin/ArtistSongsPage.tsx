@@ -18,6 +18,7 @@ import {
   processSongLyrics,
   clearSongLyrics,
   hideSong,
+  bulkUpdateSongAlbum,
 } from '../../services/adminService'
 import type { AdminSongRow } from '../../services/adminService'
 
@@ -26,7 +27,7 @@ type ConfirmAction = { type: 'process' | 'clear' | 'hide'; songId: number }
 const CONFIRM_MESSAGES: Record<ConfirmAction['type'], string> = {
   process: 'Are you sure? This will reset all processed lyrics for the selected song.',
   clear: 'Are you sure? This will remove all processed lyrics for the selected song.',
-  hide: 'Are you sure? This will hide the song from the admin screen.',
+  hide: 'Are you sure? This will hide the selected song from the admin screen.',
 }
 
 export default function ArtistSongsPage() {
@@ -40,13 +41,22 @@ export default function ArtistSongsPage() {
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
-  const albumFilter = searchParams.get('album') ? Number(searchParams.get('album')) : null
+  const albumParam = searchParams.get('album')
+  const albumFilter = albumParam === 'none' ? 'none' as const : albumParam ? Number(albumParam) : null
+  const enabledParam = searchParams.get('enabled')
+  const enabledFilter = enabledParam === 'true' ? true : enabledParam === 'false' ? false : null
   const [fetching, setFetching] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [pasteModal, setPasteModal] = useState<{ songId: number; songName: string } | null>(null)
   const [pastedLyrics, setPastedLyrics] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+  const [bulkClearConfirm, setBulkClearConfirm] = useState(false)
+  const [bulkProcessConfirm, setBulkProcessConfirm] = useState(false)
+  const [bulkHideConfirm, setBulkHideConfirm] = useState(false)
+  const [bulkEditAlbumModal, setBulkEditAlbumModal] = useState(false)
+  const [bulkAlbumValue, setBulkAlbumValue] = useState('')
 
   useEffect(() => {
     getAdminArtistById(aid).then((a) => {
@@ -65,13 +75,13 @@ export default function ArtistSongsPage() {
   const loadSongs = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await getAdminSongs(aid, page, pageSize, albumFilter)
+      const result = await getAdminSongs(aid, page, pageSize, albumFilter, enabledFilter)
       setSongs(result.rows)
       setTotal(result.total)
     } finally {
       setLoading(false)
     }
-  }, [aid, page, pageSize, albumFilter])
+  }, [aid, page, pageSize, albumFilter, enabledFilter])
 
   useEffect(() => {
     loadSongs()
@@ -181,6 +191,92 @@ export default function ArtistSongsPage() {
     executeAction(type, songId)
   }
 
+  function handleToggleSelect(key: string | number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function handleToggleAllSelect(keys: (string | number)[]) {
+    setSelectedIds((prev) => {
+      const allSelected = keys.every((k) => prev.has(k))
+      const next = new Set(prev)
+      if (allSelected) {
+        keys.forEach((k) => next.delete(k))
+      } else {
+        keys.forEach((k) => next.add(k))
+      }
+      return next
+    })
+  }
+
+  async function handleBulkClearConfirm() {
+    if (selectedIds.size === 0) return
+    setBulkClearConfirm(false)
+    const ids = [...selectedIds] as number[]
+    try {
+      for (const id of ids) {
+        await clearSongLyrics(id)
+      }
+      showToast(`Cleared lyrics for ${ids.length} songs`)
+      setSelectedIds(new Set())
+      loadSongs()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Bulk clear failed'}`)
+    }
+  }
+
+  async function handleBulkProcessConfirm() {
+    if (selectedIds.size === 0) return
+    setBulkProcessConfirm(false)
+    const ids = [...selectedIds] as number[]
+    try {
+      for (const id of ids) {
+        await processSongLyrics(id)
+      }
+      showToast(`Processed lyrics for ${ids.length} songs`)
+      setSelectedIds(new Set())
+      loadSongs()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Bulk process failed'}`)
+    }
+  }
+
+  async function handleBulkHideConfirm() {
+    if (selectedIds.size === 0) return
+    setBulkHideConfirm(false)
+    const ids = [...selectedIds] as number[]
+    try {
+      for (const id of ids) {
+        await hideSong(id)
+      }
+      showToast(`Hidden ${ids.length} songs`)
+      setSelectedIds(new Set())
+      loadSongs()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Bulk hide failed'}`)
+    }
+  }
+
+  async function handleBulkEditAlbumConfirm() {
+    if (selectedIds.size === 0) return
+    const ids = [...selectedIds] as number[]
+    const albumId = bulkAlbumValue ? Number(bulkAlbumValue) : null
+    try {
+      await bulkUpdateSongAlbum(ids, albumId)
+      showToast(`Updated album for ${ids.length} songs`)
+      setBulkEditAlbumModal(false)
+      setBulkAlbumValue('')
+      setSelectedIds(new Set())
+      loadSongs()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Bulk edit failed'}`)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -201,31 +297,89 @@ export default function ArtistSongsPage() {
           </Link>
         </div>
       </div>
-      <div className="mb-4">
+      <div className="mb-4 flex items-center">
         <label className="text-sm font-medium mr-2">Album:</label>
         <select
-          value={albumFilter ?? ''}
+          value={albumParam ?? ''}
           onChange={(e) => {
             const val = e.target.value
             setPage(1)
+            const params = new URLSearchParams(searchParams)
             if (val) {
-              setSearchParams({ album: val })
+              params.set('album', val)
             } else {
-              setSearchParams({})
+              params.delete('album')
             }
+            setSearchParams(params)
           }}
           className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
         >
           <option value="">All Albums</option>
+          <option value="none">No Album</option>
           {albums.map((a) => (
             <option key={a.id} value={a.id}>{a.name}</option>
           ))}
         </select>
+        <label className="text-sm font-medium mr-2 ml-4">Enabled:</label>
+        <select
+          value={enabledParam ?? ''}
+          onChange={(e) => {
+            const val = e.target.value
+            setPage(1)
+            const params = new URLSearchParams(searchParams)
+            if (val) {
+              params.set('enabled', val)
+            } else {
+              params.delete('enabled')
+            }
+            setSearchParams(params)
+          }}
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        >
+          <option value="">All</option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => { setBulkEditAlbumModal(true); setBulkAlbumValue('') }}
+            disabled={selectedIds.size === 0}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            Edit All
+          </button>
+          <button
+            onClick={() => setBulkProcessConfirm(true)}
+            disabled={selectedIds.size === 0}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            Process All
+          </button>
+          <button
+            onClick={() => setBulkClearConfirm(true)}
+            disabled={selectedIds.size === 0}
+            className="bg-gray-200 text-text px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            Clear All
+          </button>
+          <button
+            onClick={() => setBulkHideConfirm(true)}
+            disabled={selectedIds.size === 0}
+            className="bg-gray-200 text-text px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            Hide All
+          </button>
+        </div>
       </div>
       <AdminTable
         data={songs}
         keyFn={(s) => s.id}
         loading={loading}
+        selection={{
+          selected: selectedIds,
+          onToggle: handleToggleSelect,
+          onToggleAll: handleToggleAllSelect,
+        }}
         serverPagination={{
           total,
           page,
@@ -344,6 +498,60 @@ export default function ArtistSongsPage() {
           message={CONFIRM_MESSAGES[confirmAction.type]}
           onConfirm={handleConfirm}
           onCancel={() => setConfirmAction(null)}
+        />
+      )}
+      {bulkProcessConfirm && (
+        <ConfirmPopup
+          message={`Are you sure? This will reset all processed lyrics for the selected songs (${selectedIds.size}).`}
+          onConfirm={handleBulkProcessConfirm}
+          onCancel={() => setBulkProcessConfirm(false)}
+        />
+      )}
+      {bulkEditAlbumModal && (
+        <Modal onClose={() => { setBulkEditAlbumModal(false); setBulkAlbumValue('') }}>
+          <h2 className="text-lg font-bold mb-2">Edit Album</h2>
+          <p className="text-sm text-text/70 mb-4">
+            Update album for all selected songs ({selectedIds.size}).
+          </p>
+          <label className="block text-sm font-semibold mb-1">Album</label>
+          <select
+            value={bulkAlbumValue}
+            onChange={(e) => setBulkAlbumValue(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="">None</option>
+            {albums.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setBulkEditAlbumModal(false); setBulkAlbumValue('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleBulkEditAlbumConfirm}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Save
+            </button>
+          </div>
+        </Modal>
+      )}
+      {bulkHideConfirm && (
+        <ConfirmPopup
+          message={`Are you sure? This will hide all selected songs (${selectedIds.size}) from the admin screen.`}
+          onConfirm={handleBulkHideConfirm}
+          onCancel={() => setBulkHideConfirm(false)}
+        />
+      )}
+      {bulkClearConfirm && (
+        <ConfirmPopup
+          message={`Are you sure? This will reset all processed lyrics for the selected songs (${selectedIds.size}).`}
+          onConfirm={handleBulkClearConfirm}
+          onCancel={() => setBulkClearConfirm(false)}
         />
       )}
       <Toast message={toast} />

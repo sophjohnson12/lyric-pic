@@ -18,6 +18,12 @@ interface AdminTableProps<T> {
     onPageChange: (page: number) => void
     onPageSizeChange: (size: number) => void
   }
+  // Checkbox selection
+  selection?: {
+    selected: Set<string | number>
+    onToggle: (key: string | number) => void
+    onToggleAll: (keys: (string | number)[]) => void
+  }
 }
 
 export default function AdminTable<T>({
@@ -26,6 +32,7 @@ export default function AdminTable<T>({
   keyFn,
   loading = false,
   serverPagination,
+  selection,
 }: AdminTableProps<T>) {
   const [clientPage, setClientPage] = useState(1)
   const [clientPageSize, setClientPageSize] = useState(10)
@@ -78,6 +85,16 @@ export default function AdminTable<T>({
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-primary/10">
+            {selection && (
+              <th className="w-10 px-4 py-2.5 border-b border-primary/20">
+                <input
+                  type="checkbox"
+                  checked={displayData.length > 0 && displayData.every((row) => selection.selected.has(keyFn(row)))}
+                  onChange={() => selection.onToggleAll(displayData.map((row) => keyFn(row)))}
+                  className="cursor-pointer"
+                />
+              </th>
+            )}
             {columns.map((col, i) => (
               <th
                 key={i}
@@ -91,13 +108,23 @@ export default function AdminTable<T>({
         <tbody>
           {displayData.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="text-center py-8 text-text/50">
+              <td colSpan={columns.length + (selection ? 1 : 0)} className="text-center py-8 text-text/50">
                 No data found
               </td>
             </tr>
           ) : (
             displayData.map((row) => (
               <tr key={keyFn(row)} className="border-b border-primary/10 hover:bg-primary/5">
+                {selection && (
+                  <td className="w-10 px-4 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selection.selected.has(keyFn(row))}
+                      onChange={() => selection.onToggle(keyFn(row))}
+                      className="cursor-pointer"
+                    />
+                  </td>
+                )}
                 {columns.map((col, i) => (
                   <td key={i} className="px-4 py-2.5">
                     {col.accessor(row)}
