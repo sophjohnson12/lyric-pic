@@ -63,7 +63,7 @@ export interface Lyric {
   is_blocklisted: boolean
   blocklist_reason: number | null
   is_flagged: boolean
-  flagged_user: string | null
+  flagged_by: string | null
   created_at: string
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Pencil, ArrowRight } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
@@ -81,17 +82,16 @@ export default function ArtistsPage() {
             header: 'Actions',
             accessor: (a) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/artists/${a.id}`} className="text-primary hover:underline" title="Edit">
-                  ✏️
+                <Link to={`/admin/artists/${a.id}`} title="Edit">
+                  <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <a
                   href={`/${a.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary hover:underline"
                   title="Launch game"
                 >
-                  ↗
+                  <ArrowRight size={20} className="drop-shadow-md" />
                 </a>
               </div>
             ),

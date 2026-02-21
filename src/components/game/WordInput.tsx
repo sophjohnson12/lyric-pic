@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'motion/react';
-import { RefreshCw, Flag, Lock, LockOpen } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react'
+import { RefreshCw, Flag, Lock, LockOpen } from 'lucide-react'
 import ImageDisplay from './ImageDisplay'
+import ConfirmPopup from '../common/ConfirmPopup'
 import type { PuzzleWord } from '../../types/game'
 
 interface WordInputProps {
@@ -30,6 +31,7 @@ export default function WordInput({
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
+  const [showFlagConfirm, setShowFlagConfirm] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -50,7 +52,11 @@ export default function WordInput({
 
   const handleFlag = () => {
     if (flagged) return
-    if (!confirm(`Flag "${puzzleWord.word}" as a bad word? This will blocklist it.`)) return
+    setShowFlagConfirm(true)
+  }
+
+  const handleFlagConfirm = () => {
+    setShowFlagConfirm(false)
     setFlagged(true)
     onFlag?.(puzzleWord.lyricId)
   }
@@ -163,6 +169,13 @@ export default function WordInput({
           </div>
         </div>
       </div>
+      {showFlagConfirm && (
+        <ConfirmPopup
+          message="Are you sure you'd like to flag this word for review?"
+          onConfirm={handleFlagConfirm}
+          onCancel={() => setShowFlagConfirm(false)}
+        />
+      )}
     </div>
   )
 }

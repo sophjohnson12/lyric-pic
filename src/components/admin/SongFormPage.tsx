@@ -25,6 +25,7 @@ export default function SongFormPage() {
   const [trackNumber, setTrackNumber] = useState('')
   const [featuredArtists, setFeaturedArtists] = useState('')
   const [fullLyrics, setFullLyrics] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -53,6 +54,7 @@ export default function SongFormPage() {
         setTrackNumber(s.track_number?.toString() ?? '')
         setFeaturedArtists(s.featured_artists?.join(', ') ?? '')
         setFullLyrics(s.lyrics_full_text ?? '')
+        setSuccessMessage(s.success_message ?? '')
       })
     }
   }, [id, isEdit])
@@ -71,6 +73,7 @@ export default function SongFormPage() {
           ? featuredArtists.split(',').map((s) => s.trim()).filter(Boolean)
           : null,
         lyrics_full_text: fullLyrics || null,
+        success_message: successMessage || null,
       }
       if (isEdit) {
         await updateSong(Number(id), data)
@@ -115,6 +118,14 @@ export default function SongFormPage() {
             value={featuredArtists}
             onChange={(e) => setFeaturedArtists(e.target.value)}
             placeholder="Comma-separated names"
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Success Message">
+          <input
+            type="text"
+            value={successMessage}
+            onChange={(e) => setSuccessMessage(e.target.value)}
             className={inputClass}
           />
         </FormField>

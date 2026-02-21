@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Pencil, Download, Cog, Trash2, EyeOff } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
@@ -9,6 +10,7 @@ import ConfirmPopup from '../common/ConfirmPopup'
 import {
   getAdminSongs,
   getAdminArtistById,
+  getAlbumsForDropdown,
   toggleSongSelectable,
   fetchNewSongs,
   getGeniusSongUrl,
@@ -29,6 +31,7 @@ const CONFIRM_MESSAGES: Record<ConfirmAction['type'], string> = {
 
 export default function ArtistSongsPage() {
   const { artistId } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const aid = Number(artistId)
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [songs, setSongs] = useState<AdminSongRow[]>([])
@@ -36,6 +39,8 @@ export default function ArtistSongsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
+  const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
+  const albumFilter = searchParams.get('album') ? Number(searchParams.get('album')) : null
   const [fetching, setFetching] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
@@ -53,16 +58,20 @@ export default function ArtistSongsPage() {
     })
   }, [aid, setBreadcrumbs])
 
+  useEffect(() => {
+    getAlbumsForDropdown(aid).then(setAlbums)
+  }, [aid])
+
   const loadSongs = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await getAdminSongs(aid, page, pageSize)
+      const result = await getAdminSongs(aid, page, pageSize, albumFilter)
       setSongs(result.rows)
       setTotal(result.total)
     } finally {
       setLoading(false)
     }
-  }, [aid, page, pageSize])
+  }, [aid, page, pageSize, albumFilter])
 
   useEffect(() => {
     loadSongs()
@@ -192,6 +201,27 @@ export default function ArtistSongsPage() {
           </Link>
         </div>
       </div>
+      <div className="mb-4">
+        <label className="text-sm font-medium mr-2">Album:</label>
+        <select
+          value={albumFilter ?? ''}
+          onChange={(e) => {
+            const val = e.target.value
+            setPage(1)
+            if (val) {
+              setSearchParams({ album: val })
+            } else {
+              setSearchParams({})
+            }
+          }}
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        >
+          <option value="">All Albums</option>
+          {albums.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </select>
+      </div>
       <AdminTable
         data={songs}
         keyFn={(s) => s.id}
@@ -229,15 +259,19 @@ export default function ArtistSongsPage() {
           {
             header: 'Enabled?',
             accessor: (s) => (
-              <ToggleSwitch checked={s.is_selectable} onChange={(v) => handleToggle(s.id, v)} />
+              <ToggleSwitch
+                checked={s.is_selectable}
+                onChange={(v) => handleToggle(s.id, v)}
+                disabled={!s.has_album || s.selectable_lyric_count < 3}
+              />
             ),
           },
           {
             header: 'Actions',
             accessor: (s) => (
               <div className="flex gap-2">
-                <Link to={`/admin/artists/${aid}/songs/${s.id}`} className="text-primary hover:underline" title="Edit">
-                  ✏️
+                <Link to={`/admin/artists/${aid}/songs/${s.id}`} title="Edit">
+                  <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
                   onClick={() => handleDownload(s)}
@@ -245,7 +279,7 @@ export default function ArtistSongsPage() {
                   className="hover:opacity-70 disabled:opacity-30 cursor-pointer"
                   title="Download Lyrics"
                 >
-                  ⬇️
+                  <Download size={20} className="drop-shadow-md" />
                 </button>
                 <button
                   onClick={() => handleProcess(s)}
@@ -253,7 +287,7 @@ export default function ArtistSongsPage() {
                   className="hover:opacity-70 disabled:opacity-30 cursor-pointer"
                   title="Process Lyrics"
                 >
-                  ⚙️
+                  <Cog size={20} className="drop-shadow-md" />
                 </button>
                 <button
                   onClick={() => handleClear(s)}
@@ -261,7 +295,7 @@ export default function ArtistSongsPage() {
                   className="hover:opacity-70 disabled:opacity-30 cursor-pointer"
                   title="Clear Lyrics"
                 >
-                  🗑️
+                  <Trash2 size={20} className="drop-shadow-md" />
                 </button>
                 <button
                   onClick={() => setConfirmAction({ type: 'hide', songId: s.id })}
@@ -269,7 +303,7 @@ export default function ArtistSongsPage() {
                   className="hover:opacity-70 disabled:opacity-30 cursor-pointer"
                   title="Hide Song"
                 >
-                  👁️
+                  <EyeOff size={20} className="drop-shadow-md" />
                 </button>
               </div>
             ),
