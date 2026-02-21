@@ -35,14 +35,17 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // On iOS, focusing an input causes the window to scroll. Reset it instantly
-  // whenever the visual viewport resizes (i.e. keyboard opens or closes).
+  // Prevent iOS Safari from scrolling the window when a word input is focused
   useEffect(() => {
-    const viewport = window.visualViewport
-    if (!viewport) return
-    const resetScroll = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
-    viewport.addEventListener('resize', resetScroll)
-    return () => viewport.removeEventListener('resize', resetScroll)
+    const resetScroll = () => window.scrollTo(0, 0)
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    window.addEventListener('scroll', resetScroll)
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+      window.removeEventListener('scroll', resetScroll)
+    }
   }, [])
 
   // Update meta tags
