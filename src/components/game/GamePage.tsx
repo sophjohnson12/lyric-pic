@@ -35,16 +35,16 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // Prevent iOS Safari from scrolling the window when a word input is focused
+  // Prevent iOS Safari from scrolling the window when a word input is focused.
+  // position:fixed is the only reliable way to stop iOS from scrolling before we can reset it.
   useEffect(() => {
-    const resetScroll = () => window.scrollTo(0, 0)
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
     document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    window.addEventListener('scroll', resetScroll)
     return () => {
+      document.body.style.position = ''
+      document.body.style.width = ''
       document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-      window.removeEventListener('scroll', resetScroll)
     }
   }, [])
 
