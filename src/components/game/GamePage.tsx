@@ -35,15 +35,12 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // Prevent iOS Safari from scrolling the window when a word input is focused.
-  // position:fixed is the only reliable way to stop iOS from scrolling before we can reset it.
+  // Prevent iOS Safari from scrolling: body must have no scrollable overflow
   useEffect(() => {
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
+    document.documentElement.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.position = ''
-      document.body.style.width = ''
+      document.documentElement.style.overflow = ''
       document.body.style.overflow = ''
     }
   }, [])
@@ -191,7 +188,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="h-dvh overflow-hidden flex flex-col bg-bg">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}
@@ -201,7 +198,7 @@ export default function GamePage() {
         onSkip={game.skipSong}
       />
 
-      <main className="max-w-4xl mx-auto px-4 md:py-6 h-dvh">
+      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1 overflow-hidden">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
