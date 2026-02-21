@@ -51,6 +51,7 @@ export interface Song {
   canonical_song_id: number | null
   genius_song_id: number | null
   load_status_id: number
+  is_hidden: boolean
   updated_at: string | null
   refreshed_at: string | null
   created_at: string
@@ -61,6 +62,8 @@ export interface Lyric {
   root_word: string
   is_blocklisted: boolean
   blocklist_reason: number | null
+  is_flagged: boolean
+  flagged_user: string | null
   created_at: string
 }
 

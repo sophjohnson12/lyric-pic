@@ -102,7 +102,7 @@ export default function ArtistFormPage() {
   return (
     <>
       <Toast message={toast} />
-      <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} loading={saving} canSubmit={canSubmit}>
+      <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} onCancel={() => navigate('/admin')} loading={saving} canSubmit={canSubmit}>
         <FormField label="Name" required>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
         </FormField>

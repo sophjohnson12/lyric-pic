@@ -89,7 +89,7 @@ export default function SongFormPage() {
   return (
     <>
       <Toast message={toast} />
-      <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} loading={saving}>
+      <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} onCancel={() => navigate(`/admin/artists/${aid}/songs`)} loading={saving}>
         <FormField label="Name" required>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
         </FormField>

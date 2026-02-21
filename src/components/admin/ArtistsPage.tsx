@@ -49,7 +49,12 @@ export default function ArtistsPage() {
         keyFn={(a) => a.id}
         loading={loading}
         columns={[
-          { header: 'Name', accessor: (a) => a.name },
+          { header: 'Name', accessor: (a) => (
+              <Link to={`/admin/artists/${a.id}`} className="text-primary hover:underline">
+                {a.name}
+              </Link>
+            ),
+          },
           {
             header: 'Albums',
             accessor: (a) => (
