@@ -35,14 +35,14 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // Prevent iOS Safari from scrolling: body must have no scrollable overflow
+  // On iOS, focusing an input causes the window to scroll. Reset it instantly
+  // whenever the visual viewport resizes (i.e. keyboard opens or closes).
   useEffect(() => {
-    document.documentElement.style.overflow = 'hidden'
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.documentElement.style.overflow = ''
-      document.body.style.overflow = ''
-    }
+    const viewport = window.visualViewport
+    if (!viewport) return
+    const resetScroll = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior })
+    viewport.addEventListener('resize', resetScroll)
+    return () => viewport.removeEventListener('resize', resetScroll)
   }, [])
 
   // Update meta tags
@@ -198,7 +198,7 @@ export default function GamePage() {
         onSkip={game.skipSong}
       />
 
-      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1 overflow-hidden">
+      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
