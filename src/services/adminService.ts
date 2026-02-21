@@ -505,12 +505,22 @@ export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
 }
 
 export async function getBlocklistedLyrics(): Promise<AdminBlocklistedLyricRow[]> {
-  const { data: lyrics, error } = await supabase
-    .from('lyric')
-    .select('id, root_word, is_blocklisted, blocklist_reason')
-    .eq('is_blocklisted', true)
-    .order('root_word')
-  if (error) throw error
+  const allLyrics: { id: number; root_word: string; is_blocklisted: boolean; blocklist_reason: number | null }[] = []
+  let from = 0
+  const batchSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('id, root_word, is_blocklisted, blocklist_reason')
+      .eq('is_blocklisted', true)
+      .order('root_word')
+      .range(from, from + batchSize - 1)
+    if (error) throw error
+    allLyrics.push(...data)
+    if (data.length < batchSize) break
+    from += batchSize
+  }
+  const lyrics = allLyrics
 
   const { data: reasons } = await supabase
     .from('blocklist_reason')
@@ -596,6 +606,74 @@ export async function getBlocklistReasons(): Promise<{ id: number; reason: strin
     .order('reason')
   if (error) throw error
   return data
+}
+
+export async function getArtistsForDropdown(): Promise<{ id: number; name: string }[]> {
+  const { data, error } = await supabase
+    .from('artist')
+    .select('id, name')
+    .order('name')
+  if (error) throw error
+  return data
+}
+
+export async function resetArtistLyricCounts(artistId: number) {
+  // Get all selectable songs for this artist
+  const { data: songs, error: songsError } = await supabase
+    .from('song')
+    .select('id')
+    .eq('artist_id', artistId)
+    .eq('is_selectable', true)
+  if (songsError) throw songsError
+
+  const songIds = songs.map((s) => s.id)
+
+  // Delete all existing artist_lyric rows for this artist
+  const { error: deleteError } = await supabase
+    .from('artist_lyric')
+    .delete()
+    .eq('artist_id', artistId)
+  if (deleteError) throw deleteError
+
+  if (songIds.length === 0) return
+
+  // Get all song_lyric rows for the selectable songs
+  const allSongLyrics: { lyric_id: number; count: number }[] = []
+  for (let i = 0; i < songIds.length; i += 100) {
+    const batch = songIds.slice(i, i + 100)
+    const { data, error } = await supabase
+      .from('song_lyric')
+      .select('lyric_id, count')
+      .in('song_id', batch)
+    if (error) throw error
+    allSongLyrics.push(...data)
+  }
+
+  // Aggregate: song_count = number of distinct songs, total_count = sum of counts
+  const lyricStats = new Map<number, { songCount: number; totalCount: number }>()
+  for (const sl of allSongLyrics) {
+    const existing = lyricStats.get(sl.lyric_id)
+    if (existing) {
+      existing.songCount += 1
+      existing.totalCount += sl.count
+    } else {
+      lyricStats.set(sl.lyric_id, { songCount: 1, totalCount: sl.count })
+    }
+  }
+
+  // Insert new artist_lyric rows in batches
+  const rows = [...lyricStats.entries()].map(([lyricId, stats]) => ({
+    artist_id: artistId,
+    lyric_id: lyricId,
+    song_count: stats.songCount,
+    total_count: stats.totalCount,
+  }))
+
+  for (let i = 0; i < rows.length; i += 500) {
+    const batch = rows.slice(i, i + 500)
+    const { error } = await supabase.from('artist_lyric').insert(batch)
+    if (error) throw error
+  }
 }
 
 // ─── Fetch New Songs from Genius ─────────────────────────
