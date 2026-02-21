@@ -147,7 +147,10 @@ export async function getSongLyricIds(songId: number): Promise<number[]> {
 }
 
 export async function flagWord(lyricId: number): Promise<void> {
-  const { error } = await supabase.rpc('flag_word', { p_lyric_id: lyricId })
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_flagged: true, flagged_by: 'USER' })
+    .eq('id', lyricId)
   if (error) throw error
 }
 

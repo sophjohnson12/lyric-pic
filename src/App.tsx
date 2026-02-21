@@ -8,9 +8,11 @@ import ArtistsPage from './components/admin/ArtistsPage'
 import ArtistFormPage from './components/admin/ArtistFormPage'
 import ArtistAlbumsPage from './components/admin/ArtistAlbumsPage'
 import AlbumFormPage from './components/admin/AlbumFormPage'
+import ImportAlbumsPage from './components/admin/ImportAlbumsPage'
 import ArtistSongsPage from './components/admin/ArtistSongsPage'
 import SongFormPage from './components/admin/SongFormPage'
 import SongLyricsPage from './components/admin/SongLyricsPage'
+import LyricsPage from './components/admin/LyricsPage'
 
 export default function App() {
   return (
@@ -23,12 +25,14 @@ export default function App() {
           <Route path="artists/new" element={<ArtistFormPage />} />
           <Route path="artists/:id" element={<ArtistFormPage />} />
           <Route path="artists/:artistId/albums" element={<ArtistAlbumsPage />} />
+          <Route path="artists/:artistId/albums/imports" element={<ImportAlbumsPage />} />
           <Route path="artists/:artistId/albums/new" element={<AlbumFormPage />} />
           <Route path="artists/:artistId/albums/:id" element={<AlbumFormPage />} />
           <Route path="artists/:artistId/songs" element={<ArtistSongsPage />} />
           <Route path="artists/:artistId/songs/new" element={<SongFormPage />} />
           <Route path="artists/:artistId/songs/:id" element={<SongFormPage />} />
           <Route path="artists/:artistId/songs/:songId/lyrics" element={<SongLyricsPage />} />
+          <Route path="lyrics" element={<LyricsPage />} />
         </Route>
         <Route path="/:artistSlug" element={<GamePage />} />
       </Routes>

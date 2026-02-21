@@ -1,24 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
+import ConfirmPopup from '../common/ConfirmPopup'
 import {
   getAdminAlbums,
-  getAlbumImports,
   toggleAlbumSelectable,
   getAdminArtistById,
 } from '../../services/adminService'
-import type { AdminAlbumRow, AdminAlbumImportRow } from '../../services/adminService'
+import type { AdminAlbumRow } from '../../services/adminService'
 
 export default function ArtistAlbumsPage() {
   const { artistId } = useParams()
   const aid = Number(artistId)
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [albums, setAlbums] = useState<AdminAlbumRow[]>([])
-  const [imports, setImports] = useState<AdminAlbumImportRow[]>([])
   const [loading, setLoading] = useState(true)
   const [artistName, setArtistName] = useState('')
+  const [disableAlbumId, setDisableAlbumId] = useState<number | null>(null)
 
   useEffect(() => {
     getAdminArtistById(aid).then((a) => {
@@ -38,29 +39,48 @@ export default function ArtistAlbumsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const [a, i] = await Promise.all([getAdminAlbums(aid), getAlbumImports(aid)])
+      const a = await getAdminAlbums(aid)
       setAlbums(a)
-      setImports(i)
     } finally {
       setLoading(false)
     }
   }
 
   async function handleToggle(id: number, value: boolean) {
-    await toggleAlbumSelectable(id, value)
-    setAlbums((prev) => prev.map((a) => (a.id === id ? { ...a, is_selectable: value } : a)))
+    if (!value) {
+      setDisableAlbumId(id)
+      return
+    }
+    await toggleAlbumSelectable(id, true)
+    setAlbums((prev) => prev.map((a) => (a.id === id ? { ...a, is_selectable: true } : a)))
+  }
+
+  async function handleDisableConfirm() {
+    if (disableAlbumId === null) return
+    const id = disableAlbumId
+    setDisableAlbumId(null)
+    await toggleAlbumSelectable(id, false)
+    setAlbums((prev) => prev.map((a) => (a.id === id ? { ...a, is_selectable: false } : a)))
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">{artistName} — Albums</h1>
-        <Link
-          to={`/admin/artists/${aid}/albums/new`}
-          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
-        >
-          Add Album
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/admin/artists/${aid}/albums/imports`}
+            className="bg-gray-200 text-text px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
+          >
+            Manage Import Albums
+          </Link>
+          <Link
+            to={`/admin/artists/${aid}/albums/new`}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
+          >
+            Add Album
+          </Link>
+        </div>
       </div>
 
       <h2 className="text-lg font-semibold mb-2">Albums</h2>
@@ -91,38 +111,39 @@ export default function ArtistAlbumsPage() {
                 '—'
               ),
           },
-          { header: 'Songs', accessor: (a) => a.song_count },
+          { header: 'Songs', accessor: (a) => (
+              <Link to={`/admin/artists/${aid}/songs?album=${a.id}`} className="text-primary hover:underline">
+                {a.song_count}
+              </Link>
+            ),
+          },
           {
             header: 'Enabled?',
             accessor: (a) => (
-              <ToggleSwitch checked={a.is_selectable} onChange={(v) => handleToggle(a.id, v)} />
+              <ToggleSwitch
+                checked={a.is_selectable}
+                onChange={(v) => handleToggle(a.id, v)}
+                disabled={a.song_count === 0}
+              />
             ),
           },
           {
             header: 'Actions',
             accessor: (a) => (
-              <Link to={`/admin/artists/${aid}/albums/${a.id}`} className="text-primary hover:underline" title="Edit">
-                ✏️
+              <Link to={`/admin/artists/${aid}/albums/${a.id}`} title="Edit">
+                <Pencil size={20} className="drop-shadow-md" />
               </Link>
             ),
           },
         ]}
       />
 
-      {imports.length > 0 && (
-        <>
-          <h2 className="text-lg font-semibold mt-8 mb-2">Import Albums</h2>
-          <AdminTable
-            data={imports}
-            keyFn={(a) => a.id}
-            columns={[
-              { header: 'Name', accessor: (a) => a.name },
-              { header: 'Album Type', accessor: (a) => a.album_type ?? '—' },
-              { header: 'Songs', accessor: (a) => a.song_count },
-              { header: 'Actions', accessor: () => '—' },
-            ]}
-          />
-        </>
+      {disableAlbumId !== null && (
+        <ConfirmPopup
+          message="Are you sure? This will remove the album and its songs from the game."
+          onConfirm={handleDisableConfirm}
+          onCancel={() => setDisableAlbumId(null)}
+        />
       )}
     </div>
   )

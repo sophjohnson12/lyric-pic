@@ -34,11 +34,13 @@ export async function getAdminArtists(): Promise<AdminArtistRow[]> {
       .from('album')
       .select('*', { count: 'exact', head: true })
       .eq('artist_id', a.id)
+      .eq('is_selectable', true)
 
     const { count: songCount } = await supabase
       .from('song')
       .select('*', { count: 'exact', head: true })
       .eq('artist_id', a.id)
+      .eq('is_selectable', true)
 
     rows.push({
       ...a,
@@ -122,6 +124,7 @@ export async function getAdminAlbums(artistId: number): Promise<AdminAlbumRow[]>
       .from('song')
       .select('*', { count: 'exact', head: true })
       .eq('album_id', a.id)
+      .eq('is_selectable', true)
     rows.push({ ...a, song_count: count ?? 0 })
   }
   return rows
@@ -192,11 +195,27 @@ export async function updateAlbum(id: number, data: AlbumFormData) {
 }
 
 export async function toggleAlbumSelectable(id: number, value: boolean) {
+  const now = new Date().toISOString()
   const { error } = await supabase
     .from('album')
-    .update({ is_selectable: value, updated_at: new Date().toISOString() })
+    .update({ is_selectable: value, updated_at: now })
     .eq('id', id)
   if (error) throw error
+}
+
+export async function disableAlbumWithSongs(albumId: number) {
+  const now = new Date().toISOString()
+  const { error: albumError } = await supabase
+    .from('album')
+    .update({ is_selectable: false, updated_at: now })
+    .eq('id', albumId)
+  if (albumError) throw albumError
+
+  const { error: songError } = await supabase
+    .from('song')
+    .update({ is_selectable: false, updated_at: now })
+    .eq('album_id', albumId)
+  if (songError) throw songError
 }
 
 export async function getAlbumsForDropdown(artistId: number): Promise<{ id: number; name: string }[]> {
@@ -220,6 +239,8 @@ export interface AdminSongRow {
   is_selectable: boolean
   genius_song_id: number | null
   has_lyrics: boolean
+  has_album: boolean
+  selectable_lyric_count: number
 }
 
 export interface PaginatedResult<T> {
@@ -231,6 +252,7 @@ export async function getAdminSongs(
   artistId: number,
   page: number,
   pageSize: number,
+  albumId?: number | null,
 ): Promise<PaginatedResult<AdminSongRow>> {
   let query = supabase
     .from('song')
@@ -238,6 +260,10 @@ export async function getAdminSongs(
     .eq('artist_id', artistId)
     .or('is_hidden.eq.false,is_hidden.is.null')
     .order('name')
+
+  if (albumId) {
+    query = query.eq('album_id', albumId)
+  }
 
   if (pageSize > 0) {
     const from = (page - 1) * pageSize
@@ -268,6 +294,12 @@ export async function getAdminSongs(
       .select('*', { count: 'exact', head: true })
       .eq('song_id', s.id)
 
+    const { count: selectableLyricCount } = await supabase
+      .from('song_lyric')
+      .select('*', { count: 'exact', head: true })
+      .eq('song_id', s.id)
+      .eq('is_selectable', true)
+
     rows.push({
       id: s.id,
       name: s.name,
@@ -277,6 +309,8 @@ export async function getAdminSongs(
       is_selectable: s.is_selectable,
       genius_song_id: s.genius_song_id,
       has_lyrics: !!s.lyrics_full_text,
+      has_album: !!s.album_id,
+      selectable_lyric_count: selectableLyricCount ?? 0,
     })
   }
 
@@ -301,6 +335,7 @@ export interface SongFormData {
   track_number: number | null
   featured_artists: string[] | null
   lyrics_full_text: string | null
+  success_message: string | null
 }
 
 export async function createSong(data: SongFormData) {
@@ -356,6 +391,8 @@ export interface AdminSongLyricRow {
   total_count: number
   song_count: number
   is_selectable: boolean
+  is_blocklisted: boolean
+  is_flagged: boolean
 }
 
 export async function getAdminSongLyrics(
@@ -383,7 +420,7 @@ export async function getAdminSongLyrics(
   for (const sl of data) {
     const { data: lyric } = await supabase
       .from('lyric')
-      .select('root_word')
+      .select('root_word, is_blocklisted, is_flagged')
       .eq('id', sl.lyric_id)
       .single()
 
@@ -392,7 +429,7 @@ export async function getAdminSongLyrics(
       .select('total_count, song_count')
       .eq('artist_id', artistId)
       .eq('lyric_id', sl.lyric_id)
-      .single()
+      .maybeSingle()
 
     rows.push({
       lyric_id: sl.lyric_id,
@@ -402,10 +439,118 @@ export async function getAdminSongLyrics(
       total_count: artistLyric?.total_count ?? 0,
       song_count: artistLyric?.song_count ?? 0,
       is_selectable: sl.is_selectable,
+      is_blocklisted: lyric?.is_blocklisted ?? false,
+      is_flagged: lyric?.is_flagged ?? false,
     })
   }
 
   return { rows, total: count ?? 0 }
+}
+
+export async function toggleSongLyricSelectable(songId: number, lyricId: number, value: boolean) {
+  const { error } = await supabase
+    .from('song_lyric')
+    .update({ is_selectable: value })
+    .eq('song_id', songId)
+    .eq('lyric_id', lyricId)
+  if (error) throw error
+}
+
+export async function flagLyric(lyricId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_flagged: true, flagged_by: 'ADMIN' })
+    .eq('id', lyricId)
+  if (error) throw error
+}
+
+// ─── Lyrics Management ──────────────────────────────────
+
+export interface AdminFlaggedLyricRow {
+  id: number
+  root_word: string
+  flagged_by: string | null
+}
+
+export interface AdminBlocklistedLyricRow {
+  id: number
+  root_word: string
+  is_blocklisted: boolean
+  blocklist_reason: string | null
+}
+
+export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
+  const { data, error } = await supabase
+    .from('lyric')
+    .select('id, root_word, flagged_by')
+    .eq('is_flagged', true)
+    .order('root_word')
+  if (error) throw error
+  return data
+}
+
+export async function getBlocklistedLyrics(): Promise<AdminBlocklistedLyricRow[]> {
+  const { data: lyrics, error } = await supabase
+    .from('lyric')
+    .select('id, root_word, is_blocklisted, blocklist_reason')
+    .eq('is_blocklisted', true)
+    .order('root_word')
+  if (error) throw error
+
+  const { data: reasons } = await supabase
+    .from('blocklist_reason')
+    .select('id, reason')
+  const reasonMap = new Map((reasons ?? []).map((r) => [r.id, r.reason]))
+
+  return lyrics.map((l) => ({
+    ...l,
+    blocklist_reason: l.blocklist_reason ? reasonMap.get(l.blocklist_reason) ?? null : null,
+  }))
+}
+
+export async function unflagLyric(lyricId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_flagged: false, flagged_by: null })
+    .eq('id', lyricId)
+  if (error) throw error
+}
+
+export async function blocklistLyric(lyricId: number, reasonId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_blocklisted: true, blocklist_reason: reasonId, is_flagged: false, flagged_by: null })
+    .eq('id', lyricId)
+  if (error) throw error
+
+  const { error: slError } = await supabase
+    .from('song_lyric')
+    .update({ is_selectable: false })
+    .eq('lyric_id', lyricId)
+  if (slError) throw slError
+}
+
+export async function unblocklistLyric(lyricId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_blocklisted: false, blocklist_reason: null })
+    .eq('id', lyricId)
+  if (error) throw error
+
+  const { error: slError } = await supabase
+    .from('song_lyric')
+    .update({ is_selectable: true })
+    .eq('lyric_id', lyricId)
+  if (slError) throw slError
+}
+
+export async function getBlocklistReasons(): Promise<{ id: number; reason: string }[]> {
+  const { data, error } = await supabase
+    .from('blocklist_reason')
+    .select('id, reason')
+    .order('reason')
+  if (error) throw error
+  return data
 }
 
 // ─── Fetch New Songs from Genius ─────────────────────────
@@ -571,10 +716,11 @@ export async function processSongLyrics(songId: number) {
     // Delete existing song_lyric rows (re-process case)
     await supabase.from('song_lyric').delete().eq('song_id', songId)
 
-    // Parse lyrics
-    const lines = song.lyrics_full_text.split('\n')
-    // Skip the first line (Genius gibberish)
-    const text = lines.join(' ')
+    // Parse lyrics — strip [Section Header] lines, then split into words
+    const text = song.lyrics_full_text
+      .replace(/\[.*?\]/g, '')
+      .split('\n')
+      .join(' ')
     const rawWords = text.split(/\s+/)
 
     const wordCounts = new Map<string, number>()
@@ -644,7 +790,7 @@ export async function processSongLyrics(songId: number) {
       if (word.length > 20 || word.includes("'")) {
         await supabase
           .from('lyric')
-          .update({ is_flagged: true, flagged_user: 'PROCESS' })
+          .update({ is_flagged: true, flagged_by: 'PROCESS' })
           .eq('id', lyric.id)
       }
 
@@ -688,7 +834,7 @@ export async function clearSongLyrics(songId: number) {
   await supabase.from('song_lyric').delete().eq('song_id', songId)
 
   const loadStatuses = await getLoadStatuses()
-  const loadedStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'loaded')
+  const loadedStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'reset')
   if (loadedStatus) {
     await supabase
       .from('song')
