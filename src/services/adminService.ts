@@ -252,7 +252,8 @@ export async function getAdminSongs(
   artistId: number,
   page: number,
   pageSize: number,
-  albumId?: number | null,
+  albumId?: number | 'none' | null,
+  enabledFilter?: boolean | null,
 ): Promise<PaginatedResult<AdminSongRow>> {
   let query = supabase
     .from('song')
@@ -261,8 +262,14 @@ export async function getAdminSongs(
     .or('is_hidden.eq.false,is_hidden.is.null')
     .order('name')
 
-  if (albumId) {
+  if (albumId === 'none') {
+    query = query.is('album_id', null)
+  } else if (albumId) {
     query = query.eq('album_id', albumId)
+  }
+
+  if (enabledFilter !== undefined && enabledFilter !== null) {
+    query = query.eq('is_selectable', enabledFilter)
   }
 
   if (pageSize > 0) {
@@ -345,6 +352,14 @@ export async function createSong(data: SongFormData) {
     created_at: now,
     updated_at: now,
   })
+  if (error) throw error
+}
+
+export async function bulkUpdateSongAlbum(songIds: number[], albumId: number | null) {
+  const { error } = await supabase
+    .from('song')
+    .update({ album_id: albumId, updated_at: new Date().toISOString() })
+    .in('id', songIds)
   if (error) throw error
 }
 
@@ -530,6 +545,14 @@ export async function blocklistLyric(lyricId: number, reasonId: number) {
   if (slError) throw slError
 }
 
+export async function updateBlocklistReason(lyricId: number, reasonId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ blocklist_reason: reasonId })
+    .eq('id', lyricId)
+  if (error) throw error
+}
+
 export async function unblocklistLyric(lyricId: number) {
   const { error } = await supabase
     .from('lyric')
@@ -541,6 +564,28 @@ export async function unblocklistLyric(lyricId: number) {
     .from('song_lyric')
     .update({ is_selectable: true })
     .eq('lyric_id', lyricId)
+  if (slError) throw slError
+}
+
+export async function bulkUpdateBlocklistReason(lyricIds: number[], reasonId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ blocklist_reason: reasonId })
+    .in('id', lyricIds)
+  if (error) throw error
+}
+
+export async function bulkUnblocklistLyrics(lyricIds: number[]) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_blocklisted: false, blocklist_reason: null })
+    .in('id', lyricIds)
+  if (error) throw error
+
+  const { error: slError } = await supabase
+    .from('song_lyric')
+    .update({ is_selectable: true })
+    .in('lyric_id', lyricIds)
   if (slError) throw slError
 }
 

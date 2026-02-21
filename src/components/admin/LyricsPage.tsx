@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FlagOff, Ban, Trash2 } from 'lucide-react'
+import { FlagOff, Ban, Pencil, Trash2 } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -10,7 +10,10 @@ import {
   getBlocklistedLyrics,
   unflagLyric,
   blocklistLyric,
+  updateBlocklistReason,
   unblocklistLyric,
+  bulkUpdateBlocklistReason,
+  bulkUnblocklistLyrics,
   getBlocklistReasons,
 } from '../../services/adminService'
 import type { AdminFlaggedLyricRow, AdminBlocklistedLyricRow } from '../../services/adminService'
@@ -25,6 +28,13 @@ export default function LyricsPage() {
   const [blocklistModal, setBlocklistModal] = useState<{ lyricId: number; word: string } | null>(null)
   const [selectedReason, setSelectedReason] = useState('')
   const [unblocklistId, setUnblocklistId] = useState<number | null>(null)
+  const [reasonFilter, setReasonFilter] = useState('')
+  const [editReasonModal, setEditReasonModal] = useState<{ lyricId: number; word: string; currentReason: string } | null>(null)
+  const [editReasonValue, setEditReasonValue] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+  const [bulkEditModal, setBulkEditModal] = useState(false)
+  const [bulkEditReason, setBulkEditReason] = useState('')
+  const [bulkUnblockConfirm, setBulkUnblockConfirm] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([
@@ -80,6 +90,70 @@ export default function LyricsPage() {
     }
   }
 
+  async function handleEditReasonConfirm() {
+    if (!editReasonModal || !editReasonValue) return
+    try {
+      await updateBlocklistReason(editReasonModal.lyricId, Number(editReasonValue))
+      const reasonLabel = reasons.find((r) => r.id === Number(editReasonValue))?.reason ?? null
+      setBlocklisted((prev) => prev.map((l) => (l.id === editReasonModal.lyricId ? { ...l, blocklist_reason: reasonLabel } : l)))
+      showToast('Blocklist reason updated')
+      setEditReasonModal(null)
+      setEditReasonValue('')
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to update reason'}`)
+    }
+  }
+
+  function handleToggleSelect(key: string | number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function handleToggleAllSelect(keys: (string | number)[]) {
+    setSelectedIds((prev) => {
+      const allSelected = keys.every((k) => prev.has(k))
+      const next = new Set(prev)
+      if (allSelected) {
+        keys.forEach((k) => next.delete(k))
+      } else {
+        keys.forEach((k) => next.add(k))
+      }
+      return next
+    })
+  }
+
+  async function handleBulkEditConfirm() {
+    if (!bulkEditReason || selectedIds.size === 0) return
+    try {
+      await bulkUpdateBlocklistReason([...selectedIds] as number[], Number(bulkEditReason))
+      const reasonLabel = reasons.find((r) => r.id === Number(bulkEditReason))?.reason ?? null
+      setBlocklisted((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, blocklist_reason: reasonLabel } : l))
+      showToast(`Updated ${selectedIds.size} lyrics`)
+      setBulkEditModal(false)
+      setBulkEditReason('')
+      setSelectedIds(new Set())
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to update'}`)
+    }
+  }
+
+  async function handleBulkUnblockConfirm() {
+    if (selectedIds.size === 0) return
+    try {
+      await bulkUnblocklistLyrics([...selectedIds] as number[])
+      setBlocklisted((prev) => prev.filter((l) => !selectedIds.has(l.id)))
+      showToast(`Removed ${selectedIds.size} lyrics from blocklist`)
+      setBulkUnblockConfirm(false)
+      setSelectedIds(new Set())
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unblocklist'}`)
+    }
+  }
+
   async function handleUnblocklist(lyricId: number) {
     try {
       await unblocklistLyric(lyricId)
@@ -130,23 +204,70 @@ export default function LyricsPage() {
       />
 
       <h2 className="text-lg font-semibold mt-8 mb-2">Blocklisted Words</h2>
+      <div className="mb-4 flex items-center">
+        <label className="text-sm font-medium mr-2">Blocklist Reason:</label>
+        <select
+          value={reasonFilter}
+          onChange={(e) => setReasonFilter(e.target.value)}
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        >
+          <option value="">All Reasons</option>
+          {reasons.map((r) => (
+            <option key={r.id} value={r.reason}>{r.reason}</option>
+          ))}
+        </select>
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => { setBulkEditModal(true); setBulkEditReason('') }}
+            disabled={selectedIds.size === 0}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            Edit All
+          </button>
+          <button
+            onClick={() => setBulkUnblockConfirm(true)}
+            disabled={selectedIds.size === 0}
+            className="bg-gray-200 text-text px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            Unblock All
+          </button>
+        </div>
+      </div>
       <AdminTable
-        data={blocklisted}
+        data={reasonFilter ? blocklisted.filter((l) => l.blocklist_reason === reasonFilter) : blocklisted}
         keyFn={(l) => l.id}
         loading={loading}
+        selection={{
+          selected: selectedIds,
+          onToggle: handleToggleSelect,
+          onToggleAll: handleToggleAllSelect,
+        }}
         columns={[
           { header: 'Lyric', accessor: (l) => l.root_word },
           { header: 'Blocklist Reason', accessor: (l) => l.blocklist_reason ?? '—' },
           {
             header: 'Actions',
             accessor: (l) => (
-              <button
-                onClick={() => setUnblocklistId(l.id)}
-                className="hover:opacity-70 cursor-pointer"
-                title="Remove from blocklist"
-              >
-                <Trash2 size={20} className="drop-shadow-md" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const currentReasonId = reasons.find((r) => r.reason === l.blocklist_reason)?.id
+                    setEditReasonModal({ lyricId: l.id, word: l.root_word, currentReason: l.blocklist_reason ?? '' })
+                    setEditReasonValue(currentReasonId?.toString() ?? '')
+                  }}
+                  className="hover:opacity-70 cursor-pointer"
+                  title="Edit blocklist reason"
+                >
+                  <Pencil size={20} className="drop-shadow-md" />
+                </button>
+                <button
+                  onClick={() => setUnblocklistId(l.id)}
+                  className="hover:opacity-70 cursor-pointer"
+                  title="Remove from blocklist"
+                >
+                  <Trash2 size={20} className="drop-shadow-md" />
+                </button>
+              </div>
             ),
           },
         ]}
@@ -199,6 +320,84 @@ export default function LyricsPage() {
             handleUnblocklist(id)
           }}
           onCancel={() => setUnblocklistId(null)}
+        />
+      )}
+
+      {editReasonModal && (
+        <Modal onClose={() => { setEditReasonModal(null); setEditReasonValue('') }}>
+          <h2 className="text-lg font-bold mb-2">Edit Blocklist Reason</h2>
+          <p className="text-sm font-semibold mb-3">
+            Word: <span className="text-primary">{editReasonModal.word}</span>
+          </p>
+          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
+          <select
+            value={editReasonValue}
+            onChange={(e) => setEditReasonValue(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="" disabled>Select a reason...</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.id}>{r.reason}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setEditReasonModal(null); setEditReasonValue('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleEditReasonConfirm}
+              disabled={!editReasonValue}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              Save
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {bulkEditModal && (
+        <Modal onClose={() => { setBulkEditModal(false); setBulkEditReason('') }}>
+          <h2 className="text-lg font-bold mb-2">Edit Blocklist Reason</h2>
+          <p className="text-sm text-text/70 mb-4">
+            Update blocklist reason for all selected lyrics ({selectedIds.size}).
+          </p>
+          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
+          <select
+            value={bulkEditReason}
+            onChange={(e) => setBulkEditReason(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="" disabled>Select a reason...</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.id}>{r.reason}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setBulkEditModal(false); setBulkEditReason('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleBulkEditConfirm}
+              disabled={!bulkEditReason}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              Save
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {bulkUnblockConfirm && (
+        <ConfirmPopup
+          message={`Are you sure? All selected lyrics (${selectedIds.size}) will be enabled for existing songs.`}
+          onConfirm={handleBulkUnblockConfirm}
+          onCancel={() => setBulkUnblockConfirm(false)}
         />
       )}
 
