@@ -1,17 +1,22 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
-import { Flag, Check } from 'lucide-react'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { Flag, Check, ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
 import Toast from '../common/Toast'
-import { getAdminSongLyrics, getAdminSongById, getAdminArtistById, flagLyric, toggleSongLyricSelectable } from '../../services/adminService'
+import { getAdminSongLyrics, getAdminSongById, getAdminArtistById, getAlbumsForDropdown, flagLyric, toggleSongLyricSelectable } from '../../services/adminService'
 import type { AdminSongLyricRow } from '../../services/adminService'
 
 export default function SongLyricsPage() {
   const { artistId, songId } = useParams()
+  const [searchParams] = useSearchParams()
   const aid = Number(artistId)
   const sid = Number(songId)
+  const backParams = new URLSearchParams()
+  if (searchParams.get('album')) backParams.set('album', searchParams.get('album')!)
+  if (searchParams.get('enabled')) backParams.set('enabled', searchParams.get('enabled')!)
+  const backUrl = `/admin/artists/${aid}/songs${backParams.toString() ? `?${backParams.toString()}` : ''}`
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [lyrics, setLyrics] = useState<AdminSongLyricRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,18 +24,34 @@ export default function SongLyricsPage() {
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
+  const [artistName, setArtistName] = useState('')
+  const [songName, setSongName] = useState('')
+  const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
 
   useEffect(() => {
-    Promise.all([getAdminArtistById(aid), getAdminSongById(sid)]).then(([artist, song]) => {
-      setBreadcrumbs([
-        { label: 'Artists', to: '/admin' },
-        { label: artist.name },
-        { label: 'Songs', to: `/admin/artists/${aid}/songs` },
-        { label: song.name },
-        { label: 'Lyrics' },
-      ])
+    Promise.all([getAdminArtistById(aid), getAdminSongById(sid), getAlbumsForDropdown(aid)]).then(([artist, song, albumList]) => {
+      setArtistName(artist.name)
+      setSongName(song.name)
+      setAlbums(albumList)
     })
-  }, [aid, sid, setBreadcrumbs])
+  }, [aid, sid])
+
+  useEffect(() => {
+    if (!artistName || !songName) return
+    const albumParam = searchParams.get('album')
+    const albumName = albumParam && albumParam !== 'none'
+      ? albums.find((a) => a.id === Number(albumParam))?.name
+      : null
+    setBreadcrumbs([
+      { label: 'Artists', to: '/admin' },
+      { label: artistName },
+      { label: 'Albums', to: `/admin/artists/${aid}/albums` },
+      ...(albumName ? [{ label: albumName }] : []),
+      { label: 'Songs', to: backUrl },
+      { label: songName },
+      { label: 'Lyrics' },
+    ])
+  }, [aid, artistName, songName, albums, searchParams, setBreadcrumbs, backUrl])
 
   const loadLyrics = useCallback(async () => {
     setLoading(true)
@@ -73,7 +94,12 @@ export default function SongLyricsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Song Lyrics</h1>
+      <div className="flex items-center gap-3 mb-4">
+        <Link to={backUrl} className="text-primary hover:opacity-70" title="Back to Songs">
+          <ArrowLeft size={24} />
+        </Link>
+        <h1 className="text-2xl font-bold">Song Lyrics</h1>
+      </div>
       <AdminTable
         data={lyrics}
         keyFn={(l) => l.lyric_id}

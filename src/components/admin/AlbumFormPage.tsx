@@ -77,7 +77,7 @@ export default function AlbumFormPage() {
   return (
     <>
       <Toast message={toast} />
-      <AdminFormPage title={isEdit ? 'Edit Album' : 'Add Album'} onSubmit={handleSubmit} onCancel={() => navigate(`/admin/artists/${aid}/albums`)} loading={saving}>
+      <AdminFormPage title={isEdit ? 'Edit Album' : 'Add Album'} onSubmit={handleSubmit} onCancel={() => navigate(`/admin/artists/${aid}/albums`)} loading={saving} backUrl={`/admin/artists/${aid}/albums`}>
         <FormField label="Name" required>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
         </FormField>

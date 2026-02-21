@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
 import Toast from '../common/Toast'
+import ConfirmPopup from '../common/ConfirmPopup'
 import {
   getAdminSongById,
   getAdminArtistById,
   getAlbumsForDropdown,
   createSong,
   updateSong,
+  toggleSongSelectable,
 } from '../../services/adminService'
 
 export default function SongFormPage() {
@@ -17,6 +19,11 @@ export default function SongFormPage() {
   const aid = Number(artistId)
   const isEdit = !!id
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const backParams = new URLSearchParams()
+  if (searchParams.get('album')) backParams.set('album', searchParams.get('album')!)
+  if (searchParams.get('enabled')) backParams.set('enabled', searchParams.get('enabled')!)
+  const songsUrl = `/admin/artists/${aid}/songs${backParams.toString() ? `?${backParams.toString()}` : ''}`
   const { setBreadcrumbs } = useAdminBreadcrumbs()
 
   const [name, setName] = useState('')
@@ -29,17 +36,30 @@ export default function SongFormPage() {
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [isSelectable, setIsSelectable] = useState(false)
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false)
+
+  const [artistName, setArtistName] = useState('')
 
   useEffect(() => {
-    getAdminArtistById(aid).then((a) => {
-      setBreadcrumbs([
-        { label: 'Artists', to: '/admin' },
-        { label: a.name },
-        { label: 'Songs', to: `/admin/artists/${aid}/songs` },
-        { label: isEdit ? 'Edit Song' : 'Add Song' },
-      ])
-    })
-  }, [aid, setBreadcrumbs, isEdit])
+    getAdminArtistById(aid).then((a) => setArtistName(a.name))
+  }, [aid])
+
+  useEffect(() => {
+    if (!artistName) return
+    const albumParam = searchParams.get('album')
+    const albumName = albumParam && albumParam !== 'none'
+      ? albums.find((a) => a.id === Number(albumParam))?.name
+      : null
+    setBreadcrumbs([
+      { label: 'Artists', to: '/admin' },
+      { label: artistName },
+      { label: 'Albums', to: `/admin/artists/${aid}/albums` },
+      ...(albumName ? [{ label: albumName }] : []),
+      { label: 'Songs', to: songsUrl },
+      { label: isEdit ? 'Edit Song' : 'Add Song' },
+    ])
+  }, [aid, artistName, albums, searchParams, setBreadcrumbs, isEdit, songsUrl])
 
   useEffect(() => {
     getAlbumsForDropdown(aid).then(setAlbums)
@@ -55,33 +75,55 @@ export default function SongFormPage() {
         setFeaturedArtists(s.featured_artists?.join(', ') ?? '')
         setFullLyrics(s.lyrics_full_text ?? '')
         setSuccessMessage(s.success_message ?? '')
+        setIsSelectable(s.is_selectable ?? false)
       })
     }
   }, [id, isEdit])
 
+  function buildFormData() {
+    return {
+      artist_id: aid,
+      name,
+      genius_song_id: geniusSongId ? Number(geniusSongId) : null,
+      album_id: albumId ? Number(albumId) : null,
+      track_number: trackNumber ? Number(trackNumber) : null,
+      featured_artists: featuredArtists
+        ? featuredArtists.split(',').map((s) => s.trim()).filter(Boolean)
+        : null,
+      lyrics_full_text: fullLyrics || null,
+      success_message: successMessage || null,
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const data = buildFormData()
+    // If editing a selectable song and removing the album, confirm first
+    if (isEdit && isSelectable && !data.album_id) {
+      setShowDisableConfirm(true)
+      return
+    }
+    await doSave(data, false)
+  }
+
+  async function handleDisableConfirm() {
+    setShowDisableConfirm(false)
+    await doSave(buildFormData(), true)
+  }
+
+  async function doSave(data: ReturnType<typeof buildFormData>, disableSong: boolean) {
     setSaving(true)
     try {
-      const data = {
-        artist_id: aid,
-        name,
-        genius_song_id: geniusSongId ? Number(geniusSongId) : null,
-        album_id: albumId ? Number(albumId) : null,
-        track_number: trackNumber ? Number(trackNumber) : null,
-        featured_artists: featuredArtists
-          ? featuredArtists.split(',').map((s) => s.trim()).filter(Boolean)
-          : null,
-        lyrics_full_text: fullLyrics || null,
-        success_message: successMessage || null,
-      }
       if (isEdit) {
         await updateSong(Number(id), data)
+        if (disableSong) {
+          await toggleSongSelectable(Number(id), false)
+        }
       } else {
         await createSong(data)
       }
       setToast('Song saved')
-      setTimeout(() => navigate(`/admin/artists/${aid}/songs`), 1000)
+      setTimeout(() => navigate(songsUrl), 1000)
     } finally {
       setSaving(false)
     }
@@ -92,7 +134,14 @@ export default function SongFormPage() {
   return (
     <>
       <Toast message={toast} />
-      <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} onCancel={() => navigate(`/admin/artists/${aid}/songs`)} loading={saving}>
+      {showDisableConfirm && (
+        <ConfirmPopup
+          message="Are you sure? This song will be automatically disabled without an album."
+          onConfirm={handleDisableConfirm}
+          onCancel={() => setShowDisableConfirm(false)}
+        />
+      )}
+      <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} onCancel={() => navigate(songsUrl)} loading={saving} backUrl={songsUrl}>
         <FormField label="Name" required>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
         </FormField>

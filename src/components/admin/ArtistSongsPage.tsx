@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { Pencil, Download, Cog, Trash2, EyeOff } from 'lucide-react'
+import { Pencil, Download, Cog, Trash2, EyeOff, ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
@@ -57,16 +57,30 @@ export default function ArtistSongsPage() {
   const [bulkHideConfirm, setBulkHideConfirm] = useState(false)
   const [bulkEditAlbumModal, setBulkEditAlbumModal] = useState(false)
   const [bulkAlbumValue, setBulkAlbumValue] = useState('')
+  const [bulkDisableConfirm, setBulkDisableConfirm] = useState(false)
+  const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
+  const paramSuffix = searchParams.toString() ? `?${searchParams.toString()}` : ''
+
+  const [artistName, setArtistName] = useState('')
 
   useEffect(() => {
-    getAdminArtistById(aid).then((a) => {
-      setBreadcrumbs([
-        { label: 'Artists', to: '/admin' },
-        { label: a.name },
-        { label: 'Songs' },
-      ])
-    })
-  }, [aid, setBreadcrumbs])
+    getAdminArtistById(aid).then((a) => setArtistName(a.name))
+  }, [aid])
+
+  useEffect(() => {
+    if (!artistName) return
+    const albumName = typeof albumFilter === 'number'
+      ? albums.find((a) => a.id === albumFilter)?.name
+      : null
+    const crumbs = [
+      { label: 'Artists', to: '/admin' },
+      { label: artistName },
+      { label: 'Albums', to: `/admin/artists/${aid}/albums` },
+      ...(albumName ? [{ label: albumName }] : []),
+      { label: 'Songs' },
+    ]
+    setBreadcrumbs(crumbs)
+  }, [aid, artistName, albumFilter, albums, setBreadcrumbs])
 
   useEffect(() => {
     getAlbumsForDropdown(aid).then(setAlbums)
@@ -85,7 +99,15 @@ export default function ArtistSongsPage() {
 
   useEffect(() => {
     loadSongs()
+    setSelectedIds(new Set())
   }, [loadSongs])
+
+  useEffect(() => {
+    if (!bulkLoading) return
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [bulkLoading])
 
   async function handleFetchNewSongs() {
     setFetching(true)
@@ -217,15 +239,19 @@ export default function ArtistSongsPage() {
     if (selectedIds.size === 0) return
     setBulkClearConfirm(false)
     const ids = [...selectedIds] as number[]
+    setBulkLoading({ type: 'clear', done: 0, total: ids.length })
     try {
-      for (const id of ids) {
-        await clearSongLyrics(id)
+      for (let i = 0; i < ids.length; i++) {
+        await clearSongLyrics(ids[i])
+        setBulkLoading({ type: 'clear', done: i + 1, total: ids.length })
       }
       showToast(`Cleared lyrics for ${ids.length} songs`)
       setSelectedIds(new Set())
       loadSongs()
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Bulk clear failed'}`)
+    } finally {
+      setBulkLoading(null)
     }
   }
 
@@ -233,15 +259,19 @@ export default function ArtistSongsPage() {
     if (selectedIds.size === 0) return
     setBulkProcessConfirm(false)
     const ids = [...selectedIds] as number[]
+    setBulkLoading({ type: 'process', done: 0, total: ids.length })
     try {
-      for (const id of ids) {
-        await processSongLyrics(id)
+      for (let i = 0; i < ids.length; i++) {
+        await processSongLyrics(ids[i])
+        setBulkLoading({ type: 'process', done: i + 1, total: ids.length })
       }
       showToast(`Processed lyrics for ${ids.length} songs`)
       setSelectedIds(new Set())
       loadSongs()
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Bulk process failed'}`)
+    } finally {
+      setBulkLoading(null)
     }
   }
 
@@ -249,24 +279,40 @@ export default function ArtistSongsPage() {
     if (selectedIds.size === 0) return
     setBulkHideConfirm(false)
     const ids = [...selectedIds] as number[]
+    setBulkLoading({ type: 'hide', done: 0, total: ids.length })
     try {
-      for (const id of ids) {
-        await hideSong(id)
+      for (let i = 0; i < ids.length; i++) {
+        await hideSong(ids[i])
+        setBulkLoading({ type: 'hide', done: i + 1, total: ids.length })
       }
       showToast(`Hidden ${ids.length} songs`)
       setSelectedIds(new Set())
       loadSongs()
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Bulk hide failed'}`)
+    } finally {
+      setBulkLoading(null)
     }
   }
 
-  async function handleBulkEditAlbumConfirm() {
+  function handleBulkEditAlbumSave() {
     if (selectedIds.size === 0) return
+    if (!bulkAlbumValue) {
+      setBulkEditAlbumModal(false)
+      setBulkDisableConfirm(true)
+      return
+    }
+    doBulkEditAlbum(false)
+  }
+
+  async function doBulkEditAlbum(disableIfNoAlbum: boolean) {
+    if (selectedIds.size === 0) return
+    setBulkDisableConfirm(false)
     const ids = [...selectedIds] as number[]
+    setBulkLoading({ type: 'edit', done: 0, total: 1 })
     const albumId = bulkAlbumValue ? Number(bulkAlbumValue) : null
     try {
-      await bulkUpdateSongAlbum(ids, albumId)
+      await bulkUpdateSongAlbum(ids, albumId, disableIfNoAlbum)
       showToast(`Updated album for ${ids.length} songs`)
       setBulkEditAlbumModal(false)
       setBulkAlbumValue('')
@@ -274,23 +320,30 @@ export default function ArtistSongsPage() {
       loadSongs()
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Bulk edit failed'}`)
+    } finally {
+      setBulkLoading(null)
     }
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Songs</h1>
+        <div className="flex items-center gap-3">
+          <Link to={`/admin/artists/${aid}/albums`} className="text-primary hover:opacity-70" title="Back to Albums">
+            <ArrowLeft size={24} />
+          </Link>
+          <h1 className="text-2xl font-bold">Songs</h1>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={handleFetchNewSongs}
             disabled={fetching}
-            className="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
           >
             {fetching ? 'Fetching...' : 'Fetch New Songs'}
           </button>
           <Link
-            to={`/admin/artists/${aid}/songs/new`}
+            to={`/admin/artists/${aid}/songs/new${paramSuffix}`}
             className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
           >
             Add Song
@@ -343,31 +396,35 @@ export default function ArtistSongsPage() {
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={() => { setBulkEditAlbumModal(true); setBulkAlbumValue('') }}
-            disabled={selectedIds.size === 0}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            disabled={selectedIds.size === 0 || !!bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
+            {bulkLoading?.type === 'edit' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             Edit All
           </button>
           <button
             onClick={() => setBulkProcessConfirm(true)}
-            disabled={selectedIds.size === 0}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            disabled={selectedIds.size === 0 || !!bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
-            Process All
+            {bulkLoading?.type === 'process' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            {bulkLoading?.type === 'process' ? `Process All (${bulkLoading.done}/${bulkLoading.total})` : 'Process All'}
           </button>
           <button
             onClick={() => setBulkClearConfirm(true)}
-            disabled={selectedIds.size === 0}
-            className="bg-gray-200 text-text px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            disabled={selectedIds.size === 0 || !!bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
-            Clear All
+            {bulkLoading?.type === 'clear' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            {bulkLoading?.type === 'clear' ? `Clear All (${bulkLoading.done}/${bulkLoading.total})` : 'Clear All'}
           </button>
           <button
             onClick={() => setBulkHideConfirm(true)}
-            disabled={selectedIds.size === 0}
-            className="bg-gray-200 text-text px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            disabled={selectedIds.size === 0 || !!bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
-            Hide All
+            {bulkLoading?.type === 'hide' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            {bulkLoading?.type === 'hide' ? `Hide All (${bulkLoading.done}/${bulkLoading.total})` : 'Hide All'}
           </button>
         </div>
       </div>
@@ -392,7 +449,7 @@ export default function ArtistSongsPage() {
         }}
         columns={[
           { header: 'Name', accessor: (s) => (
-              <Link to={`/admin/artists/${aid}/songs/${s.id}`} className="text-primary hover:underline">
+              <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} className="text-primary hover:underline">
                 {s.name}
               </Link>
             ),
@@ -402,7 +459,7 @@ export default function ArtistSongsPage() {
             header: 'Lyrics',
             accessor: (s) => (
               <Link
-                to={`/admin/artists/${aid}/songs/${s.id}/lyrics`}
+                to={`/admin/artists/${aid}/songs/${s.id}/lyrics${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
                 className="text-primary hover:underline"
               >
                 {s.lyric_count}
@@ -424,7 +481,7 @@ export default function ArtistSongsPage() {
             header: 'Actions',
             accessor: (s) => (
               <div className="flex gap-2">
-                <Link to={`/admin/artists/${aid}/songs/${s.id}`} title="Edit">
+                <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} title="Edit">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
@@ -532,7 +589,7 @@ export default function ArtistSongsPage() {
               Cancel
             </button>
             <button
-              onClick={handleBulkEditAlbumConfirm}
+              onClick={handleBulkEditAlbumSave}
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Save
@@ -552,6 +609,13 @@ export default function ArtistSongsPage() {
           message={`Are you sure? This will reset all processed lyrics for the selected songs (${selectedIds.size}).`}
           onConfirm={handleBulkClearConfirm}
           onCancel={() => setBulkClearConfirm(false)}
+        />
+      )}
+      {bulkDisableConfirm && (
+        <ConfirmPopup
+          message="Are you sure? All songs will be automatically disabled without an album."
+          onConfirm={() => doBulkEditAlbum(true)}
+          onCancel={() => { setBulkDisableConfirm(false); setBulkAlbumValue('') }}
         />
       )}
       <Toast message={toast} />
