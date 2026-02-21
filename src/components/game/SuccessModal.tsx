@@ -9,7 +9,7 @@ interface SuccessModalProps {
 }
 
 export default function SuccessModal({ song, album, artist, onNext }: SuccessModalProps) {
-  const message = artist.success_message || 'You got it!'
+  const message = song.success_message || artist.success_message || 'You got it!'
   const songDisplay = song.featured_artists?.length
     ? `${song.name} ft. ${song.featured_artists.join(', ')}`
     : song.name

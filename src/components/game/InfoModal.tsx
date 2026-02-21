@@ -1,33 +1,39 @@
 import Modal from '../common/Modal'
+import { Lock, History, SkipForward, RefreshCw } from 'lucide-react';
+import type { Album } from '../../types/database'
+import AlbumButtons from './AlbumDropdown'
 
 interface InfoModalProps {
+  albums: Album[]
   onClose: () => void
 }
 
-export default function InfoModal({ onClose }: InfoModalProps) {
+export default function InfoModal({ albums, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
       <div className="space-y-3 text-sm text-text/80">
         <div>
           <p className="font-semibold text-text">1. Guess the Words</p>
-          <p>Each image represents a word from a song's lyrics. Type your guesses in any order and press Enter.</p>
+          <p>Each picture represents a word from a song's lyrics. Type a guess and press Enter.</p>
         </div>
         <div>
-          <p className="font-semibold text-text">2. Guess the Song</p>
-          <p>After guessing all three words, select the album (optional) and song from the dropdowns.</p>
+          <p className="font-semibold text-text">2. Guess the Album</p>
+          <p className="mb-2">Click the buttons to guess the album.</p>
+          {albums.length > 0 && <AlbumButtons albums={albums} readonly list />}
+        </div>        
+        <div>
+          <p className="font-semibold text-text">3. Guess the Song</p>
+          <p>Select the song from the dropdown and click Submit.</p>
         </div>
         <div>
           <p className="font-semibold text-text">3. Need Help?</p>
           <ul className="ml-4 space-y-1">
-            <li>🔄 Refresh - Get a different image for that word</li>
-            <li>👁️ Reveal - Show the correct answer</li>
-            <li>⏭️ Skip - Move to the next song without revealing answers</li>
+            <li className="flex items-center"><RefreshCw size={15} className="mr-2"/> Load new image</li>
+            <li className="flex items-center"><Lock size={15} className="mr-2"/> Reveal correct word</li>
+            <li className="flex items-center"> <History size={15} className="mr-2"/> View  played songs</li>
+            <li className="flex items-center"><SkipForward size={15} className="mr-2"/>  Skip song</li>
           </ul>
-        </div>
-        <div>
-          <p className="font-semibold text-text">4. Have Fun!</p>
-          <p>No duplicate songs in your session. Check your history anytime to see what you've played.</p>
         </div>
       </div>
     </Modal>

@@ -7,6 +7,7 @@
   --color-text: var(--color-theme-text, #1f2937);
   --font-heading: 'Quicksand', 'Nunito', sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
+  --text-tiny: 0.625rem;
 }
 
 :root {

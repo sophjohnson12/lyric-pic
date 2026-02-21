@@ -52,6 +52,7 @@ export interface Song {
   genius_song_id: number | null
   load_status_id: number
   is_hidden: boolean
+  success_message: string | null
   updated_at: string | null
   refreshed_at: string | null
   created_at: string

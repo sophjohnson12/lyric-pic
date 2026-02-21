@@ -3,10 +3,12 @@ import type { Album } from '../../types/database'
 
 interface AlbumButtonsProps {
   albums: Album[]
-  incorrectAlbumIds: number[]
-  albumGuessed: boolean
-  correctAlbumId: number | null
-  onGuess: (albumId: number | null, albumName: string) => string
+  incorrectAlbumIds?: number[]
+  albumGuessed?: boolean
+  correctAlbumId?: number | null
+  onGuess?: (albumId: number | null, albumName: string) => string
+  readonly?: boolean
+  list?: boolean
 }
 
 function getInitials(name: string): string {
@@ -19,13 +21,47 @@ function getInitials(name: string): string {
     .slice(0, 3)
 }
 
+function AlbumIcon({ album }: { album: Album }) {
+  return (
+    <div
+      className="w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0 overflow-hidden"
+      style={{ backgroundColor: album.theme_primary_color || '#6b7280', fontSize: '10px', fontWeight: 'bold' }}
+    >
+      {album.image_url !== null ? (
+        <img
+          src={window.location.origin + album.image_url}
+          alt={album.name}
+          style={{ width: '15px', height: '15px' }}
+        />
+      ) : (
+        getInitials(album.name)
+      )}
+    </div>
+  )
+}
+
 export default function AlbumButtons({
   albums,
-  incorrectAlbumIds,
-  albumGuessed,
-  correctAlbumId,
+  incorrectAlbumIds = [],
+  albumGuessed = false,
+  correctAlbumId = null,
   onGuess,
+  readonly = false,
+  list = false,
 }: AlbumButtonsProps) {
+  if (list) {
+    return (
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+        {albums.map((album) => (
+          <div key={album.id} className="flex items-center gap-2 text-tiny md:text-sm text-text/80">
+            <AlbumIcon album={album} />
+            <span className="pt-0.5">{album.name}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-wrap justify-center gap-2">
       {albums.map((album) => {
@@ -37,25 +73,25 @@ export default function AlbumButtons({
         return (
           <button
             key={album.id}
-            onClick={() => onGuess(album.id, album.name)}
-            disabled={isDisabled}
+            onClick={readonly || !onGuess ? undefined : () => onGuess(album.id, album.name)}
+            disabled={!readonly && isDisabled}
             title={album.name}
-            onMouseEnter={() => setIsHoveringAlbum(true)}
-            onMouseLeave={() => setIsHoveringAlbum(false)}
-            className="w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 cursor-pointer disabled:cursor-not-allowed shrink-0"
+            onMouseEnter={readonly ? undefined : () => setIsHoveringAlbum(true)}
+            onMouseLeave={readonly ? undefined : () => setIsHoveringAlbum(false)}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-not-allowed'}`}
             style={{
-              backgroundColor: isDisabled && !isCorrect
+              backgroundColor: !readonly && isDisabled && !isCorrect
                 ? '#9ca3af'
                 : album.theme_primary_color || '#6b7280',
-              opacity: isDisabled && !isCorrect ? 0.5 : (isHoveringAlbum ? 0.8 : 1),
+              opacity: !readonly && isDisabled && !isCorrect ? 0.5 : (!readonly && isHoveringAlbum ? 0.8 : 1),
             }}
           >
-            {album.image_url !== null ? 
-              <img 
-                src={window.location.origin + album.image_url} 
-                alt={album.name} 
-                style={{ width: '30px', height: '30px' }} 
-              />      
+            {album.image_url !== null ?
+              <img
+                src={window.location.origin + album.image_url}
+                alt={album.name}
+                style={{ width: '30px', height: '30px' }}
+              />
               : getInitials(album.name)
             }
           </button>

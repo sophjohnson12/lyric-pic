@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { stem } from '../utils/stem'
 import type { Artist, Album, Song } from '../types/database'
 import type { PuzzleWord, GameState } from '../types/game'
 import {
@@ -170,6 +171,17 @@ export function useGame(artistSlug: string) {
         return 'already_guessed'
       }
 
+      // Accept any stem variation of the correct answer (e.g. "girl" matches "girls")
+      if (stem(trimmed) === stem(puzzleWord.word.toLowerCase())) {
+        setState((prev) => {
+          const newPuzzleWords = [...prev.puzzleWords]
+          newPuzzleWords[wordIndex] = { ...newPuzzleWords[wordIndex], guessed: true }
+          const allGuessed = newPuzzleWords.every((w) => w.guessed || w.revealed)
+          return { ...prev, puzzleWords: newPuzzleWords, allWordsGuessed: allGuessed }
+        })
+        return 'correct'
+      }
+
       const lyricData = await getLyricByWord(trimmed)
       if (!lyricData) {
         showToast('Not a valid word')
@@ -197,22 +209,18 @@ export function useGame(artistSlug: string) {
         return 'incorrect'
       }
 
-      // Check if it matches any puzzle word by lyric_id
-      for (let i = 0; i < state.puzzleWords.length; i++) {
-        const pw = state.puzzleWords[i]
-        if (pw.guessed || pw.revealed) continue
-        if (pw.lyricId === lyricId) {
-          setState((prev) => {
-            const newPuzzleWords = [...prev.puzzleWords]
-            newPuzzleWords[i] = { ...newPuzzleWords[i], guessed: true }
-            const allGuessed = newPuzzleWords.every((w) => w.guessed || w.revealed)
-            return { ...prev, puzzleWords: newPuzzleWords, allWordsGuessed: allGuessed }
-          })
-          return 'correct'
-        }
+      // Check if it matches the puzzle word at this specific index
+      if (puzzleWord.lyricId === lyricId) {
+        setState((prev) => {
+          const newPuzzleWords = [...prev.puzzleWords]
+          newPuzzleWords[wordIndex] = { ...newPuzzleWords[wordIndex], guessed: true }
+          const allGuessed = newPuzzleWords.every((w) => w.guessed || w.revealed)
+          return { ...prev, puzzleWords: newPuzzleWords, allWordsGuessed: allGuessed }
+        })
+        return 'correct'
       }
 
-      // Word is in song but not one of the puzzle words
+      // Word is in song but not the answer for this puzzle slot
       setState((prev) => {
         const newIncorrect = { ...prev.incorrectWordGuesses }
         const existing = newIncorrect[wordIndex] || []

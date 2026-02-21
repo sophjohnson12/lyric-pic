@@ -259,7 +259,7 @@ export default function GamePage() {
           onNext={game.nextSong}
         />
       )}
-      {showInfo && <InfoModal onClose={() => setShowInfo(false)} />}
+      {showInfo && <InfoModal albums={game.albums} onClose={() => setShowInfo(false)} />}
       {showHistory && (
         <HistoryModal
           playedSongIds={game.playedSongIds}
