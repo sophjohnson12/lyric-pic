@@ -1,16 +1,27 @@
+import { Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
+
 interface AdminFormPageProps {
   title: string
   onSubmit: (e: React.FormEvent) => void
   onCancel?: () => void
   loading?: boolean
   canSubmit?: boolean
+  backUrl?: string
   children: React.ReactNode
 }
 
-export default function AdminFormPage({ title, onSubmit, onCancel, loading = false, canSubmit = true, children }: AdminFormPageProps) {
+export default function AdminFormPage({ title, onSubmit, onCancel, loading = false, canSubmit = true, backUrl, children }: AdminFormPageProps) {
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold mb-1">{title}</h1>
+      <div className="flex items-center gap-3 mb-1">
+        {backUrl && (
+          <Link to={backUrl} className="text-primary hover:opacity-70" title="Back">
+            <ArrowLeft size={24} />
+          </Link>
+        )}
+        <h1 className="text-2xl font-bold">{title}</h1>
+      </div>
       <p className="text-sm text-text/50 mb-6">* required</p>
       <form onSubmit={onSubmit} className="space-y-5">
         {children}

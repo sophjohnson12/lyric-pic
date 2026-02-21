@@ -1,5 +1,26 @@
 import { supabase } from './supabase'
 
+// Simple suffix-stripping stemmer for grouping word variants (e.g. dance/dancing/danced)
+function simpleStem(word: string): string {
+  if (word.length <= 3) return word
+  if (word.endsWith('ing') && word.length > 5) return word.slice(0, -3)
+  if (word.endsWith('tion') && word.length > 5) return word.slice(0, -4)
+  if (word.endsWith('ness') && word.length > 5) return word.slice(0, -4)
+  if (word.endsWith('ment') && word.length > 5) return word.slice(0, -4)
+  if (word.endsWith('able') && word.length > 5) return word.slice(0, -4)
+  if (word.endsWith('ible') && word.length > 5) return word.slice(0, -4)
+  if (word.endsWith('ful') && word.length > 4) return word.slice(0, -3)
+  if (word.endsWith('less') && word.length > 5) return word.slice(0, -4)
+  if (word.endsWith('ous') && word.length > 4) return word.slice(0, -3)
+  if (word.endsWith('ive') && word.length > 4) return word.slice(0, -3)
+  if (word.endsWith('ly') && word.length > 4) return word.slice(0, -2)
+  if (word.endsWith('ed') && word.length > 4) return word.slice(0, -2)
+  if (word.endsWith('er') && word.length > 4) return word.slice(0, -2)
+  if (word.endsWith('es') && word.length > 4) return word.slice(0, -2)
+  if (word.endsWith('s') && !word.endsWith('ss') && word.length > 3) return word.slice(0, -1)
+  return word
+}
+
 // ─── Genius API (via Edge Function) ───────────────────────
 
 export async function searchGeniusArtistId(name: string): Promise<number | null> {
@@ -355,10 +376,14 @@ export async function createSong(data: SongFormData) {
   if (error) throw error
 }
 
-export async function bulkUpdateSongAlbum(songIds: number[], albumId: number | null) {
+export async function bulkUpdateSongAlbum(songIds: number[], albumId: number | null, disableIfNoAlbum = false) {
+  const update: Record<string, unknown> = { album_id: albumId, updated_at: new Date().toISOString() }
+  if (disableIfNoAlbum && !albumId) {
+    update.is_selectable = false
+  }
   const { error } = await supabase
     .from('song')
-    .update({ album_id: albumId, updated_at: new Date().toISOString() })
+    .update(update)
     .in('id', songIds)
   if (error) throw error
 }
@@ -563,6 +588,20 @@ export async function updateBlocklistReason(lyricId: number, reasonId: number) {
   if (error) throw error
 }
 
+export async function bulkBlocklistLyrics(lyricIds: number[], reasonId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_blocklisted: true, blocklist_reason: reasonId, is_flagged: false, flagged_by: null })
+    .in('id', lyricIds)
+  if (error) throw error
+
+  const { error: slError } = await supabase
+    .from('song_lyric')
+    .update({ is_selectable: false })
+    .in('lyric_id', lyricIds)
+  if (slError) throw slError
+}
+
 export async function unblocklistLyric(lyricId: number) {
   const { error } = await supabase
     .from('lyric')
@@ -618,15 +657,21 @@ export async function getArtistsForDropdown(): Promise<{ id: number; name: strin
 }
 
 export async function resetArtistLyricCounts(artistId: number) {
-  // Get all selectable songs for this artist
-  const { data: songs, error: songsError } = await supabase
-    .from('song')
-    .select('id')
-    .eq('artist_id', artistId)
-    .eq('is_selectable', true)
-  if (songsError) throw songsError
-
-  const songIds = songs.map((s) => s.id)
+  // Get all selectable songs for this artist (paginate to avoid 1000-row limit)
+  const songIds: number[] = []
+  let songOffset = 0
+  while (true) {
+    const { data: songs, error: songsError } = await supabase
+      .from('song')
+      .select('id')
+      .eq('artist_id', artistId)
+      .eq('is_selectable', true)
+      .range(songOffset, songOffset + 999)
+    if (songsError) throw songsError
+    songIds.push(...songs.map((s) => s.id))
+    if (songs.length < 1000) break
+    songOffset += 1000
+  }
 
   // Delete all existing artist_lyric rows for this artist
   const { error: deleteError } = await supabase
@@ -637,16 +682,23 @@ export async function resetArtistLyricCounts(artistId: number) {
 
   if (songIds.length === 0) return
 
-  // Get all song_lyric rows for the selectable songs
+  // Get all song_lyric rows for the selectable songs (paginate to avoid 1000-row limit)
   const allSongLyrics: { lyric_id: number; count: number }[] = []
   for (let i = 0; i < songIds.length; i += 100) {
     const batch = songIds.slice(i, i + 100)
-    const { data, error } = await supabase
-      .from('song_lyric')
-      .select('lyric_id, count')
-      .in('song_id', batch)
-    if (error) throw error
-    allSongLyrics.push(...data)
+    let offset = 0
+    const pageSize = 1000
+    while (true) {
+      const { data, error } = await supabase
+        .from('song_lyric')
+        .select('lyric_id, count')
+        .in('song_id', batch)
+        .range(offset, offset + pageSize - 1)
+      if (error) throw error
+      allSongLyrics.push(...data)
+      if (data.length < pageSize) break
+      offset += pageSize
+    }
   }
 
   // Aggregate: song_count = number of distinct songs, total_count = sum of counts
@@ -671,9 +723,66 @@ export async function resetArtistLyricCounts(artistId: number) {
 
   for (let i = 0; i < rows.length; i += 500) {
     const batch = rows.slice(i, i + 500)
-    const { error } = await supabase.from('artist_lyric').insert(batch)
+    const { error } = await supabase.from('artist_lyric').upsert(batch, { onConflict: 'artist_id,lyric_id' })
     if (error) throw error
   }
+}
+
+export async function deleteUnusedLyrics(): Promise<number> {
+  // Collect all lyric IDs referenced in song_lyric and artist_lyric
+  const referencedIds = new Set<number>()
+
+  // Paginate song_lyric
+  let offset = 0
+  const batchSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('song_lyric')
+      .select('lyric_id')
+      .range(offset, offset + batchSize - 1)
+    if (error) throw error
+    for (const row of data) referencedIds.add(row.lyric_id)
+    if (data.length < batchSize) break
+    offset += batchSize
+  }
+
+  // Paginate artist_lyric
+  offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('artist_lyric')
+      .select('lyric_id')
+      .range(offset, offset + batchSize - 1)
+    if (error) throw error
+    for (const row of data) referencedIds.add(row.lyric_id)
+    if (data.length < batchSize) break
+    offset += batchSize
+  }
+
+  // Get all lyric IDs
+  const allLyricIds: number[] = []
+  offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('id')
+      .range(offset, offset + batchSize - 1)
+    if (error) throw error
+    for (const row of data) {
+      if (!referencedIds.has(row.id)) allLyricIds.push(row.id)
+    }
+    if (data.length < batchSize) break
+    offset += batchSize
+  }
+
+  // Delete unused lyrics in batches
+  for (let i = 0; i < allLyricIds.length; i += 100) {
+    const batch = allLyricIds.slice(i, i + 100)
+    const { error } = await supabase.from('lyric').delete().in('id', batch)
+    if (error) throw error
+  }
+
+  return allLyricIds.length
 }
 
 // ─── Fetch New Songs from Genius ─────────────────────────
@@ -830,7 +939,7 @@ export async function processSongLyrics(songId: number) {
     const reason = b.blocklist_reason ? reasonMap.get(b.blocklist_reason) : null
     if (reason === 'contraction') {
       contractionBlocklist.add(b.root_word)
-    } else if (reason === 'common_word' || reason === 'pronoun' || reason === 'vocalization') {
+    } else if (reason === 'common_word' || reason === 'vocalization') {
       postProcessBlocklist.add(b.root_word)
     }
   }
@@ -863,7 +972,9 @@ export async function processSongLyrics(songId: number) {
         if (contractionBlocklist.has(word)) continue
 
         // Strip wrapping single quotes
-        word = word.replace(/^'+|'+$/g, '')
+        if (word.startsWith("'") && word.endsWith("'")) {
+          word = word.replace(/^'+|'+$/g, '')
+        }
 
         // Strip trailing 's
         if (word.endsWith("'s")) {
@@ -891,11 +1002,37 @@ export async function processSongLyrics(songId: number) {
     // Build song_lyric records
     const songNameLower = song.name.toLowerCase()
 
+    // Blocklist reasons that should disable is_selectable
+    const disableReasons = new Set(['unknown_word', 'explicit', 'no_images'])
+
+    // Group words by stem to find duplicates
+    const stemGroups = new Map<string, { word: string; count: number }[]>()
+    for (const [word, count] of wordCounts) {
+      const stem = simpleStem(word)
+      const group = stemGroups.get(stem)
+      if (group) {
+        group.push({ word, count })
+      } else {
+        stemGroups.set(stem, [{ word, count }])
+      }
+    }
+
+    // For each stem group, determine which word gets is_selectable=true
+    // (highest count wins, alphabetical tiebreak)
+    const duplicateDisabled = new Set<string>()
+    for (const [, group] of stemGroups) {
+      if (group.length <= 1) continue
+      group.sort((a, b) => b.count - a.count || a.word.localeCompare(b.word))
+      for (let i = 1; i < group.length; i++) {
+        duplicateDisabled.add(group[i].word)
+      }
+    }
+
     for (const [word, count] of wordCounts) {
       // Find or create lyric record
       let { data: lyric } = await supabase
         .from('lyric')
-        .select('id')
+        .select('id, is_blocklisted, blocklist_reason')
         .eq('root_word', word)
         .maybeSingle()
 
@@ -903,7 +1040,7 @@ export async function processSongLyrics(songId: number) {
         const { data: inserted, error: insertErr } = await supabase
           .from('lyric')
           .insert({ root_word: word, created_at: new Date().toISOString() })
-          .select('id')
+          .select('id, is_blocklisted, blocklist_reason')
           .single()
         if (insertErr) throw insertErr
         lyric = inserted
@@ -919,27 +1056,48 @@ export async function processSongLyrics(songId: number) {
 
       const isInTitle = songNameLower.includes(word)
 
+      // Determine is_selectable
+      let selectable = true
+      // Check if lyric is blocklisted with a disabling reason
+      if (lyric.is_blocklisted && lyric.blocklist_reason) {
+        const lyricReason = reasonMap.get(lyric.blocklist_reason)
+        if (lyricReason && disableReasons.has(lyricReason)) {
+          selectable = false
+        }
+      }
+      // Check if this is a duplicate stem (not the highest count)
+      if (duplicateDisabled.has(word)) {
+        selectable = false
+      }
+
       const { error: slError } = await supabase.from('song_lyric').insert({
         song_id: songId,
         lyric_id: lyric.id,
         count,
-        is_selectable: true,
+        is_selectable: selectable,
         is_in_title: isInTitle,
       })
       if (slError) throw slError
     }
 
-    // Update song status to completed
-    if (completedStatus) {
-      await supabase
-        .from('song')
-        .update({
-          load_status_id: completedStatus.id,
-          refreshed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', songId)
-    }
+    // Count selectable song_lyric rows
+    const { count: selectableCount } = await supabase
+      .from('song_lyric')
+      .select('*', { count: 'exact', head: true })
+      .eq('song_id', songId)
+      .eq('is_selectable', true)
+
+    // Update song status to completed + auto-disable if fewer than 3 selectable lyrics
+    const now = new Date().toISOString()
+    await supabase
+      .from('song')
+      .update({
+        ...(completedStatus ? { load_status_id: completedStatus.id } : {}),
+        refreshed_at: now,
+        updated_at: now,
+        ...((selectableCount ?? 0) < 3 ? { is_selectable: false } : {}),
+      })
+      .eq('id', songId)
   } catch (err) {
     // Cleanup on failure
     await supabase.from('song_lyric').delete().eq('song_id', songId)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Pencil, ArrowRight } from 'lucide-react'
+import { Pencil, ExternalLink } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
@@ -91,7 +91,7 @@ export default function ArtistsPage() {
                   rel="noopener noreferrer"
                   title="Launch game"
                 >
-                  <ArrowRight size={20} className="drop-shadow-md" />
+                  <ExternalLink size={20} className="drop-shadow-md" />
                 </a>
               </div>
             ),

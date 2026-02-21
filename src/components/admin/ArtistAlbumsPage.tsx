@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Pencil } from 'lucide-react'
+import { Pencil, ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
@@ -66,11 +66,16 @@ export default function ArtistAlbumsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{artistName} — Albums</h1>
+        <div className="flex items-center gap-3">
+          <Link to="/admin" className="text-primary hover:opacity-70" title="Back to Artists">
+            <ArrowLeft size={24} />
+          </Link>
+          <h1 className="text-2xl font-bold">{artistName} — Albums</h1>
+        </div>
         <div className="flex items-center gap-2">
           <Link
             to={`/admin/artists/${aid}/albums/imports`}
-            className="bg-gray-200 text-text px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
           >
             Manage Import Albums
           </Link>
@@ -112,7 +117,7 @@ export default function ArtistAlbumsPage() {
               ),
           },
           { header: 'Songs', accessor: (a) => (
-              <Link to={`/admin/artists/${aid}/songs?album=${a.id}`} className="text-primary hover:underline">
+              <Link to={`/admin/artists/${aid}/songs?album=${a.id}&enabled=true`} className="text-primary hover:underline">
                 {a.song_count}
               </Link>
             ),
