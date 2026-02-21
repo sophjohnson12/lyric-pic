@@ -218,6 +218,8 @@ export interface AdminSongRow {
   lyric_count: number
   load_status: string
   is_selectable: boolean
+  genius_song_id: number | null
+  has_lyrics: boolean
 }
 
 export interface PaginatedResult<T> {
@@ -232,8 +234,9 @@ export async function getAdminSongs(
 ): Promise<PaginatedResult<AdminSongRow>> {
   let query = supabase
     .from('song')
-    .select('id, name, album_id, is_selectable, load_status_id', { count: 'exact' })
+    .select('id, name, album_id, is_selectable, load_status_id, genius_song_id, lyrics_full_text', { count: 'exact' })
     .eq('artist_id', artistId)
+    .or('is_hidden.eq.false,is_hidden.is.null')
     .order('name')
 
   if (pageSize > 0) {
@@ -272,6 +275,8 @@ export async function getAdminSongs(
       lyric_count: lyricCount ?? 0,
       load_status: statusMap.get(s.load_status_id) ?? 'Unknown',
       is_selectable: s.is_selectable,
+      genius_song_id: s.genius_song_id,
+      has_lyrics: !!s.lyrics_full_text,
     })
   }
 
@@ -320,6 +325,14 @@ export async function toggleSongSelectable(id: number, value: boolean) {
   const { error } = await supabase
     .from('song')
     .update({ is_selectable: value, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function hideSong(id: number) {
+  const { error } = await supabase
+    .from('song')
+    .update({ is_hidden: true, updated_at: new Date().toISOString() })
     .eq('id', id)
   if (error) throw error
 }
@@ -484,4 +497,202 @@ export async function fetchNewSongs(
   }
 
   return { created, updated, skipped }
+}
+
+// ─── Song Lyrics Pipeline ────────────────────────────────
+
+export async function getGeniusSongUrl(songId: number): Promise<string> {
+  const song = await getAdminSongById(songId)
+  if (!song.genius_song_id) {
+    throw new Error('Song does not have a Genius Song ID configured.')
+  }
+
+  const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+    'genius-song-lyrics',
+    { body: { genius_song_id: song.genius_song_id } },
+  )
+  if (edgeError) {
+    const detail = typeof edgeData === 'object' && edgeData?.error ? `: ${edgeData.error}` : ''
+    throw new Error((edgeError.message ?? 'Edge function failed') + detail)
+  }
+  if (edgeData?.error) throw new Error(edgeData.error)
+
+  return edgeData.url
+}
+
+export async function saveSongLyrics(songId: number, lyrics: string) {
+  const loadStatuses = await getLoadStatuses()
+  const loadedStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'loaded')
+
+  const { error } = await supabase
+    .from('song')
+    .update({
+      lyrics_full_text: lyrics,
+      load_status_id: loadedStatus?.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', songId)
+  if (error) throw error
+}
+
+export async function processSongLyrics(songId: number) {
+  const song = await getAdminSongById(songId)
+  if (!song.lyrics_full_text) {
+    throw new Error('Song does not have lyrics to process.')
+  }
+
+  const loadStatuses = await getLoadStatuses()
+  const completedStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'completed')
+  const failedStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'failed')
+
+  // Load blocklists from DB — two separate sets by reason
+  const { data: blocklistReasons } = await supabase
+    .from('blocklist_reason')
+    .select('id, reason')
+  const reasonMap = new Map((blocklistReasons ?? []).map((r) => [r.id, r.reason]))
+
+  const { data: blocklisted } = await supabase
+    .from('lyric')
+    .select('root_word, blocklist_reason')
+    .eq('is_blocklisted', true)
+
+  const contractionBlocklist = new Set<string>()
+  const postProcessBlocklist = new Set<string>()
+  for (const b of blocklisted ?? []) {
+    const reason = b.blocklist_reason ? reasonMap.get(b.blocklist_reason) : null
+    if (reason === 'contraction') {
+      contractionBlocklist.add(b.root_word)
+    } else if (reason === 'common_word' || reason === 'pronoun' || reason === 'vocalization') {
+      postProcessBlocklist.add(b.root_word)
+    }
+  }
+
+  try {
+    // Delete existing song_lyric rows (re-process case)
+    await supabase.from('song_lyric').delete().eq('song_id', songId)
+
+    // Parse lyrics
+    const lines = song.lyrics_full_text.split('\n')
+    // Skip the first line (Genius gibberish)
+    const text = lines.join(' ')
+    const rawWords = text.split(/\s+/)
+
+    const wordCounts = new Map<string, number>()
+
+    for (const raw of rawWords) {
+      // Clean: keep only letters, apostrophes, hyphens
+      const cleaned = raw.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
+      if (!cleaned) continue
+
+      // Split hyphenated words
+      const parts = cleaned.includes('-') ? cleaned.split('-') : [cleaned]
+
+      for (let word of parts) {
+        if (!word) continue
+
+        // Stage 1: skip contractions before quote processing
+        if (contractionBlocklist.has(word)) continue
+
+        // Strip wrapping single quotes
+        word = word.replace(/^'+|'+$/g, '')
+
+        // Strip trailing 's
+        if (word.endsWith("'s")) {
+          word = word.slice(0, -2)
+        }
+        // Strip trailing s'
+        else if (word.endsWith("s'")) {
+          word = word.slice(0, -2)
+        }
+        // Replace trailing in' with ing
+        else if (word.endsWith("in'")) {
+          word = word.slice(0, -3) + 'ing'
+        }
+
+        // Stage 2: skip common_word, pronoun, vocalization after quote processing
+        if (postProcessBlocklist.has(word)) continue
+
+        // Skip single characters
+        if (word.length <= 1) continue
+
+        wordCounts.set(word, (wordCounts.get(word) ?? 0) + 1)
+      }
+    }
+
+    // Build song_lyric records
+    const songNameLower = song.name.toLowerCase()
+
+    for (const [word, count] of wordCounts) {
+      // Find or create lyric record
+      let { data: lyric } = await supabase
+        .from('lyric')
+        .select('id')
+        .eq('root_word', word)
+        .maybeSingle()
+
+      if (!lyric) {
+        const { data: inserted, error: insertErr } = await supabase
+          .from('lyric')
+          .insert({ root_word: word, created_at: new Date().toISOString() })
+          .select('id')
+          .single()
+        if (insertErr) throw insertErr
+        lyric = inserted
+      }
+
+      // Flag long words or words with apostrophes
+      if (word.length > 20 || word.includes("'")) {
+        await supabase
+          .from('lyric')
+          .update({ is_flagged: true, flagged_user: 'PROCESS' })
+          .eq('id', lyric.id)
+      }
+
+      const isInTitle = songNameLower.includes(word)
+
+      const { error: slError } = await supabase.from('song_lyric').insert({
+        song_id: songId,
+        lyric_id: lyric.id,
+        count,
+        is_selectable: true,
+        is_in_title: isInTitle,
+      })
+      if (slError) throw slError
+    }
+
+    // Update song status to completed
+    if (completedStatus) {
+      await supabase
+        .from('song')
+        .update({
+          load_status_id: completedStatus.id,
+          refreshed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', songId)
+    }
+  } catch (err) {
+    // Cleanup on failure
+    await supabase.from('song_lyric').delete().eq('song_id', songId)
+    if (failedStatus) {
+      await supabase
+        .from('song')
+        .update({ load_status_id: failedStatus.id, updated_at: new Date().toISOString() })
+        .eq('id', songId)
+    }
+    throw err
+  }
+}
+
+export async function clearSongLyrics(songId: number) {
+  await supabase.from('song_lyric').delete().eq('song_id', songId)
+
+  const loadStatuses = await getLoadStatuses()
+  const loadedStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'loaded')
+  if (loadedStatus) {
+    await supabase
+      .from('song')
+      .update({ load_status_id: loadedStatus.id, updated_at: new Date().toISOString() })
+      .eq('id', songId)
+  }
 }

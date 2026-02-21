@@ -69,7 +69,12 @@ export default function ArtistAlbumsPage() {
         keyFn={(a) => a.id}
         loading={loading}
         columns={[
-          { header: 'Name', accessor: (a) => a.name },
+          { header: 'Name', accessor: (a) => (
+              <Link to={`/admin/artists/${aid}/albums/${a.id}`} className="text-primary hover:underline">
+                {a.name}
+              </Link>
+            ),
+          },
           { header: 'Release Year', accessor: (a) => a.release_year ?? '—' },
           {
             header: 'Primary Color',
