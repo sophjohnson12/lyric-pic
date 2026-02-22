@@ -35,6 +35,21 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
+  // Prevent document-level scroll on mobile
+  useEffect(() => {
+    if (isMd) {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    } else {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isMd])
+
 
   // Update meta tags
   useEffect(() => {
