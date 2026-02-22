@@ -1,24 +1,113 @@
 import { supabase } from './supabase'
+// Porter Stemmer — ported from the `natural` npm package (MIT licence, Chris Umbel 2011)
+// Groups word variants by stem for lyric count aggregation (e.g. love/loved/loving → "love")
+function porterStem(token: string): string {
+  if (token.length < 3) return token
+  const t = token.toLowerCase()
 
-// Simple suffix-stripping stemmer for grouping word variants (e.g. dance/dancing/danced)
-function simpleStem(word: string): string {
-  if (word.length <= 3) return word
-  if (word.endsWith('ing') && word.length > 5) return word.slice(0, -3)
-  if (word.endsWith('tion') && word.length > 5) return word.slice(0, -4)
-  if (word.endsWith('ness') && word.length > 5) return word.slice(0, -4)
-  if (word.endsWith('ment') && word.length > 5) return word.slice(0, -4)
-  if (word.endsWith('able') && word.length > 5) return word.slice(0, -4)
-  if (word.endsWith('ible') && word.length > 5) return word.slice(0, -4)
-  if (word.endsWith('ful') && word.length > 4) return word.slice(0, -3)
-  if (word.endsWith('less') && word.length > 5) return word.slice(0, -4)
-  if (word.endsWith('ous') && word.length > 4) return word.slice(0, -3)
-  if (word.endsWith('ive') && word.length > 4) return word.slice(0, -3)
-  if (word.endsWith('ly') && word.length > 4) return word.slice(0, -2)
-  if (word.endsWith('ed') && word.length > 4) return word.slice(0, -2)
-  if (word.endsWith('er') && word.length > 4) return word.slice(0, -2)
-  if (word.endsWith('es') && word.length > 4) return word.slice(0, -2)
-  if (word.endsWith('s') && !word.endsWith('ss') && word.length > 3) return word.slice(0, -1)
-  return word
+  function categorizeGroups(s: string) {
+    return s.replace(/[^aeiouy]+y/g, 'CV').replace(/[aeiou]+/g, 'V').replace(/[^V]+/g, 'C')
+  }
+  function categorizeChars(s: string) {
+    return s.replace(/[^aeiouy]y/g, 'CV').replace(/[aeiou]/g, 'V').replace(/[^V]/g, 'C')
+  }
+  function measure(s: string): number {
+    if (!s) return -1
+    return categorizeGroups(s).replace(/^C/, '').replace(/V$/, '').length / 2
+  }
+  function endsDoubleCons(s: string) { return /([^aeiou])\1$/.test(s) }
+
+  function attemptReplace(s: string, pattern: string | RegExp, repl: string, cb?: (r: string) => string | null): string | null {
+    let result: string | null = null
+    if (typeof pattern === 'string') {
+      if (s.substr(-pattern.length) === pattern) result = s.replace(new RegExp(pattern + '$'), repl)
+    } else if (pattern.test(s)) {
+      result = s.replace(pattern, repl)
+    }
+    if (result && cb) return cb(result)
+    return result
+  }
+
+  function replacePatterns(s: string, replacements: [string, string, string][], threshold: number | null): string {
+    let r = s
+    for (const [match, , repl] of replacements) {
+      if (threshold == null || measure(attemptReplace(s, match, '') ?? '') > threshold) {
+        r = attemptReplace(r, match, repl) ?? r
+      }
+    }
+    return r
+  }
+
+  function replaceRegex(s: string, regex: RegExp, parts: number[], minMeasure: number): string | null {
+    if (!regex.test(s)) return null
+    const m = regex.exec(s)!
+    const result = parts.map((i) => m[i]).join('')
+    return measure(result) > minMeasure ? result : null
+  }
+
+  function step1a(s: string) {
+    if (/(ss|i)es$/.test(s)) return s.replace(/(ss|i)es$/, '$1')
+    if (s.slice(-1) === 's' && s.slice(-2, -1) !== 's' && s.length > 2) return s.replace(/s?$/, '')
+    return s
+  }
+
+  function step1b(s: string) {
+    if (s.slice(-3) === 'eed') {
+      return measure(s.slice(0, -3)) > 0 ? s.replace(/eed$/, 'ee') : s
+    }
+    const r = attemptReplace(s, /(ed|ing)$/, '', (inner) => {
+      if (categorizeGroups(inner).indexOf('V') < 0) return null
+      const r2 = replacePatterns(inner, [['at', '', 'ate'], ['bl', '', 'ble'], ['iz', '', 'ize']], null)
+      if (r2 !== inner) return r2
+      if (endsDoubleCons(inner) && !/[lsz]$/.test(inner)) return inner.replace(/([^aeiou])\1$/, '$1')
+      if (measure(inner) === 1 && categorizeChars(inner).slice(-3) === 'CVC' && !/[wxy]$/.test(inner)) return inner + 'e'
+      return inner
+    })
+    return r ?? s
+  }
+
+  function step1c(s: string) {
+    const grp = categorizeGroups(s)
+    if (s.slice(-1) === 'y' && grp.slice(0, -1).indexOf('V') > -1) return s.replace(/y$/, 'i')
+    return s
+  }
+
+  function step2(s: string) {
+    return replacePatterns(s, [
+      ['ational', '', 'ate'], ['tional', '', 'tion'], ['enci', '', 'ence'], ['anci', '', 'ance'],
+      ['izer', '', 'ize'], ['abli', '', 'able'], ['bli', '', 'ble'], ['alli', '', 'al'],
+      ['entli', '', 'ent'], ['eli', '', 'e'], ['ousli', '', 'ous'], ['ization', '', 'ize'],
+      ['ation', '', 'ate'], ['ator', '', 'ate'], ['alism', '', 'al'], ['iveness', '', 'ive'],
+      ['fulness', '', 'ful'], ['ousness', '', 'ous'], ['aliti', '', 'al'], ['iviti', '', 'ive'],
+      ['biliti', '', 'ble'], ['logi', '', 'log'],
+    ], 0)
+  }
+
+  function step3(s: string) {
+    return replacePatterns(s, [
+      ['icate', '', 'ic'], ['ative', '', ''], ['alize', '', 'al'],
+      ['iciti', '', 'ic'], ['ical', '', 'ic'], ['ful', '', ''], ['ness', '', ''],
+    ], 0)
+  }
+
+  function step4(s: string) {
+    return replaceRegex(s, /^(.+?)(al|ance|ence|er|ic|able|ible|ant|ement|ment|ent|ou|ism|ate|iti|ous|ive|ize)$/, [1], 1) ??
+      replaceRegex(s, /^(.+?)(s|t)(ion)$/, [1, 2], 1) ?? s
+  }
+
+  function step5a(s: string) {
+    const m = measure(s.replace(/e$/, ''))
+    if (m > 1 || (m === 1 && !(categorizeChars(s).slice(-4, -1) === 'CVC' && /[^wxy].$/.test(s)))) {
+      return s.replace(/e$/, '')
+    }
+    return s
+  }
+
+  function step5b(s: string) {
+    return measure(s) > 1 ? s.replace(/ll$/, 'l') : s
+  }
+
+  return step5b(step5a(step4(step3(step2(step1c(step1b(step1a(t))))))))
 }
 
 // ─── Genius API (via Edge Function) ───────────────────────
@@ -683,7 +772,7 @@ export async function resetArtistLyricCounts(artistId: number) {
   if (songIds.length === 0) return
 
   // Get all song_lyric rows for the selectable songs (paginate to avoid 1000-row limit)
-  const allSongLyrics: { lyric_id: number; count: number }[] = []
+  const allSongLyrics: { song_id: number; lyric_id: number; count: number }[] = []
   for (let i = 0; i < songIds.length; i += 100) {
     const batch = songIds.slice(i, i + 100)
     let offset = 0
@@ -691,7 +780,7 @@ export async function resetArtistLyricCounts(artistId: number) {
     while (true) {
       const { data, error } = await supabase
         .from('song_lyric')
-        .select('lyric_id, count')
+        .select('song_id, lyric_id, count')
         .in('song_id', batch)
         .range(offset, offset + pageSize - 1)
       if (error) throw error
@@ -701,25 +790,48 @@ export async function resetArtistLyricCounts(artistId: number) {
     }
   }
 
-  // Aggregate: song_count = number of distinct songs, total_count = sum of counts
-  const lyricStats = new Map<number, { songCount: number; totalCount: number }>()
+  // Fetch root_word for every unique lyric_id (paginated in batches of 1000)
+  const uniqueLyricIds = [...new Set(allSongLyrics.map((sl) => sl.lyric_id))]
+  const lyricIdToWord = new Map<number, string>()
+  for (let i = 0; i < uniqueLyricIds.length; i += 1000) {
+    const batch = uniqueLyricIds.slice(i, i + 1000)
+    const { data, error } = await supabase.from('lyric').select('id, root_word').in('id', batch)
+    if (error) throw error
+    for (const row of data) lyricIdToWord.set(row.id, row.root_word)
+  }
+
+  // Map each lyric_id to its Porter stem
+  const lyricIdToStem = new Map<number, string>()
+  for (const [lyricId, word] of lyricIdToWord) {
+    lyricIdToStem.set(lyricId, porterStem(word))
+  }
+
+  // Aggregate per stem: distinct song_ids and total word count
+  const stemStats = new Map<string, { songIds: Set<number>; totalCount: number }>()
   for (const sl of allSongLyrics) {
-    const existing = lyricStats.get(sl.lyric_id)
+    const stem = lyricIdToStem.get(sl.lyric_id) ?? String(sl.lyric_id)
+    const existing = stemStats.get(stem)
     if (existing) {
-      existing.songCount += 1
+      existing.songIds.add(sl.song_id)
       existing.totalCount += sl.count
     } else {
-      lyricStats.set(sl.lyric_id, { songCount: 1, totalCount: sl.count })
+      stemStats.set(stem, { songIds: new Set([sl.song_id]), totalCount: sl.count })
     }
   }
 
-  // Insert new artist_lyric rows in batches
-  const rows = [...lyricStats.entries()].map(([lyricId, stats]) => ({
-    artist_id: artistId,
-    lyric_id: lyricId,
-    song_count: stats.songCount,
-    total_count: stats.totalCount,
-  }))
+  // Build one artist_lyric row per lyric_id, sharing the stem group's aggregated counts
+  const rows = uniqueLyricIds
+    .filter((lyricId) => lyricIdToStem.has(lyricId))
+    .map((lyricId) => {
+      const stem = lyricIdToStem.get(lyricId)!
+      const stats = stemStats.get(stem)!
+      return {
+        artist_id: artistId,
+        lyric_id: lyricId,
+        song_count: stats.songIds.size,
+        total_count: stats.totalCount,
+      }
+    })
 
   for (let i = 0; i < rows.length; i += 500) {
     const batch = rows.slice(i, i + 500)
@@ -1008,7 +1120,7 @@ export async function processSongLyrics(songId: number) {
     // Group words by stem to find duplicates
     const stemGroups = new Map<string, { word: string; count: number }[]>()
     for (const [word, count] of wordCounts) {
-      const stem = simpleStem(word)
+      const stem = porterStem(word)
       const group = stemGroups.get(stem)
       if (group) {
         group.push({ word, count })
