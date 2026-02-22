@@ -79,7 +79,7 @@ export default function WordInput({
             {(
               <button
                 onClick={() => onRefresh(wordIndex)}
-                className="absolute top-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full"
+                className="absolute top-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer"
                 title="Get different image"
               >
                 <RefreshCw size={20} className="drop-shadow-md" />
@@ -99,14 +99,14 @@ export default function WordInput({
               <motion.div
                 initial={{ width: "3rem" }}
                 animate={{ width: "100%" }}
-                className="absolute inset-0 bg-primary flex items-center justify-center text-white font-bold text-lg"
+                className="absolute inset-0 bg-primary flex items-center justify-center text-white text-lg"
               >
                 {puzzleWord.word.toLowerCase()}
                 {debugMode && (
                   <button
                     onClick={handleFlag}
                     disabled={flagged}
-                    className={`absolute bottom-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full ${flagged ? 'opacity-40' : 'hover:scale-110'}`}
+                    className={`absolute bottom-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40' : 'hover:scale-110'}`}
                     title={flagged ? 'Flagged' : 'Flag this word'}
                   >
                     <Flag size={20} className="drop-shadow-md" />
@@ -119,7 +119,7 @@ export default function WordInput({
                 {/* Lock Button */}
                 <motion.button
                   className={`h-full flex items-center justify-center z-10 px-4 transition-colors duration-300 ${
-                    isHoveringLock ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'
+                    isHoveringLock ? 'bg-primary text-white cursor-pointer' : 'bg-primary text-white cursor-default'
                   }`}
                   onHoverStart={() => setIsHoveringLock(true)}
                   onHoverEnd={() => setIsHoveringLock(false)}

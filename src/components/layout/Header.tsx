@@ -47,14 +47,14 @@ export default function Header({
         <div className="flex items-center gap-2 text-gray-600">
           <button 
             onClick={onInfo}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            className="p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="How to play"
           >
             <Info size={20} />
           </button>
           <button 
             onClick={onHistory}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+            className="p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="Song history"
           >
             <History size={20} />

@@ -24,11 +24,11 @@ export default function InfoModal({ albums, onClose }: InfoModalProps) {
         </div>        
         <div>
           <p className="font-semibold text-text">3. Guess the Song</p>
-          <p>Select the song from the dropdown and click Submit.</p>
+          <p>Select a song from the dropdown and click Submit.</p>
         </div>
         <div>
-          <p className="font-semibold text-text">3. Need Help?</p>
-          <ul className="ml-4 space-y-1">
+          <p className="font-semibold text-text">4. Need Help?</p>
+          <ul className="space-y-1">
             <li className="flex items-center"><RefreshCw size={15} className="mr-2"/> Load new image</li>
             <li className="flex items-center"><Lock size={15} className="mr-2"/> Reveal correct word</li>
             <li className="flex items-center"> <History size={15} className="mr-2"/> View  played songs</li>

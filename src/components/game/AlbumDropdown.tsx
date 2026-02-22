@@ -53,9 +53,9 @@ export default function AlbumButtons({
     return (
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {albums.map((album) => (
-          <div key={album.id} className="flex items-center gap-2 text-tiny md:text-sm text-text/80">
+          <div key={album.id} className="flex items-center gap-2 text-tiny text-text/80">
             <AlbumIcon album={album} />
-            <span className="pt-0.5">{album.name}</span>
+            <span>{album.name}</span>
           </div>
         ))}
       </div>
@@ -78,7 +78,7 @@ export default function AlbumButtons({
             title={album.name}
             onMouseEnter={readonly ? undefined : () => setIsHoveringAlbum(true)}
             onMouseLeave={readonly ? undefined : () => setIsHoveringAlbum(false)}
-            className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-not-allowed'}`}
+            className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`}
             style={{
               backgroundColor: !readonly && isDisabled && !isCorrect
                 ? '#9ca3af'

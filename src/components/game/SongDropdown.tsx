@@ -49,7 +49,7 @@ export default function SongDropdown({
         <button
           onClick={handleSubmit}
           disabled={selectedId === undefined}
-          className="px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed shrink-0"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0"
         >
           Submit
         </button>

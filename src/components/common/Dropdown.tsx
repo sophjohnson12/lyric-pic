@@ -59,10 +59,10 @@ export default function Dropdown({ options, placeholder, onSelect, disabled = fa
         onFocus={() => setIsOpen(true)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary disabled:opacity-50 text-base"
+        className="w-full px-3 py-2 rounded-lg bg-white shadow-sm border border-gray-200 text-text disabled:opacity-50 text-base focus:border-gray-200 focus:outline-none"
       />
       {isOpen && filteredOptions.length > 0 && (
-        <ul className="absolute z-30 w-full mt-1 bg-bg border-2 border-primary/20 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+        <ul className="absolute z-30 w-full bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto">
           {filteredOptions.map((opt) => (
             <li
               key={`${opt.id}-${opt.label}`}
