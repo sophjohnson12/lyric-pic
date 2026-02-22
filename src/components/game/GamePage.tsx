@@ -37,22 +37,6 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // Prevent document-level scroll on mobile
-  useEffect(() => {
-    if (isMd) {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-    } else {
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
-    }
-    return () => {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-    }
-  }, [isMd])
-
-
   // Update meta tags
   useEffect(() => {
     if (game.artist) {
@@ -196,7 +180,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="flex flex-col bg-bg h-svh overflow-hidden md:h-auto md:overflow-visible">
+    <div className="flex flex-col bg-bg">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}
