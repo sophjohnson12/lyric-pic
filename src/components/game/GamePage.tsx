@@ -211,7 +211,6 @@ export default function GamePage() {
                 debugMode={game.enableUserFlag}
                 autoFocus={isMd && index === deferredFocusIndex}
                 focusTrigger={focusTrigger}
-                isMd={isMd}
               />
             </div>
           ))}
