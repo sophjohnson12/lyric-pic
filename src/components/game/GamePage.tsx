@@ -179,7 +179,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="h-dvh overflow-hidden flex flex-col bg-bg">
+    <div className="flex flex-col bg-bg">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}
