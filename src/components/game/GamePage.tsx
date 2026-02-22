@@ -9,6 +9,7 @@ import SuccessModal from './SuccessModal'
 import InfoModal from './InfoModal'
 import HistoryModal from './HistoryModal'
 import Toast from '../common/Toast'
+import ConfirmPopup from '../common/ConfirmPopup'
 import { flagWord } from '../../services/supabase'
 
 const DEBUG_MODE = true
@@ -19,6 +20,7 @@ export default function GamePage() {
 
   const [showInfo, setShowInfo] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false)
 
   // Carousel state
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -201,7 +203,7 @@ export default function GamePage() {
         totalSongs={game.totalPlayableSongs}
         onInfo={() => setShowInfo(true)}
         onHistory={() => setShowHistory(true)}
-        onSkip={game.skipSong}
+        onSkip={() => setShowSkipConfirm(true)}
       />
 
       <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
@@ -275,6 +277,16 @@ export default function GamePage() {
           album={correctAlbumForModal}
           artist={game.artist}
           onNext={game.nextSong}
+        />
+      )}
+      {showSkipConfirm && (
+        <ConfirmPopup
+          title="Skip Song?"
+          message="Are you sure you want to skip this song? It won't be marked as played and might reappear later."
+          confirmLabel="Skip"
+          cancelLabel="Cancel"
+          onConfirm={() => { game.skipSong(); setShowSkipConfirm(false) }}
+          onCancel={() => setShowSkipConfirm(false)}
         />
       )}
       {showInfo && <InfoModal albums={game.albums} onClose={() => setShowInfo(false)} />}

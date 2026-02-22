@@ -202,7 +202,10 @@ export default function WordInput({
       </div>
       {showFlagConfirm && (
         <ConfirmPopup
-          message="Are you sure you'd like to flag this word for review?"
+          title="Flag for Review?"
+          message="Are you sure you want to flag this word? It will be reviewed for appropriate spelling and pictures."
+          confirmLabel="Flag"
+          cancelLabel="Cancel"
           onConfirm={handleFlagConfirm}
           onCancel={() => setShowFlagConfirm(false)}
         />
