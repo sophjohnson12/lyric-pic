@@ -68,7 +68,7 @@ export default function WordInput({
 
   return (
     <div className="min-w-full snap-center mx-auto">
-      <div className="pb-0 w-3/4 md:w-full mx-auto">
+      <div className="pb-0 w-7/8 md:w-full mx-auto">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white">
           {/* Image Container */}
           <div className="relative flex-1 w-full overflow-hidden bg-gray-100">
