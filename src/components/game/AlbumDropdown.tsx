@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Album } from '../../types/database'
 
 interface AlbumButtonsProps {
@@ -55,6 +55,14 @@ export default function AlbumButtons({
   readonly = false,
   list = false,
 }: AlbumButtonsProps) {
+  useEffect(() => {
+    if (!onGuess || albumGuessed || readonly) return
+    const remaining = albums.filter((a) => !incorrectAlbumIds.includes(a.id))
+    if (remaining.length === 1) {
+      onGuess(remaining[0].id, remaining[0].name)
+    }
+  }, [incorrectAlbumIds.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (list) {
     return (
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
