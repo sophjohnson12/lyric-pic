@@ -2,17 +2,13 @@ import type { PexelsImage } from '../types/game'
 
 const PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY
 
-// TODO: Re-enable after data cleanup
-const DISABLE_API = true
+let imagesEnabled = true
+export function setImagesEnabled(value: boolean) {
+  imagesEnabled = value
+}
 
 export async function searchImages(query: string, count: number = 5): Promise<PexelsImage[]> {
-  if (DISABLE_API) {
-    return Array.from({ length: count }, (_, i) => ({
-      id: i,
-      url: `https://placehold.co/400x400/e2e8f0/64748b?text=${encodeURIComponent(query)}`,
-      photographer: 'Placeholder',
-    }))
-  }
+  if (!imagesEnabled) return []
 
   if (!PEXELS_API_KEY) {
     console.error('VITE_PEXELS_API_KEY is not set')

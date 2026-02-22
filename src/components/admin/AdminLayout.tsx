@@ -1,10 +1,13 @@
+import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminBreadcrumbProvider, useAdminBreadcrumbs } from './AdminBreadcrumbContext'
+import { getAppConfig } from '../../services/adminService'
 
 const sidebarLinks = [
   { to: '/admin', label: 'Artists', end: true },
   { to: '/admin/lyrics', label: 'Lyrics' },
+  { to: '/admin/settings', label: 'Settings' },
 ]
 
 function AdminSidebar() {
@@ -76,6 +79,14 @@ function Breadcrumbs() {
 }
 
 export default function AdminLayout() {
+  useEffect(() => {
+    getAppConfig().then((config) => {
+      document.documentElement.style.setProperty('--color-theme-primary', config.theme_primary_color)
+      document.documentElement.style.setProperty('--color-theme-secondary', config.theme_secondary_color)
+      document.documentElement.style.setProperty('--color-theme-bg', config.theme_background_color)
+    }).catch(() => {/* silent — fallback to CSS defaults */})
+  }, [])
+
   return (
     <AdminBreadcrumbProvider>
       <div className="min-h-screen bg-bg text-text">

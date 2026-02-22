@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import LandingPage from './components/landing/LandingPage'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import GamePage from './components/game/GamePage'
 import LoginPage from './components/admin/LoginPage'
 import ProtectedRoute from './components/admin/ProtectedRoute'
@@ -13,12 +12,13 @@ import ArtistSongsPage from './components/admin/ArtistSongsPage'
 import SongFormPage from './components/admin/SongFormPage'
 import SongLyricsPage from './components/admin/SongLyricsPage'
 import LyricsPage from './components/admin/LyricsPage'
+import SettingsPage from './components/admin/SettingsPage'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Navigate to="/taylorswift" replace />} />
         <Route path="/admin/login" element={<LoginPage />} />
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<ArtistsPage />} />
@@ -33,6 +33,7 @@ export default function App() {
           <Route path="artists/:artistId/songs/:id" element={<SongFormPage />} />
           <Route path="artists/:artistId/songs/:songId/lyrics" element={<SongLyricsPage />} />
           <Route path="lyrics" element={<LyricsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path="/:artistSlug" element={<GamePage />} />
       </Routes>

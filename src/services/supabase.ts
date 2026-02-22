@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Artist, Album, Song } from '../types/database'
+import type { Artist, Album, Song, AppConfig } from '../types/database'
 import type { WordVariationWithStats } from '../types/game'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -167,4 +167,16 @@ export async function getPlayedSongNames(songIds: number[]): Promise<string[]> {
     .order('name')
   if (error) throw error
   return data.map((d: { name: string }) => d.name)
+}
+
+export async function getAppConfig(): Promise<AppConfig | null> {
+  const { data, error } = await supabase
+    .from('app_config')
+    .select('*')
+    .maybeSingle()
+  if (error) {
+    console.error('Failed to load app_config:', error)
+    return null
+  }
+  return data as AppConfig
 }

@@ -12,8 +12,6 @@ import Toast from '../common/Toast'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { flagWord } from '../../services/supabase'
 
-const DEBUG_MODE = true
-
 export default function GamePage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const game = useGame(artistSlug || '')
@@ -209,8 +207,8 @@ export default function GamePage() {
                 onGuess={game.guessWord}
                 onReveal={game.revealWord}
                 onRefresh={game.refreshImage}
-                onFlag={(lyricId) => flagWord(lyricId)}
-                debugMode={DEBUG_MODE}
+                onFlag={game.enableUserFlag ? (lyricId) => flagWord(lyricId) : undefined}
+                debugMode={game.enableUserFlag}
                 autoFocus={isMd && index === deferredFocusIndex}
                 focusTrigger={focusTrigger}
                 isMd={isMd}

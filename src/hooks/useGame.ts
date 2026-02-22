@@ -13,8 +13,9 @@ import {
   getAlbumById,
   getLyricByWord,
   getSongLyricIds,
+  getAppConfig,
 } from '../services/supabase'
-import { searchImages } from '../services/pexels'
+import { searchImages, setImagesEnabled } from '../services/pexels'
 import { selectPuzzleWords } from '../services/wordSelection'
 import { useLocalStorage } from './useLocalStorage'
 import { useTheme } from './useTheme'
@@ -48,6 +49,8 @@ export function useGame(artistSlug: string) {
   const [allSongs, setAllSongs] = useState<Song[]>([])
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([])
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [enableImages, setEnableImages] = useState(true)
+  const [enableUserFlag, setEnableUserFlag] = useState(true)
 
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songLyricIdsRef = useRef<number[]>([])
@@ -83,7 +86,7 @@ export function useGame(artistSlug: string) {
           return
         }
 
-      // Fetch images in parallel
+      // Fetch images in parallel (returns [] per word if images are disabled)
       const imageResults = await Promise.all(
         selected.map((w) => searchImages(w.word, IMAGES_PER_WORD))
       )
@@ -140,8 +143,19 @@ export function useGame(artistSlug: string) {
     let cancelled = false
     async function init() {
       try {
-        const artist = await getArtistBySlug(artistSlug)
+        // Load app config and artist in parallel
+        const [config, artist] = await Promise.all([
+          getAppConfig(),
+          getArtistBySlug(artistSlug),
+        ])
         if (cancelled) return
+
+        if (config) {
+          setImagesEnabled(config.enable_images)
+          setEnableImages(config.enable_images)
+          setEnableUserFlag(config.enable_user_flag)
+        }
+
         applyArtistTheme(artist)
         const total = await getTotalPlayableSongCount(artist.id)
         if (cancelled) return
@@ -360,6 +374,8 @@ export function useGame(artistSlug: string) {
     albums,
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,
     toastMessage,
+    enableImages,
+    enableUserFlag,
     guessWord,
     revealWord,
     refreshImage,

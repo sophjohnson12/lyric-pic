@@ -92,3 +92,13 @@ export interface LoadStatus {
   id: number
   status: string
 }
+
+export interface AppConfig {
+  id: true
+  theme_primary_color: string
+  theme_secondary_color: string
+  theme_background_color: string
+  enable_images: boolean
+  enable_user_flag: boolean
+  updated_at: string
+}

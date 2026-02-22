@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import type { AppConfig } from '../types/database'
 // Porter Stemmer — ported from the `natural` npm package (MIT licence, Chris Umbel 2011)
 // Groups word variants by stem for lyric count aggregation (e.g. love/loved/loving → "love")
 function porterStem(token: string): string {
@@ -1234,4 +1235,26 @@ export async function clearSongLyrics(songId: number) {
       .update({ load_status_id: loadedStatus.id, updated_at: new Date().toISOString() })
       .eq('id', songId)
   }
+}
+
+// ─── App Config ───────────────────────────────────────────
+
+export async function getAppConfig(): Promise<AppConfig> {
+  const { data, error } = await supabase
+    .from('app_config')
+    .select('*')
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('No app_config row found')
+  return data as AppConfig
+}
+
+export async function updateAppConfig(
+  updates: Partial<Pick<AppConfig, 'theme_primary_color' | 'theme_secondary_color' | 'theme_background_color' | 'enable_images' | 'enable_user_flag'>>
+): Promise<void> {
+  const { error } = await supabase
+    .from('app_config')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', true)
+  if (error) throw error
 }
