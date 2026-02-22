@@ -218,7 +218,7 @@ export default function GamePage() {
           ))}
         </div>
         {/* Carousel Dots (Mobile Only) */}
-        <div className="flex justify-center gap-2 mb-6 md:hidden">
+        <div className="flex justify-center gap-2 mb-9 md:hidden">
           {game.puzzleWords.map((_: any, index: number) => (
             <button
               key={index}
@@ -231,7 +231,7 @@ export default function GamePage() {
         {/* Album and Song dropdowns */}
         {(
           <div>
-            <div className="max-w-xxl mb-3">
+            <div className="max-w-xxl mb-9">
               <AlbumButtons
                 albums={game.albums}
                 incorrectAlbumIds={game.incorrectAlbumIds}

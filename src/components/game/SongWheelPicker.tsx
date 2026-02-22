@@ -4,22 +4,24 @@ import type { Song } from '../../types/database'
 interface SongWheelPickerProps {
   songs: Song[]
   incorrectGuesses: string[]
-  onGuess: (songId: number, songName: string) => string
+  onGuess?: (songId: number, songName: string) => string
+  onSelectionChange?: (songId: number | null, songName: string) => void
+  showSubmit?: boolean
   itemHeight?: number
   visibleCount?: number
 }
-
-const PLACEHOLDER = { id: null as null, name: 'Select a song...' }
 
 export default function SongWheelPicker({
   songs,
   incorrectGuesses,
   onGuess,
+  onSelectionChange,
+  showSubmit = true,
   itemHeight = 40,
   visibleCount = 3,
 }: SongWheelPickerProps) {
   const filteredSongs = songs.filter((s) => !incorrectGuesses.includes(s.name))
-  const items = [PLACEHOLDER, ...filteredSongs]
+  const items = filteredSongs
 
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -30,7 +32,6 @@ export default function SongWheelPicker({
 
   // Effective index clamped to valid range
   const effectiveIndex = Math.min(selectedIndex, Math.max(0, items.length - 1))
-  const isPlaceholderSelected = effectiveIndex === 0
 
   // Reset to placeholder whenever the songs list changes (e.g. album clicked)
   const songsKey = songs.map((s) => s.id).join(',')
@@ -39,6 +40,7 @@ export default function SongWheelPicker({
     if (containerRef.current) {
       containerRef.current.scrollTop = 0
     }
+    onSelectionChange?.(filteredSongs[0]?.id ?? null, filteredSongs[0]?.name ?? '')
   }, [songsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clamp selectedIndex when items shrinks after an incorrect guess
@@ -56,29 +58,29 @@ export default function SongWheelPicker({
     debounceRef.current = setTimeout(() => {
       if (!containerRef.current) return
       const index = Math.round(containerRef.current.scrollTop / itemHeight)
-      setSelectedIndex(Math.max(0, Math.min(index, items.length - 1)))
+      const clamped = Math.max(0, Math.min(index, items.length - 1))
+      setSelectedIndex(clamped)
+      const item = items[clamped]
+      onSelectionChange?.(item.id, item.name)
     }, 100)
-  }, [itemHeight, items.length])
+  }, [itemHeight, items.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = () => {
     const item = items[effectiveIndex]
-    if (!item || item.id === null) return
+    if (!item || item.id === null || !onGuess) return
     const result = onGuess(item.id, item.name)
     if (result !== 'correct') {
       setSelectedIndex(0)
       if (containerRef.current) {
         containerRef.current.scrollTop = 0
       }
+      onSelectionChange?.(items[0]?.id ?? null, items[0]?.name ?? '')
     }
   }
 
   const getItemClass = (index: number) => {
     const diff = Math.abs(index - effectiveIndex)
-    if (diff === 0) {
-      return index === 0
-        ? 'opacity-60 text-text'
-        : 'opacity-100 font-medium text-primary'
-    }
+    if (diff === 0) return 'opacity-100 font-medium text-primary'
     if (diff === 1) return 'opacity-50 text-text'
     return 'opacity-20 text-text'
   }
@@ -122,22 +124,26 @@ export default function SongWheelPicker({
         </div>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={isPlaceholderSelected}
-        className="w-3/4 max-w-xs px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
-      >
-        Submit
-      </button>
+      {showSubmit && (
+        <>
+          <button
+            onClick={handleSubmit}
+            disabled={items.length === 0}
+            className="w-3/4 max-w-xs px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
+          >
+            Submit
+          </button>
 
-      {incorrectGuesses.length > 0 && (
-        <p className="text-xs text-primary -mt-1">
-          Who's counting? (
-          {incorrectGuesses.length <= 5
-            ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
-            : `1, 2, 3, ..., ${incorrectGuesses.length}`}
-          )
-        </p>
+          {incorrectGuesses.length > 0 && (
+            <p className="text-xs text-primary -mt-1">
+              Who's counting? (
+              {incorrectGuesses.length <= 5
+                ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
+                : `1, 2, 3, ..., ${incorrectGuesses.length}`}
+              )
+            </p>
+          )}
+        </>
       )}
     </div>
   )
