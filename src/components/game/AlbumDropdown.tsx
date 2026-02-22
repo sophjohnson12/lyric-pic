@@ -25,7 +25,13 @@ function AlbumIcon({ album }: { album: Album }) {
   return (
     <div
       className="w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0 overflow-hidden"
-      style={{ backgroundColor: album.theme_primary_color || '#6b7280', fontSize: '10px', fontWeight: 'bold' }}
+      style={{ 
+        backgroundColor: album.theme_primary_color || '#6b7280', 
+        border: "solid",
+        borderWidth: "1px",
+        borderColor: album.theme_secondary_color || '#9ca3af',
+        fontSize: '10px', 
+        fontWeight: 'bold' }}
     >
       {album.image_url !== null ? (
         <img
@@ -83,7 +89,14 @@ export default function AlbumButtons({
               backgroundColor: !readonly && isDisabled && !isCorrect
                 ? '#9ca3af'
                 : album.theme_primary_color || '#6b7280',
-              opacity: !readonly && isDisabled && !isCorrect ? 0.5 : (!readonly && isHoveringAlbum ? 0.8 : 1),
+              border: "solid",
+              borderWidth: "1px",
+              borderColor: !readonly && isDisabled && !isCorrect
+                ? '#cad0da'
+                : album.theme_secondary_color || '#9ca3af',
+              opacity: !readonly && isDisabled && !isCorrect 
+                ? 0.5 
+                : (!readonly && isHoveringAlbum ? 0.8 : 1),
             }}
           >
             {album.image_url !== null ?

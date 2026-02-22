@@ -69,9 +69,9 @@ export default function WordInput({
   return (
     <div className="min-w-full snap-center mx-auto">
       <div className="pb-0 w-7/8 md:w-full mx-auto">
-        <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white">
+        <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white">
           {/* Image Container */}
-          <div className="relative flex-1 w-full overflow-hidden bg-gray-100">
+          <div className="relative flex-1 w-full overflow-hidden bg-gray-100 rounded-t-xl overflow-hidden border-x border-t border-secondary">
             <ImageDisplay
               imageUrls={puzzleWord.imageUrls}
               currentIndex={puzzleWord.currentImageIndex}
@@ -95,14 +95,14 @@ export default function WordInput({
           </div>
 
           {/* Input Container */}
-          <div className="relative h-14 bg-white border-t border-gray-100 flex items-center shrink-0">
+          <div className="relative h-14 bg-white flex items-center shrink-0">
             {isGuessed ? (
               // Solved State (Revealed)
               isMd ? (
                 <motion.div
                   initial={{ width: "3rem" }}
                   animate={{ width: "100%" }}
-                  className="absolute inset-0 bg-primary flex items-center justify-center text-white text-lg"
+                  className="absolute inset-0 bg-primary flex items-center justify-center text-white text-lg rounded-b-xl border border-secondary"
                 >
                   {puzzleWord.word.toLowerCase()}
                   {debugMode && (
@@ -117,7 +117,7 @@ export default function WordInput({
                   )}
                 </motion.div>
               ) : (
-                <div className="absolute inset-0 bg-primary flex items-center justify-center text-white text-lg">
+                <div className="absolute inset-0 bg-primary flex items-center justify-center text-white text-lg rounded-b-xl border border-secondary">
                   {puzzleWord.word.toLowerCase()}
                   {debugMode && (
                     <button
@@ -137,7 +137,7 @@ export default function WordInput({
                 {/* Lock Button — full width on mobile, icon-only on desktop */}
                 {isMd ? (
                   <motion.button
-                    className={`h-full flex items-center justify-center z-10 px-4 transition-colors duration-300 ${
+                    className={`h-full flex items-center justify-center z-10 px-4 transition-colors duration-300 rounded-bl-xl ${
                       isHoveringLock ? 'bg-primary text-white cursor-pointer' : 'bg-primary text-white cursor-default'
                     }`}
                     onHoverStart={() => setIsHoveringLock(true)}
@@ -173,7 +173,7 @@ export default function WordInput({
                   </motion.button>
                 ) : (
                   <button
-                    className="absolute inset-0 flex items-center justify-center bg-primary text-white cursor-pointer"
+                    className="absolute inset-0 flex items-center justify-center bg-primary text-white cursor-pointer rounded-bl-xl border border-secondary"
                     onClick={() => onReveal(wordIndex)}
                     title="Reveal answer"
                     type="button"
@@ -190,7 +190,7 @@ export default function WordInput({
                       ref={inputRef}
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
-                      className="w-full h-full px-4 outline-none text-gray-800 placeholder-gray-400 text-base"
+                      className="w-full h-full px-4 outline-none text-gray-800 placeholder-gray-400 text-base rounded-br-xl border border-secondary focus:border-primary"
                       placeholder="Guess the word..."
                     />
                   </form>

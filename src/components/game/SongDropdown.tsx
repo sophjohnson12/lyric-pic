@@ -41,11 +41,11 @@ export default function SongDropdown({
             readOnly
             placeholder="Select a song..."
             onClick={() => setShowModal(true)}
-            className="w-full px-3 py-2 rounded-lg bg-white shadow-sm border border-gray-200 text-text text-base cursor-pointer"
+            className="w-full px-3 py-2 rounded-lg bg-white shadow-sm text-text text-base cursor-pointer border border-secondary"
           />
         </div>
         {incorrectGuesses.length > 0 && (
-          <p className="text-tiny text-text/60 mt-1 ml-1">
+          <p className="text-xs text-text/60 mt-1 ml-1 font-medium">
             But honestly, baby, who's counting? (
             {incorrectGuesses.length <= 5
               ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
@@ -67,14 +67,15 @@ export default function SongDropdown({
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 text-text text-base font-medium hover:bg-gray-50 cursor-pointer"
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 
+                text-text text-base font-medium hover:bg-gray-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleModalGuess}
                 disabled={!modalSelection}
-                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
+                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default border border-secondary"
               >
                 Submit
               </button>
@@ -107,20 +108,20 @@ export default function SongDropdown({
         <Dropdown
           key={incorrectGuesses.length}
           options={options}
-          placeholder="Select song..."
+          placeholder="Select a song..."
           onSelect={handleSelect}
           excludeLabels={incorrectGuesses}
         />
         <button
           onClick={handleSubmit}
           disabled={selectedId === undefined}
-          className="px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0"
+          className="px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0 border border-secondary"
         >
           Submit
         </button>
       </div>
       {incorrectGuesses.length > 0 && (
-        <p className="text-tiny text-text/60 mt-1">
+        <p className="text-xs text-text/60 mt-1 ml-1 font-medium">
           But honestly, baby, who's counting? (
           {incorrectGuesses.length <= 5
             ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'

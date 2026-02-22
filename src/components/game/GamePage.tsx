@@ -189,7 +189,7 @@ export default function GamePage() {
         onSkip={game.skipSong}
       />
 
-      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1">
+      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
@@ -223,7 +223,7 @@ export default function GamePage() {
             <button
               key={index}
               onClick={() => scrollToSlide(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-primary/20 hover:bg-gray-400'}`}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-secondary hover:bg-gray-400'}`}
               aria-label={`Go to image ${index + 1}`}
             />
           ))}

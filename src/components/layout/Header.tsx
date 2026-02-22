@@ -33,13 +33,13 @@ export default function Header({
         </div>
 
         <div className="hidden md:flex flex-1 mx-8 max-w-md flex-col gap-1">
-          <div className="h-2 w-full bg-gray-100  bg-primary/10 rounded-full overflow-hidden mt-5">
+          <div className="h-2 w-full bg-gray-100 bg-secondary/50 rounded-full overflow-hidden mt-5">
             <div 
               className="h-full bg-primary transition-all duration-500" 
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
-          <div className="text-xs text-gray-500 text-center font-medium">
+          <div className="text-xs text-text/60 text-center font-medium">
             {playedCount} / {totalSongs} songs
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function Header({
           </button>
           <button 
             onClick={onSkip}
-            className="flex items-center py-2 px-3 bg-primary hover:bg-primary/50 rounded-full transition-colors cursor-pointer"
+            className="flex items-center py-2 px-3 bg-primary hover:bg-primary/50 rounded-full transition-colors cursor-pointer border border-secondary"
           >
             <SkipForward size={20} color="white"/>
           </button>

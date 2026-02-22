@@ -100,7 +100,7 @@ export default function SongWheelPicker({
         />
         {/* Center selection lines */}
         <div
-          className="absolute left-0 right-0 pointer-events-none z-10 border-t border-b border-primary/30"
+          className="absolute left-0 right-0 pointer-events-none z-10 border-t border-b border-secondary"
           style={{ top: padding, height: itemHeight }}
         />
         {/* Scroll container */}
