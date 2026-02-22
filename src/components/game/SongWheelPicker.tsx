@@ -125,7 +125,7 @@ export default function SongWheelPicker({
       <button
         onClick={handleSubmit}
         disabled={isPlaceholderSelected}
-        className="w-5/6 max-w-xs px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
+        className="w-3/4 max-w-xs px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
       >
         Submit
       </button>
