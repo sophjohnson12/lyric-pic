@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Dropdown from '../common/Dropdown'
+import SongWheelPicker from './SongWheelPicker'
 import type { Song } from '../../types/database'
 
 interface SongDropdownProps {
@@ -7,6 +8,7 @@ interface SongDropdownProps {
   incorrectGuesses: string[]
   songGuessed: boolean
   onGuess: (songId: number, songName: string) => string
+  isMd: boolean
 }
 
 export default function SongDropdown({
@@ -14,11 +16,16 @@ export default function SongDropdown({
   incorrectGuesses,
   songGuessed,
   onGuess,
+  isMd,
 }: SongDropdownProps) {
   const [selectedId, setSelectedId] = useState<number | undefined>(undefined)
   const [selectedLabel, setSelectedLabel] = useState('')
 
   if (songGuessed) return null
+
+  if (!isMd) {
+    return <SongWheelPicker songs={songs} incorrectGuesses={incorrectGuesses} onGuess={onGuess} />
+  }
 
   const options = songs.map((s) => ({ id: s.id as number | null, label: s.name }))
 

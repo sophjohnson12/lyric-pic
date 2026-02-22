@@ -35,18 +35,6 @@ export default function GamePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  // Prevent iOS Safari from scrolling the window when a word input is focused
-  useEffect(() => {
-    const resetScroll = () => window.scrollTo(0, 0)
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    window.addEventListener('scroll', resetScroll)
-    return () => {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-      window.removeEventListener('scroll', resetScroll)
-    }
-  }, [])
 
   // Update meta tags
   useEffect(() => {
@@ -224,12 +212,13 @@ export default function GamePage() {
                 debugMode={DEBUG_MODE}
                 autoFocus={isMd && index === deferredFocusIndex}
                 focusTrigger={focusTrigger}
+                isMd={isMd}
               />
             </div>
           ))}
         </div>
         {/* Carousel Dots (Mobile Only) */}
-        <div className="flex justify-center gap-2 mb-12 md:hidden">
+        <div className="flex justify-center gap-2 mb-6 md:hidden">
           {game.puzzleWords.map((_: any, index: number) => (
             <button
               key={index}
@@ -242,7 +231,7 @@ export default function GamePage() {
         {/* Album and Song dropdowns */}
         {(
           <div>
-            <div className="max-w-xxl mb-12 md:mb-9">
+            <div className="max-w-xxl mb-3">
               <AlbumButtons
                 albums={game.albums}
                 incorrectAlbumIds={game.incorrectAlbumIds}
@@ -257,6 +246,7 @@ export default function GamePage() {
                 incorrectGuesses={game.incorrectSongGuesses}
                 songGuessed={game.songGuessed}
                 onGuess={game.guessSong}
+                isMd={isMd}
               />
             </div>
           </div>
