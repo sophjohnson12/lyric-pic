@@ -179,7 +179,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="flex flex-col bg-bg h-dvh md:h-auto">
+    <div className="flex flex-col bg-bg h-dvh overflow-hidden md:h-auto md:overflow-visible">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}
@@ -189,7 +189,7 @@ export default function GamePage() {
         onSkip={game.skipSong}
       />
 
-      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1 overflow-y-auto md:overflow-y-visible">
+      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
