@@ -27,14 +27,16 @@ import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
 import { saveLyricImages } from '../../services/supabase'
 import { IMAGES_TO_CACHE } from '../../utils/constants'
 
-function ImageThumb({ url }: { url: string }) {
+function ImageThumb({ url, imageId }: { url: string; imageId: number }) {
   return (
-    <img
-      src={url}
-      alt=""
-      className="w-12 h-12 object-cover rounded shrink-0"
-      loading="lazy"
-    />
+    <Link to={`/admin/images/${imageId}`}>
+      <img
+        src={url}
+        alt=""
+        className="w-12 h-12 object-cover rounded shrink-0 hover:opacity-80"
+        loading="lazy"
+      />
+    </Link>
   )
 }
 
@@ -441,13 +443,17 @@ export default function ImagesPage() {
           onToggleAll: handleToggleAllFlaggedSelect,
         }}
         columns={[
-          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} /> },
+          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} /> },
           { header: 'Image ID', accessor: (img) => img.image_id },
           { header: 'Flagged By', accessor: (img) => img.flagged_by ?? '—' },
+          { header: 'Lyrics', accessor: (img) => img.lyric_count },
           {
             header: 'Actions',
             accessor: (img) => (
               <div className="flex items-center gap-2">
+                <Link to={`/admin/images/${img.id}`} className="hover:opacity-70" title="View image">
+                  <Pencil size={20} className="drop-shadow-md" />
+                </Link>
                 <button
                   onClick={() => handleUnflag(img.id)}
                   className="hover:opacity-70 cursor-pointer"
@@ -488,7 +494,7 @@ export default function ImagesPage() {
             onClick={() => {
               if (unreviewedDuplicates.length === 0) return
               const [first, ...rest] = unreviewedDuplicates
-              navigate(`/admin/images/${first.id}/lyrics`, { state: { reviewQueue: rest.map((r) => r.id) } })
+              navigate(`/admin/images/${first.id}`, { state: { reviewQueue: rest.map((r) => r.id) } })
             }}
             disabled={unreviewedDuplicates.length === 0 || loading}
             className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
@@ -520,19 +526,8 @@ export default function ImagesPage() {
           onToggleAll: handleToggleAllDuplicatesSelect,
         }}
         columns={[
-          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} /> },
+          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} /> },
           { header: 'Image ID', accessor: (img) => img.image_id },
-          {
-            header: 'Lyrics',
-            accessor: (img) => (
-              <Link
-                to={`/admin/images/${img.id}/lyrics`}
-                className="text-primary hover:underline"
-              >
-                {img.lyric_count}
-              </Link>
-            ),
-          },
           {
             header: 'Is Reviewed?',
             accessor: (img) =>
@@ -540,10 +535,14 @@ export default function ImagesPage() {
                 ? <Check size={16} />
                 : null,
           },
+          { header: 'Lyrics', accessor: (img) => img.lyric_count },
           {
             header: 'Actions',
             accessor: (img) => (
               <div className="flex items-center gap-2">
+                <Link to={`/admin/images/${img.id}`} className="hover:opacity-70" title="View image">
+                  <Pencil size={20} className="drop-shadow-md" />
+                </Link>
                 <button
                   onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownWordId) }}
                   className="hover:opacity-70 cursor-pointer"
@@ -612,13 +611,17 @@ export default function ImagesPage() {
           onToggleAll: handleToggleAllSelect,
         }}
         columns={[
-          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} /> },
+          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} /> },
           { header: 'Image ID', accessor: (img) => img.image_id },
           { header: 'Blocklist Reason', accessor: (img) => img.blocklist_reason ?? '—' },
+          { header: 'Lyrics', accessor: (img) => img.lyric_count },
           {
             header: 'Actions',
             accessor: (img) => (
               <div className="flex items-center gap-2">
+                <Link to={`/admin/images/${img.id}`} className="hover:opacity-70" title="View image">
+                  <Pencil size={20} className="drop-shadow-md" />
+                </Link>
                 <button
                   onClick={() => {
                     const currentReasonId = reasons.find((r) => r.reason === img.blocklist_reason)?.id
@@ -659,7 +662,7 @@ export default function ImagesPage() {
             Are you sure? This image will be hidden from the game.
           </p>
           <div className="flex items-center gap-3 mb-4">
-            <ImageThumb url={blocklistModal.url} />
+            <img src={blocklistModal.url} alt="" className="w-12 h-12 object-cover rounded shrink-0" />
           </div>
           <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
           <select
@@ -706,7 +709,7 @@ export default function ImagesPage() {
         <Modal onClose={() => { setEditReasonModal(null); setEditReasonValue('') }}>
           <h2 className="text-lg font-bold mb-2">Edit Blocklist Reason</h2>
           <div className="flex items-center gap-3 mb-4">
-            <ImageThumb url={editReasonModal.url} />
+            <img src={editReasonModal.url} alt="" className="w-12 h-12 object-cover rounded shrink-0" />
           </div>
           <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
           <select

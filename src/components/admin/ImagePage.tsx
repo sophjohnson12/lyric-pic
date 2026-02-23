@@ -8,7 +8,7 @@ import { getImageById, getImageLyrics, updateLyricImageSelectable, blocklistImag
 import type { AdminImageLyricRow } from '../../services/adminService'
 import ToggleSwitch from './ToggleSwitch'
 
-export default function ImageLyricsPage() {
+export default function ImagePage() {
   const { imageId } = useParams<{ imageId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -26,7 +26,7 @@ export default function ImageLyricsPage() {
   function navigateNext() {
     if (reviewQueue.length > 0) {
       const [next, ...rest] = reviewQueue
-      navigate(`/admin/images/${next}/lyrics`, { state: { reviewQueue: rest } })
+      navigate(`/admin/images/${next}`, { state: { reviewQueue: rest } })
     } else {
       navigate('/admin/images')
     }
@@ -35,7 +35,7 @@ export default function ImageLyricsPage() {
   useEffect(() => {
     setBreadcrumbs([
       { label: 'Images', to: '/admin/images' },
-      { label: 'Image Lyrics' },
+      { label: 'Image' },
     ])
   }, [setBreadcrumbs])
 
@@ -100,7 +100,7 @@ export default function ImageLyricsPage() {
             <ArrowLeft size={16} />
             Back
           </Link>
-          <h1 className="text-2xl font-bold">Image Lyrics</h1>
+          <h1 className="text-2xl font-bold">Image</h1>
           {reviewQueue.length > 0 && (
             <span className="text-sm text-text/50">{reviewQueue.length} remaining</span>
           )}
@@ -144,7 +144,7 @@ export default function ImageLyricsPage() {
         keyFn={(l) => l.lyric_id}
         loading={loading}
         columns={[
-          { header: 'Word', accessor: (l) => l.root_word },
+          { header: 'Lyric', accessor: (l) => l.root_word },
           {
             header: 'Enabled?',
             accessor: (l) => (

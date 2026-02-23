@@ -13,7 +13,7 @@ import SongFormPage from './components/admin/SongFormPage'
 import SongLyricsPage from './components/admin/SongLyricsPage'
 import LyricsPage from './components/admin/LyricsPage'
 import ImagesPage from './components/admin/ImagesPage'
-import ImageLyricsPage from './components/admin/ImageLyricsPage'
+import ImagePage from './components/admin/ImagePage'
 import SettingsPage from './components/admin/SettingsPage'
 
 export default function App() {
@@ -36,7 +36,7 @@ export default function App() {
           <Route path="artists/:artistId/songs/:songId/lyrics" element={<SongLyricsPage />} />
           <Route path="lyrics" element={<LyricsPage />} />
           <Route path="images" element={<ImagesPage />} />
-          <Route path="images/:imageId/lyrics" element={<ImageLyricsPage />} />
+          <Route path="images/:imageId" element={<ImagePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path="/:artistSlug" element={<GamePage />} />

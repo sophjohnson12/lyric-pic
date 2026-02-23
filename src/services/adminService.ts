@@ -744,6 +744,7 @@ export interface AdminFlaggedImageRow {
   image_id: string
   url: string
   flagged_by: string | null
+  lyric_count: number
 }
 
 export interface AdminBlocklistedImageRow {
@@ -751,6 +752,7 @@ export interface AdminBlocklistedImageRow {
   image_id: string
   url: string
   blocklist_reason: string | null
+  lyric_count: number
 }
 
 export interface AdminDuplicateImageRow {
@@ -900,17 +902,21 @@ export async function getLyricsWithoutImages(): Promise<{ id: number; root_word:
 export async function getFlaggedImages(): Promise<AdminFlaggedImageRow[]> {
   const { data, error } = await supabase
     .from('image')
-    .select('id, image_id, url, flagged_by')
+    .select('id, image_id, url, flagged_by, lyric_image(count)')
     .eq('is_flagged', true)
     .order('id')
   if (error) throw error
-  return data
+  return (data as any[]).map((img) => ({
+    ...img,
+    lyric_count: img.lyric_image?.[0]?.count ?? 0,
+    lyric_image: undefined,
+  }))
 }
 
 export async function getBlocklistedImages(): Promise<AdminBlocklistedImageRow[]> {
   const { data, error } = await supabase
     .from('image')
-    .select('id, image_id, url, blocklist_reason')
+    .select('id, image_id, url, blocklist_reason, lyric_image(count)')
     .eq('is_blocklisted', true)
     .order('id')
   if (error) throw error
@@ -918,9 +924,11 @@ export async function getBlocklistedImages(): Promise<AdminBlocklistedImageRow[]
   const { data: reasons } = await supabase.from('blocklist_reason').select('id, reason')
   const reasonMap = new Map((reasons ?? []).map((r) => [r.id, r.reason]))
 
-  return data.map((img: { id: number; image_id: string; url: string; blocklist_reason: number | null }) => ({
+  return (data as any[]).map((img) => ({
     ...img,
     blocklist_reason: img.blocklist_reason ? (reasonMap.get(img.blocklist_reason) ?? null) : null,
+    lyric_count: img.lyric_image?.[0]?.count ?? 0,
+    lyric_image: undefined,
   }))
 }
 
