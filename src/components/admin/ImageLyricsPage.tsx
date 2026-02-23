@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ConfirmPopup from '../common/ConfirmPopup'
-import { getImageById, getImageLyrics, updateLyricImageSelectable, blocklistImageUnknown } from '../../services/adminService'
+import { getImageById, getImageLyrics, updateLyricImageSelectable, blocklistImageUnknown, markImageReviewed } from '../../services/adminService'
 import type { AdminImageLyricRow } from '../../services/adminService'
 import ToggleSwitch from './ToggleSwitch'
 
@@ -18,6 +18,7 @@ export default function ImageLyricsPage() {
   const [toggling, setToggling] = useState<number | null>(null)
   const [showBlocklistConfirm, setShowBlocklistConfirm] = useState(false)
   const [blocklisting, setBlocklisting] = useState(false)
+  const [reviewing, setReviewing] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([
@@ -37,6 +38,18 @@ export default function ImageLyricsPage() {
       setLyrics(lyr)
     }).finally(() => setLoading(false))
   }, [imageId])
+
+  async function handleMarkReviewed() {
+    if (!imageId) return
+    setReviewing(true)
+    try {
+      await markImageReviewed(Number(imageId))
+      navigate('/admin/images')
+    } catch (err) {
+      console.error('Failed to mark as reviewed:', err)
+      setReviewing(false)
+    }
+  }
 
   async function handleBlocklistConfirm() {
     if (!imageId) return
@@ -75,14 +88,24 @@ export default function ImageLyricsPage() {
           </Link>
           <h1 className="text-2xl font-bold">Image Lyrics</h1>
         </div>
-        <button
-          onClick={() => setShowBlocklistConfirm(true)}
-          disabled={blocklisting || loading}
-          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-        >
-          {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          Blocklist
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleMarkReviewed}
+            disabled={reviewing || blocklisting || loading}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {reviewing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Mark as Reviewed
+          </button>
+          <button
+            onClick={() => setShowBlocklistConfirm(true)}
+            disabled={blocklisting || reviewing || loading}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Blocklist
+          </button>
+        </div>
       </div>
 
       {image && (

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FlagOff, Ban, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import { FlagOff, Ban, Pencil, Trash2, ExternalLink, Check } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -22,6 +22,7 @@ import {
   clearLyricsForBlocklistedImages,
 } from '../../services/adminService'
 import type { AdminFlaggedImageRow, AdminBlocklistedImageRow, AdminDuplicateImageRow } from '../../services/adminService'
+import ToggleSwitch from './ToggleSwitch'
 import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
 import { saveLyricImages } from '../../services/supabase'
 import { IMAGES_TO_CACHE } from '../../utils/constants'
@@ -68,6 +69,7 @@ export default function ImagesPage() {
   const fetchCancelRef = useRef(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
+  const [showReviewed, setShowReviewed] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Images' }])
@@ -470,7 +472,11 @@ export default function ImagesPage() {
 
       <div className="flex items-center mt-8 mb-2">
         <h2 className="text-lg font-semibold">Duplicate Images</h2>
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-4 ml-auto">
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            Is Reviewed?
+            <ToggleSwitch checked={showReviewed} onChange={setShowReviewed} />
+          </label>
           <button
             onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason('') }}
             disabled={duplicatesSelectedIds.size === 0 || !!bulkLoading}
@@ -484,7 +490,10 @@ export default function ImagesPage() {
         </div>
       </div>
       <AdminTable
-        data={duplicates}
+        data={duplicates.filter((img) => {
+          const isReviewed = !!img.reviewed_at && (!img.updated_at || img.reviewed_at > img.updated_at)
+          return showReviewed ? isReviewed : !isReviewed
+        })}
         keyFn={(img) => img.id}
         loading={loading}
         selection={{
@@ -505,6 +514,13 @@ export default function ImagesPage() {
                 {img.lyric_count}
               </Link>
             ),
+          },
+          {
+            header: 'Is Reviewed?',
+            accessor: (img) =>
+              img.reviewed_at && (!img.updated_at || img.reviewed_at > img.updated_at)
+                ? <Check size={16} />
+                : null,
           },
           {
             header: 'Actions',

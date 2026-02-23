@@ -758,6 +758,8 @@ export interface AdminDuplicateImageRow {
   image_id: string
   url: string
   lyric_count: number
+  reviewed_at: string | null
+  updated_at: string | null
 }
 
 export async function getImageById(imageId: number): Promise<{ id: number; image_id: string; url: string } | null> {
@@ -774,6 +776,14 @@ export interface AdminImageLyricRow {
   lyric_id: number
   root_word: string
   is_selectable: boolean
+}
+
+export async function markImageReviewed(imageId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ reviewed_at: new Date().toISOString() })
+    .eq('id', imageId)
+  if (error) throw error
 }
 
 export async function blocklistImageUnknown(imageId: number) {
