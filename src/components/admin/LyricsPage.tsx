@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { FlagOff, Ban, Pencil, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { FlagOff, Ban, Trash2, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -333,12 +334,15 @@ export default function LyricsPage() {
           onToggleAll: handleToggleAllFlaggedSelect,
         }}
         columns={[
-          { header: 'Lyric', accessor: (l) => l.root_word },
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">{l.root_word}</Link> },
           { header: 'Flagged By', accessor: (l) => l.flagged_by ?? '—' },
           {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
+                <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="View lyric">
+                  <Pencil size={20} className="drop-shadow-md" />
+                </Link>
                 <button
                   onClick={() => handleUnflag(l.id)}
                   className="hover:opacity-70 cursor-pointer"
@@ -404,12 +408,15 @@ export default function LyricsPage() {
           onToggleAll: handleToggleAllSelect,
         }}
         columns={[
-          { header: 'Lyric', accessor: (l) => l.root_word },
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">{l.root_word}</Link> },
           { header: 'Blocklist Reason', accessor: (l) => l.blocklist_reason ?? '—' },
           {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
+                <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="View lyric">
+                  <Pencil size={20} className="drop-shadow-md" />
+                </Link>
                 <button
                   onClick={() => {
                     const currentReasonId = reasons.find((r) => r.reason === l.blocklist_reason)?.id
@@ -419,7 +426,7 @@ export default function LyricsPage() {
                   className="hover:opacity-70 cursor-pointer"
                   title="Edit blocklist reason"
                 >
-                  <Pencil size={20} className="drop-shadow-md" />
+                  <Ban size={20} className="drop-shadow-md" />
                 </button>
                 <button
                   onClick={() => setUnblocklistId(l.id)}

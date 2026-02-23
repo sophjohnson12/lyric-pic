@@ -520,6 +520,7 @@ export interface AdminSongLyricRow {
   is_in_title: boolean
   total_count: number
   song_count: number
+  image_count: number
   is_selectable: boolean
   is_blocklisted: boolean
   is_flagged: boolean
@@ -554,12 +555,19 @@ export async function getAdminSongLyrics(
       .eq('id', sl.lyric_id)
       .single()
 
-    const { data: artistLyric } = await supabase
-      .from('artist_lyric')
-      .select('total_count, song_count')
-      .eq('artist_id', artistId)
-      .eq('lyric_id', sl.lyric_id)
-      .maybeSingle()
+    const [{ data: artistLyric }, { count: imageCount }] = await Promise.all([
+      supabase
+        .from('artist_lyric')
+        .select('total_count, song_count')
+        .eq('artist_id', artistId)
+        .eq('lyric_id', sl.lyric_id)
+        .maybeSingle(),
+      supabase
+        .from('lyric_image')
+        .select('*', { count: 'exact', head: true })
+        .eq('lyric_id', sl.lyric_id)
+        .eq('is_selectable', true),
+    ])
 
     rows.push({
       lyric_id: sl.lyric_id,
@@ -568,6 +576,7 @@ export async function getAdminSongLyrics(
       is_in_title: sl.is_in_title,
       total_count: artistLyric?.total_count ?? 0,
       song_count: artistLyric?.song_count ?? 0,
+      image_count: imageCount ?? 0,
       is_selectable: sl.is_selectable,
       is_blocklisted: lyric?.is_blocklisted ?? false,
       is_flagged: lyric?.is_flagged ?? false,
@@ -778,6 +787,7 @@ export interface AdminImageLyricRow {
   lyric_id: number
   root_word: string
   is_selectable: boolean
+  is_blocklisted: boolean
 }
 
 export async function markImageReviewed(imageId: number) {
@@ -811,13 +821,52 @@ export async function updateLyricImageSelectable(imageId: number, lyricId: numbe
 export async function getImageLyrics(imageId: number): Promise<AdminImageLyricRow[]> {
   const { data, error } = await supabase
     .from('lyric_image')
-    .select('lyric_id, is_selectable, lyric(root_word)')
+    .select('lyric_id, is_selectable, lyric(root_word, is_blocklisted)')
     .eq('image_id', imageId)
     .order('lyric_id')
   if (error) throw error
-  return (data as unknown as { lyric_id: number; is_selectable: boolean; lyric: { root_word: string } }[]).map((r) => ({
+  return (data as unknown as { lyric_id: number; is_selectable: boolean; lyric: { root_word: string; is_blocklisted: boolean } }[]).map((r) => ({
     lyric_id: r.lyric_id,
     root_word: r.lyric.root_word,
+    is_selectable: r.is_selectable,
+    is_blocklisted: r.lyric.is_blocklisted,
+  }))
+}
+
+export interface AdminLyricRow {
+  id: number
+  root_word: string
+  is_blocklisted: boolean
+  blocklist_reason: number | null
+  is_flagged: boolean
+}
+
+export async function getLyricById(lyricId: number): Promise<AdminLyricRow | null> {
+  const { data, error } = await supabase
+    .from('lyric')
+    .select('id, root_word, is_blocklisted, blocklist_reason, is_flagged')
+    .eq('id', lyricId)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export interface AdminLyricImageRow {
+  image_id: number
+  url: string
+  is_selectable: boolean
+}
+
+export async function getLyricImages(lyricId: number): Promise<AdminLyricImageRow[]> {
+  const { data, error } = await supabase
+    .from('lyric_image')
+    .select('image_id, is_selectable, image(url)')
+    .eq('lyric_id', lyricId)
+    .order('image_id')
+  if (error) throw error
+  return (data as unknown as { image_id: number; is_selectable: boolean; image: { url: string } }[]).map((r) => ({
+    image_id: r.image_id,
+    url: r.image.url,
     is_selectable: r.is_selectable,
   }))
 }

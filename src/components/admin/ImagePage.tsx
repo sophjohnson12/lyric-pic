@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Check } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { getImageById, getImageLyrics, updateLyricImageSelectable, blocklistImageUnknown, markImageReviewed } from '../../services/adminService'
 import type { AdminImageLyricRow } from '../../services/adminService'
+import type { Breadcrumb } from './AdminBreadcrumbContext'
 import ToggleSwitch from './ToggleSwitch'
 
 export default function ImagePage() {
@@ -21,22 +22,26 @@ export default function ImagePage() {
   const [blocklisting, setBlocklisting] = useState(false)
   const [reviewing, setReviewing] = useState(false)
 
-  const reviewQueue: number[] = (location.state as { reviewQueue?: number[] } | null)?.reviewQueue ?? []
+  const state = location.state as { reviewQueue?: number[]; parentBreadcrumbs?: Breadcrumb[]; backUrl?: string; backState?: unknown } | null
+  const reviewQueue: number[] = state?.reviewQueue ?? []
+  const backUrl = state?.backUrl ?? '/admin/images'
+  const backState = state?.backState ?? null
 
   function navigateNext() {
     if (reviewQueue.length > 0) {
       const [next, ...rest] = reviewQueue
       navigate(`/admin/images/${next}`, { state: { reviewQueue: rest } })
     } else {
-      navigate('/admin/images')
+      navigate(backUrl, { state: backState })
     }
   }
 
+  const currentBreadcrumbs: Breadcrumb[] = state?.parentBreadcrumbs
+    ? [...state.parentBreadcrumbs, { label: 'Images' }, { label: 'Image' }]
+    : [{ label: 'Images', to: '/admin/images' }, { label: 'Image' }]
+
   useEffect(() => {
-    setBreadcrumbs([
-      { label: 'Images', to: '/admin/images' },
-      { label: 'Image' },
-    ])
+    setBreadcrumbs(currentBreadcrumbs)
   }, [setBreadcrumbs])
 
   useEffect(() => {
@@ -94,7 +99,8 @@ export default function ImagePage() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Link
-            to="/admin/images"
+            to={backUrl}
+            state={backState}
             className="flex items-center gap-1.5 text-sm text-primary hover:opacity-70"
           >
             <ArrowLeft size={16} />
@@ -144,7 +150,8 @@ export default function ImagePage() {
         keyFn={(l) => l.lyric_id}
         loading={loading}
         columns={[
-          { header: 'Lyric', accessor: (l) => l.root_word },
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: state }} className="text-primary hover:underline">{l.root_word}</Link> },
+          { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
           {
             header: 'Enabled?',
             accessor: (l) => (

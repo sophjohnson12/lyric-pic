@@ -631,7 +631,7 @@ export default function ImagesPage() {
                   className="hover:opacity-70 cursor-pointer"
                   title="Edit blocklist reason"
                 >
-                  <Pencil size={20} className="drop-shadow-md" />
+                  <Ban size={20} className="drop-shadow-md" />
                 </button>
                 <button
                   onClick={() => setUnblocklistId(img.id)}

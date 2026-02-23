@@ -12,6 +12,7 @@ import ArtistSongsPage from './components/admin/ArtistSongsPage'
 import SongFormPage from './components/admin/SongFormPage'
 import SongLyricsPage from './components/admin/SongLyricsPage'
 import LyricsPage from './components/admin/LyricsPage'
+import LyricPage from './components/admin/LyricPage'
 import ImagesPage from './components/admin/ImagesPage'
 import ImagePage from './components/admin/ImagePage'
 import SettingsPage from './components/admin/SettingsPage'
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="artists/:artistId/songs/:id" element={<SongFormPage />} />
           <Route path="artists/:artistId/songs/:songId/lyrics" element={<SongLyricsPage />} />
           <Route path="lyrics" element={<LyricsPage />} />
+          <Route path="lyrics/:lyricId" element={<LyricPage />} />
           <Route path="images" element={<ImagesPage />} />
           <Route path="images/:imageId" element={<ImagePage />} />
           <Route path="settings" element={<SettingsPage />} />

@@ -44,7 +44,7 @@ export default function ArtistSongsPage() {
   const albumParam = searchParams.get('album')
   const albumFilter = albumParam === 'none' ? 'none' as const : albumParam ? Number(albumParam) : null
   const enabledParam = searchParams.get('enabled')
-  const enabledFilter = enabledParam === 'true' ? true : enabledParam === 'false' ? false : null
+  const enabledFilter = enabledParam === 'false' ? false : enabledParam === 'true' || enabledParam === null ? true : null
   const [fetching, setFetching] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
@@ -375,7 +375,7 @@ export default function ArtistSongsPage() {
         </select>
         <label className="text-sm font-medium mr-2 ml-4">Enabled:</label>
         <select
-          value={enabledParam ?? ''}
+          value={enabledParam ?? 'true'}
           onChange={(e) => {
             const val = e.target.value
             setPage(1)

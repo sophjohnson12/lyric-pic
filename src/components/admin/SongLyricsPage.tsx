@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, useSearchParams, Link } from 'react-router-dom'
-import { Flag, Check, ArrowLeft } from 'lucide-react'
+import { useParams, useSearchParams, useLocation, Link } from 'react-router-dom'
+import { Flag, Check, ArrowLeft, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
@@ -17,7 +17,8 @@ export default function SongLyricsPage() {
   if (searchParams.get('album')) backParams.set('album', searchParams.get('album')!)
   if (searchParams.get('enabled')) backParams.set('enabled', searchParams.get('enabled')!)
   const backUrl = `/admin/artists/${aid}/songs${backParams.toString() ? `?${backParams.toString()}` : ''}`
-  const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const location = useLocation()
+  const { breadcrumbs, setBreadcrumbs } = useAdminBreadcrumbs()
   const [lyrics, setLyrics] = useState<AdminSongLyricRow[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -115,14 +116,15 @@ export default function SongLyricsPage() {
           },
         }}
         columns={[
-          { header: 'Lyric', accessor: (l) => l.root_word },
-          { header: 'Count', accessor: (l) => l.count },
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search }} className="text-primary hover:underline">{l.root_word}</Link> },
+          { header: 'Lyric Count', accessor: (l) => l.count },
+          { header: 'Image Count', accessor: (l) => l.image_count },
           { header: 'In Title?', accessor: (l) => (l.is_in_title ? <Check size={20} className="drop-shadow-md" /> : '') },
           { header: 'Total Count', accessor: (l) => l.total_count },
           { header: 'Song Count', accessor: (l) => l.song_count },
-          { header: 'Blocklisted', accessor: (l) => (l.is_blocklisted ? <Check size={20} className="drop-shadow-md" /> : '') },
+          { header: 'Blocklisted?', accessor: (l) => (l.is_blocklisted ? <Check size={20} className="drop-shadow-md" /> : '') },
           {
-            header: 'Enabled',
+            header: 'Enabled?',
             accessor: (l) => (
               <ToggleSwitch
                 checked={l.is_selectable}
@@ -133,14 +135,19 @@ export default function SongLyricsPage() {
           {
             header: 'Actions',
             accessor: (l) => (
-              <button
-                onClick={() => handleFlag(l.lyric_id)}
-                disabled={l.is_blocklisted || l.is_flagged}
-                className="hover:opacity-70 disabled:opacity-30 cursor-pointer disabled:cursor-default"
-                title={l.is_blocklisted ? 'Blocklisted' : l.is_flagged ? 'Already flagged' : 'Flag Lyric'}
-              >
-                <Flag size={20} className="drop-shadow-md" />
-              </button>
+              <div className="flex items-center gap-2">
+                <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search }} className="hover:opacity-70" title="View lyric">
+                  <Pencil size={20} className="drop-shadow-md" />
+                </Link>
+                <button
+                  onClick={() => handleFlag(l.lyric_id)}
+                  disabled={l.is_blocklisted || l.is_flagged}
+                  className="hover:opacity-70 disabled:opacity-30 cursor-pointer disabled:cursor-default"
+                  title={l.is_blocklisted ? 'Blocklisted' : l.is_flagged ? 'Already flagged' : 'Flag Lyric'}
+                >
+                  <Flag size={20} className="drop-shadow-md" />
+                </button>
+              </div>
             ),
           },
         ]}
