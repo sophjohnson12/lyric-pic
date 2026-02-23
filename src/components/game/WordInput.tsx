@@ -89,13 +89,15 @@ export default function WordInput({
             />
 
             {/* Refresh Icon */}
-            <button
-              onClick={() => onRefresh(wordIndex)}
-              className="absolute top-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer"
-              title="Get different image"
-            >
-              <RefreshCw size={20} className="drop-shadow-md" />
-            </button>
+            {puzzleWord.imageUrls.length > 1 && (
+              <button
+                onClick={() => onRefresh(wordIndex)}
+                className="absolute top-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer"
+                title="Get different image"
+              >
+                <RefreshCw size={20} className="drop-shadow-md" />
+              </button>
+            )}
 
             {/* Flag Image Icon */}
             {onFlagImage && currentImageUrl && (

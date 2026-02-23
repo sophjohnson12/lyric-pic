@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FlagOff, Ban, Pencil, Trash2, ExternalLink, Check } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -40,6 +40,7 @@ function ImageThumb({ url }: { url: string }) {
 
 
 export default function ImagesPage() {
+  const navigate = useNavigate()
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [flagged, setFlagged] = useState<AdminFlaggedImageRow[]>([])
   const [duplicates, setDuplicates] = useState<AdminDuplicateImageRow[]>([])
@@ -70,6 +71,12 @@ export default function ImagesPage() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [showReviewed, setShowReviewed] = useState(false)
+
+  const unknownWordId = String(reasons.find((r) => r.reason.toLowerCase() === 'unknown_word')?.id ?? '')
+
+  const unreviewedDuplicates = duplicates.filter((img) =>
+    !(img.reviewed_at && (!img.updated_at || img.reviewed_at > img.updated_at))
+  )
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Images' }])
@@ -413,7 +420,7 @@ export default function ImagesPage() {
               : 'Unflag All'}
           </button>
           <button
-            onClick={() => { setBulkBlockModal(true); setBulkBlockReason('') }}
+            onClick={() => { setBulkBlockModal(true); setBulkBlockReason(unknownWordId) }}
             disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
             className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
@@ -449,7 +456,7 @@ export default function ImagesPage() {
                   <FlagOff size={20} className="drop-shadow-md" />
                 </button>
                 <button
-                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason('') }}
+                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownWordId) }}
                   className="hover:opacity-70 cursor-pointer"
                   title="Blocklist"
                 >
@@ -478,7 +485,18 @@ export default function ImagesPage() {
             <ToggleSwitch checked={showReviewed} onChange={setShowReviewed} />
           </label>
           <button
-            onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason('') }}
+            onClick={() => {
+              if (unreviewedDuplicates.length === 0) return
+              const [first, ...rest] = unreviewedDuplicates
+              navigate(`/admin/images/${first.id}/lyrics`, { state: { reviewQueue: rest.map((r) => r.id) } })
+            }}
+            disabled={unreviewedDuplicates.length === 0 || loading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            Review All
+          </button>
+          <button
+            onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason(unknownWordId) }}
             disabled={duplicatesSelectedIds.size === 0 || !!bulkLoading}
             className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
@@ -527,7 +545,7 @@ export default function ImagesPage() {
             accessor: (img) => (
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason('') }}
+                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownWordId) }}
                   className="hover:opacity-70 cursor-pointer"
                   title="Blocklist"
                 >

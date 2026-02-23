@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -11,6 +11,7 @@ import ToggleSwitch from './ToggleSwitch'
 export default function ImageLyricsPage() {
   const { imageId } = useParams<{ imageId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [image, setImage] = useState<{ id: number; image_id: string; url: string } | null>(null)
   const [lyrics, setLyrics] = useState<AdminImageLyricRow[]>([])
@@ -19,6 +20,17 @@ export default function ImageLyricsPage() {
   const [showBlocklistConfirm, setShowBlocklistConfirm] = useState(false)
   const [blocklisting, setBlocklisting] = useState(false)
   const [reviewing, setReviewing] = useState(false)
+
+  const reviewQueue: number[] = (location.state as { reviewQueue?: number[] } | null)?.reviewQueue ?? []
+
+  function navigateNext() {
+    if (reviewQueue.length > 0) {
+      const [next, ...rest] = reviewQueue
+      navigate(`/admin/images/${next}/lyrics`, { state: { reviewQueue: rest } })
+    } else {
+      navigate('/admin/images')
+    }
+  }
 
   useEffect(() => {
     setBreadcrumbs([
@@ -30,6 +42,8 @@ export default function ImageLyricsPage() {
   useEffect(() => {
     if (!imageId) return
     setLoading(true)
+    setReviewing(false)
+    setBlocklisting(false)
     Promise.all([
       getImageById(Number(imageId)),
       getImageLyrics(Number(imageId)),
@@ -44,7 +58,7 @@ export default function ImageLyricsPage() {
     setReviewing(true)
     try {
       await markImageReviewed(Number(imageId))
-      navigate('/admin/images')
+      navigateNext()
     } catch (err) {
       console.error('Failed to mark as reviewed:', err)
       setReviewing(false)
@@ -56,7 +70,7 @@ export default function ImageLyricsPage() {
     setBlocklisting(true)
     try {
       await blocklistImageUnknown(Number(imageId))
-      navigate('/admin/images')
+      navigateNext()
     } catch (err) {
       console.error('Failed to blocklist image:', err)
       setBlocklisting(false)
@@ -87,6 +101,9 @@ export default function ImageLyricsPage() {
             Back
           </Link>
           <h1 className="text-2xl font-bold">Image Lyrics</h1>
+          {reviewQueue.length > 0 && (
+            <span className="text-sm text-text/50">{reviewQueue.length} remaining</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -113,7 +130,7 @@ export default function ImageLyricsPage() {
           <img
             src={image.url}
             alt=""
-            className="w-32 h-32 object-cover rounded"
+            className="w-75 h-75 object-cover rounded"
           />
           <div>
             <p className="text-sm font-medium text-text/60">Image ID</p>
