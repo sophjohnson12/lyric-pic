@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { FlagOff, Ban, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -16,8 +17,14 @@ import {
   bulkUnblocklistImages,
   bulkBlocklistImages,
   getBlocklistReasons,
+  getLyricsWithoutImages,
+  getDuplicateImages,
+  clearLyricsForBlocklistedImages,
 } from '../../services/adminService'
-import type { AdminFlaggedImageRow, AdminBlocklistedImageRow } from '../../services/adminService'
+import type { AdminFlaggedImageRow, AdminBlocklistedImageRow, AdminDuplicateImageRow } from '../../services/adminService'
+import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
+import { saveLyricImages } from '../../services/supabase'
+import { IMAGES_TO_CACHE } from '../../utils/constants'
 
 function ImageThumb({ url }: { url: string }) {
   return (
@@ -34,6 +41,7 @@ function ImageThumb({ url }: { url: string }) {
 export default function ImagesPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [flagged, setFlagged] = useState<AdminFlaggedImageRow[]>([])
+  const [duplicates, setDuplicates] = useState<AdminDuplicateImageRow[]>([])
   const [blocklisted, setBlocklisted] = useState<AdminBlocklistedImageRow[]>([])
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,7 +59,15 @@ export default function ImagesPage() {
   const [flaggedSelectedIds, setFlaggedSelectedIds] = useState<Set<string | number>>(new Set())
   const [bulkBlockModal, setBulkBlockModal] = useState(false)
   const [bulkBlockReason, setBulkBlockReason] = useState('')
+  const [duplicatesSelectedIds, setDuplicatesSelectedIds] = useState<Set<string | number>>(new Set())
+  const [bulkBlockDuplicatesModal, setBulkBlockDuplicatesModal] = useState(false)
+  const [bulkBlockDuplicatesReason, setBulkBlockDuplicatesReason] = useState('')
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
+  const [fetchJob, setFetchJob] = useState<{ done: number; total: number | null } | null>(null)
+  const [fetchResult, setFetchResult] = useState<{ done: number; total: number; rateLimited: boolean } | null>(null)
+  const fetchCancelRef = useRef(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Images' }])
@@ -62,21 +78,27 @@ export default function ImagesPage() {
   }, [])
 
   useEffect(() => {
-    if (!bulkLoading) return
+    if (!bulkLoading && !fetchJob) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading])
+  }, [bulkLoading, fetchJob])
+
+  useEffect(() => {
+    return () => { fetchCancelRef.current = true }
+  }, [])
 
   async function loadData() {
     setLoading(true)
     try {
-      const [f, b, r] = await Promise.all([
+      const [f, d, b, r] = await Promise.all([
         getFlaggedImages(),
+        getDuplicateImages(),
         getBlocklistedImages(),
         getBlocklistReasons(),
       ])
       setFlagged(f)
+      setDuplicates(d)
       setBlocklisted(b)
       setReasons(r)
     } finally {
@@ -87,6 +109,56 @@ export default function ImagesPage() {
   function showToast(message: string) {
     setToast(message)
     setTimeout(() => setToast(null), 5000)
+  }
+
+  async function handleFetchNewImages() {
+    fetchCancelRef.current = false
+    setFetchJob({ done: 0, total: null })
+    setFetchResult(null)
+    try {
+      const lyrics = await getLyricsWithoutImages()
+      if (fetchCancelRef.current) return
+      if (lyrics.length === 0) {
+        showToast('All lyrics already have images')
+        setFetchJob(null)
+        return
+      }
+      setFetchJob({ done: 0, total: lyrics.length })
+      for (let i = 0; i < lyrics.length; i++) {
+        if (fetchCancelRef.current) break
+        try {
+          const images = await searchImagesOrThrow(lyrics[i].root_word, IMAGES_TO_CACHE)
+          if (images.length > 0) await saveLyricImages(lyrics[i].id, images)
+        } catch (err) {
+          if (err instanceof RateLimitError) {
+            setFetchResult({ done: i, total: lyrics.length, rateLimited: true })
+            setFetchJob(null)
+            return
+          }
+          console.error(`Failed for "${lyrics[i].root_word}":`, err)
+        }
+        setFetchJob({ done: i + 1, total: lyrics.length })
+      }
+      setFetchResult({ done: lyrics.length, total: lyrics.length, rateLimited: false })
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to load lyrics'}`)
+    } finally {
+      setFetchJob(null)
+    }
+  }
+
+  async function handleClearBlocklistLyrics() {
+    setShowClearConfirm(false)
+    setClearing(true)
+    try {
+      const count = await clearLyricsForBlocklistedImages()
+      showToast(`Deleted ${count} lyric_image records`)
+      loadData()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to clear'}`)
+    } finally {
+      setClearing(false)
+    }
   }
 
   async function handleUnflag(imageId: number) {
@@ -238,6 +310,42 @@ export default function ImagesPage() {
     }
   }
 
+  function handleToggleDuplicatesSelect(key: string | number) {
+    setDuplicatesSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function handleToggleAllDuplicatesSelect(keys: (string | number)[]) {
+    setDuplicatesSelectedIds((prev) => {
+      const allSelected = keys.every((k) => prev.has(k))
+      const next = new Set(prev)
+      if (allSelected) keys.forEach((k) => next.delete(k))
+      else keys.forEach((k) => next.add(k))
+      return next
+    })
+  }
+
+  async function handleBulkBlockDuplicatesConfirm() {
+    if (!bulkBlockDuplicatesReason || duplicatesSelectedIds.size === 0) return
+    setBulkLoading({ type: 'block-dupes', done: 0, total: 1 })
+    try {
+      await bulkBlocklistImages([...duplicatesSelectedIds] as number[], Number(bulkBlockDuplicatesReason))
+      showToast(`Blocklisted ${duplicatesSelectedIds.size} images`)
+      setBulkBlockDuplicatesModal(false)
+      setBulkBlockDuplicatesReason('')
+      setDuplicatesSelectedIds(new Set())
+      loadData()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
+    } finally {
+      setBulkLoading(null)
+    }
+  }
+
   async function handleUnblocklist(imageId: number) {
     try {
       await unblocklistImage(imageId)
@@ -250,7 +358,42 @@ export default function ImagesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Images</h1>
+      <div className="flex items-start justify-between mb-4">
+        <h1 className="text-2xl font-bold">Images</h1>
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              disabled={clearing || !!fetchJob}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {clearing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Clear Lyrics For Blocklist
+            </button>
+            <button
+              onClick={handleFetchNewImages}
+              disabled={!!fetchJob || clearing}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {fetchJob && (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              )}
+              {fetchJob
+                ? fetchJob.total === null
+                  ? 'Loading...'
+                  : `Fetching... ${fetchJob.done.toLocaleString()} / ${fetchJob.total.toLocaleString()}`
+                : 'Fetch New Images'}
+            </button>
+          </div>
+          {fetchResult && (
+            <p className={`text-xs ${fetchResult.rateLimited ? 'text-amber-600' : 'text-text/60'}`}>
+              {fetchResult.rateLimited
+                ? `Rate limit hit — ${fetchResult.done.toLocaleString()} / ${fetchResult.total.toLocaleString()} complete. Run again when the limit refreshes.`
+                : `Done — ${fetchResult.total.toLocaleString()} lyrics fetched.`}
+            </p>
+          )}
+        </div>
+      </div>
 
       <div className="flex items-center mb-2">
         <h2 className="text-lg font-semibold">Flagged Images</h2>
@@ -303,6 +446,70 @@ export default function ImagesPage() {
                 >
                   <FlagOff size={20} className="drop-shadow-md" />
                 </button>
+                <button
+                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason('') }}
+                  className="hover:opacity-70 cursor-pointer"
+                  title="Blocklist"
+                >
+                  <Ban size={20} className="drop-shadow-md" />
+                </button>
+                <a
+                  href={img.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-70"
+                  title="Open image"
+                >
+                  <ExternalLink size={20} className="drop-shadow-md" />
+                </a>
+              </div>
+            ),
+          },
+        ]}
+      />
+
+      <div className="flex items-center mt-8 mb-2">
+        <h2 className="text-lg font-semibold">Duplicate Images</h2>
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason('') }}
+            disabled={duplicatesSelectedIds.size === 0 || !!bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {bulkLoading?.type === 'block-dupes' && (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            )}
+            Block All
+          </button>
+        </div>
+      </div>
+      <AdminTable
+        data={duplicates}
+        keyFn={(img) => img.id}
+        loading={loading}
+        selection={{
+          selected: duplicatesSelectedIds,
+          onToggle: handleToggleDuplicatesSelect,
+          onToggleAll: handleToggleAllDuplicatesSelect,
+        }}
+        columns={[
+          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} /> },
+          { header: 'Image ID', accessor: (img) => img.image_id },
+          {
+            header: 'Lyrics',
+            accessor: (img) => (
+              <Link
+                to={`/admin/images/${img.id}/lyrics`}
+                className="text-primary hover:underline"
+              >
+                {img.lyric_count}
+              </Link>
+            ),
+          },
+          {
+            header: 'Actions',
+            accessor: (img) => (
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason('') }}
                   className="hover:opacity-70 cursor-pointer"
@@ -539,6 +746,41 @@ export default function ImagesPage() {
         />
       )}
 
+      {bulkBlockDuplicatesModal && (
+        <Modal onClose={() => { setBulkBlockDuplicatesModal(false); setBulkBlockDuplicatesReason('') }}>
+          <h2 className="text-lg font-bold mb-2">Blocklist Images</h2>
+          <p className="text-sm text-text/70 mb-4">
+            Blocklist all selected duplicate images ({duplicatesSelectedIds.size}). They will be hidden from the game.
+          </p>
+          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
+          <select
+            value={bulkBlockDuplicatesReason}
+            onChange={(e) => setBulkBlockDuplicatesReason(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="" disabled>Select a reason...</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.id}>{r.reason}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setBulkBlockDuplicatesModal(false); setBulkBlockDuplicatesReason('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleBulkBlockDuplicatesConfirm}
+              disabled={!bulkBlockDuplicatesReason}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              Blocklist
+            </button>
+          </div>
+        </Modal>
+      )}
+
       {bulkBlockModal && (
         <Modal onClose={() => { setBulkBlockModal(false); setBulkBlockReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Images</h2>
@@ -572,6 +814,17 @@ export default function ImagesPage() {
             </button>
           </div>
         </Modal>
+      )}
+
+      {showClearConfirm && (
+        <ConfirmPopup
+          title="Clear Lyrics For Blocklist?"
+          message="Are you sure? This action will permanently delete all lyrics associated with the blocklisted images."
+          confirmLabel="Yes"
+          cancelLabel="Cancel"
+          onConfirm={handleClearBlocklistLyrics}
+          onCancel={() => setShowClearConfirm(false)}
+        />
       )}
 
       <Toast message={toast} />

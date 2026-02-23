@@ -753,6 +753,140 @@ export interface AdminBlocklistedImageRow {
   blocklist_reason: string | null
 }
 
+export interface AdminDuplicateImageRow {
+  id: number
+  image_id: string
+  url: string
+  lyric_count: number
+}
+
+export async function getImageById(imageId: number): Promise<{ id: number; image_id: string; url: string } | null> {
+  const { data, error } = await supabase
+    .from('image')
+    .select('id, image_id, url')
+    .eq('id', imageId)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export interface AdminImageLyricRow {
+  lyric_id: number
+  root_word: string
+  is_selectable: boolean
+}
+
+export async function blocklistImageUnknown(imageId: number) {
+  const { data, error } = await supabase
+    .from('blocklist_reason')
+    .select('id')
+    .ilike('reason', 'unknown_image')
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('"unknown_image" blocklist reason not found')
+  await blocklistImage(imageId, data.id)
+}
+
+export async function updateLyricImageSelectable(imageId: number, lyricId: number, isSelectable: boolean) {
+  const { error } = await supabase
+    .from('lyric_image')
+    .update({ is_selectable: isSelectable })
+    .eq('image_id', imageId)
+    .eq('lyric_id', lyricId)
+  if (error) throw error
+}
+
+export async function getImageLyrics(imageId: number): Promise<AdminImageLyricRow[]> {
+  const { data, error } = await supabase
+    .from('lyric_image')
+    .select('lyric_id, is_selectable, lyric(root_word)')
+    .eq('image_id', imageId)
+    .order('lyric_id')
+  if (error) throw error
+  return (data as unknown as { lyric_id: number; is_selectable: boolean; lyric: { root_word: string } }[]).map((r) => ({
+    lyric_id: r.lyric_id,
+    root_word: r.lyric.root_word,
+    is_selectable: r.is_selectable,
+  }))
+}
+
+export async function getDuplicateImages(): Promise<AdminDuplicateImageRow[]> {
+  const { data, error } = await supabase.rpc('get_duplicate_images')
+  if (error) throw error
+  return data
+}
+
+export async function clearLyricsForBlocklistedImages(): Promise<number> {
+  // Collect all blocklisted image IDs (paginated)
+  const imageIds: number[] = []
+  let offset = 0
+  const pageSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('image')
+      .select('id')
+      .eq('is_blocklisted', true)
+      .range(offset, offset + pageSize - 1)
+    if (error) throw error
+    for (const r of data as { id: number }[]) imageIds.push(r.id)
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+
+  if (imageIds.length === 0) return 0
+
+  // Delete lyric_image rows in batches to avoid URL length limits
+  let deleted = 0
+  for (let i = 0; i < imageIds.length; i += 100) {
+    const batch = imageIds.slice(i, i + 100)
+    const { count, error } = await supabase
+      .from('lyric_image')
+      .delete({ count: 'exact' })
+      .in('image_id', batch)
+    if (error) throw error
+    deleted += count ?? 0
+  }
+
+  return deleted
+}
+
+export async function getLyricsWithoutImages(): Promise<{ id: number; root_word: string }[]> {
+  // Collect all lyric_ids that already have at least one image
+  const coveredIds = new Set<number>()
+  let offset = 0
+  const pageSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric_image')
+      .select('lyric_id')
+      .range(offset, offset + pageSize - 1)
+    if (error) throw error
+    for (const r of data as { lyric_id: number }[]) coveredIds.add(r.lyric_id)
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+
+  // Collect non-blocklisted lyrics not yet covered
+  const result: { id: number; root_word: string }[] = []
+  offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('id, root_word')
+      .eq('is_blocklisted', false)
+      .order('id')
+      .range(offset, offset + pageSize - 1)
+    if (error) throw error
+    for (const l of data as { id: number; root_word: string }[]) {
+      if (!coveredIds.has(l.id)) result.push(l)
+    }
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+
+  return result
+}
+
 export async function getFlaggedImages(): Promise<AdminFlaggedImageRow[]> {
   const { data, error } = await supabase
     .from('image')
