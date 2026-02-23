@@ -951,8 +951,9 @@ export async function getLyricsWithoutImages(): Promise<{ id: number; root_word:
 export async function getFlaggedImages(): Promise<AdminFlaggedImageRow[]> {
   const { data, error } = await supabase
     .from('image')
-    .select('id, image_id, url, flagged_by, lyric_image(count)')
+    .select('id, image_id, url, flagged_by, lyric_image!left(count)')
     .eq('is_flagged', true)
+    .eq('lyric_image.is_selectable', true)
     .order('id')
   if (error) throw error
   return (data as any[]).map((img) => ({
@@ -965,8 +966,9 @@ export async function getFlaggedImages(): Promise<AdminFlaggedImageRow[]> {
 export async function getBlocklistedImages(): Promise<AdminBlocklistedImageRow[]> {
   const { data, error } = await supabase
     .from('image')
-    .select('id, image_id, url, blocklist_reason, lyric_image(count)')
+    .select('id, image_id, url, blocklist_reason, lyric_image!left(count)')
     .eq('is_blocklisted', true)
+    .eq('lyric_image.is_selectable', true)
     .order('id')
   if (error) throw error
 
