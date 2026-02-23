@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Artist, Album, Song, AppConfig } from '../types/database'
-import type { WordVariationWithStats } from '../types/game'
+import type { WordVariationWithStats, PexelsImage } from '../types/game'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -167,6 +167,41 @@ export async function getPlayedSongNames(songIds: number[]): Promise<string[]> {
     .order('name')
   if (error) throw error
   return data.map((d: { name: string }) => d.name)
+}
+
+export async function getCachedImages(lyricId: number): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('lyric_image')
+      .select('image!inner(url, is_blocklisted, is_flagged)')
+      .eq('lyric_id', lyricId)
+      .eq('is_selectable', true)
+      .eq('image.is_blocklisted', false)
+      .eq('image.is_flagged', false)
+    if (error) {
+      console.error('Failed to fetch cached images:', error)
+      return []
+    }
+    return (data as unknown as { image: { url: string } }[]).map((r) => r.image.url)
+  } catch {
+    return []
+  }
+}
+
+export async function saveLyricImages(lyricId: number, images: PexelsImage[]): Promise<void> {
+  try {
+    const p_images = images.map((img) => ({
+      image_id: String(img.id),
+      url: img.url,
+    }))
+    const { error } = await supabase.rpc('save_lyric_images', {
+      p_lyric_id: lyricId,
+      p_images,
+    })
+    if (error) console.error('Failed to save lyric images:', error)
+  } catch (err) {
+    console.error('Failed to save lyric images:', err)
+  }
 }
 
 export async function getAppConfig(): Promise<AppConfig | null> {

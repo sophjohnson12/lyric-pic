@@ -93,6 +93,23 @@ export interface LoadStatus {
   status: string
 }
 
+export interface Image {
+  id: number
+  image_id: string       // external provider ID
+  url: string
+  is_flagged: boolean
+  flagged_by: string | null
+  is_blocklisted: boolean
+  blocklist_reason: number | null
+  created_at: string
+}
+
+export interface LyricImage {
+  lyric_id: number
+  image_id: number       // FK to image.id
+  is_selectable: boolean
+}
+
 export interface AppConfig {
   id: true
   theme_primary_color: string

@@ -14,12 +14,14 @@ import {
   getLyricByWord,
   getSongLyricIds,
   getAppConfig,
+  getCachedImages,
+  saveLyricImages,
 } from '../services/supabase'
 import { searchImages, setImagesEnabled } from '../services/pexels'
 import { selectPuzzleWords } from '../services/wordSelection'
 import { useLocalStorage } from './useLocalStorage'
 import { useTheme } from './useTheme'
-import { LOCAL_STORAGE_KEY_PREFIX, IMAGES_PER_WORD } from '../utils/constants'
+import { LOCAL_STORAGE_KEY_PREFIX, IMAGES_TO_CACHE } from '../utils/constants'
 
 export function useGame(artistSlug: string) {
   const [playedSongIds, setPlayedSongIds] = useLocalStorage<number[]>(
@@ -86,15 +88,24 @@ export function useGame(artistSlug: string) {
           return
         }
 
-      // Fetch images in parallel (returns [] per word if images are disabled)
-      const imageResults = await Promise.all(
-        selected.map((w) => searchImages(w.word, IMAGES_PER_WORD))
+      // Cache-first image loading
+      const imageUrls = await Promise.all(
+        selected.map(async (w) => {
+          const cached = await getCachedImages(w.lyric_id)
+          if (cached.length > 0) return cached
+
+          const fetched = await searchImages(w.word, IMAGES_TO_CACHE)
+          if (fetched.length > 0) {
+            await saveLyricImages(w.lyric_id, fetched)
+          }
+          return fetched.map((img) => img.url)
+        })
       )
 
       const puzzleWords: PuzzleWord[] = selected.map((w, i) => ({
         lyricId: w.lyric_id,
         word: w.word,
-        imageUrls: imageResults[i].map((img) => img.url),
+        imageUrls: imageUrls[i],
         currentImageIndex: 0,
         guessed: false,
         revealed: false,
