@@ -10,7 +10,7 @@ import InfoModal from './InfoModal'
 import HistoryModal from './HistoryModal'
 import Toast from '../common/Toast'
 import ConfirmPopup from '../common/ConfirmPopup'
-import { flagWord } from '../../services/supabase'
+import { flagWord, flagImage } from '../../services/supabase'
 
 export default function GamePage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
@@ -208,6 +208,7 @@ export default function GamePage() {
                 onReveal={game.revealWord}
                 onRefresh={game.refreshImage}
                 onFlag={game.enableUserFlag ? (lyricId) => flagWord(lyricId) : undefined}
+                onFlagImage={game.enableUserFlag ? (url) => flagImage(url) : undefined}
                 debugMode={game.enableUserFlag}
                 autoFocus={isMd && index === deferredFocusIndex}
                 focusTrigger={focusTrigger}

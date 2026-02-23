@@ -97,8 +97,9 @@ export function useGame(artistSlug: string) {
           const fetched = await searchImages(w.word, IMAGES_TO_CACHE)
           if (fetched.length > 0) {
             await saveLyricImages(w.lyric_id, fetched)
+            return getCachedImages(w.lyric_id)
           }
-          return fetched.map((img) => img.url)
+          return []
         })
       )
 

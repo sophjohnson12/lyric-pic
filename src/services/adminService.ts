@@ -737,6 +737,129 @@ export async function getBlocklistReasons(): Promise<{ id: number; reason: strin
   return data
 }
 
+// ─── Image Admin ─────────────────────────────────────────
+
+export interface AdminFlaggedImageRow {
+  id: number
+  image_id: string
+  url: string
+  flagged_by: string | null
+}
+
+export interface AdminBlocklistedImageRow {
+  id: number
+  image_id: string
+  url: string
+  blocklist_reason: string | null
+}
+
+export async function getFlaggedImages(): Promise<AdminFlaggedImageRow[]> {
+  const { data, error } = await supabase
+    .from('image')
+    .select('id, image_id, url, flagged_by')
+    .eq('is_flagged', true)
+    .order('id')
+  if (error) throw error
+  return data
+}
+
+export async function getBlocklistedImages(): Promise<AdminBlocklistedImageRow[]> {
+  const { data, error } = await supabase
+    .from('image')
+    .select('id, image_id, url, blocklist_reason')
+    .eq('is_blocklisted', true)
+    .order('id')
+  if (error) throw error
+
+  const { data: reasons } = await supabase.from('blocklist_reason').select('id, reason')
+  const reasonMap = new Map((reasons ?? []).map((r) => [r.id, r.reason]))
+
+  return data.map((img: { id: number; image_id: string; url: string; blocklist_reason: number | null }) => ({
+    ...img,
+    blocklist_reason: img.blocklist_reason ? (reasonMap.get(img.blocklist_reason) ?? null) : null,
+  }))
+}
+
+export async function unflagImage(imageId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ is_flagged: false, flagged_by: null })
+    .eq('id', imageId)
+  if (error) throw error
+}
+
+export async function blocklistImage(imageId: number, reasonId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ is_blocklisted: true, blocklist_reason: reasonId, is_flagged: false, flagged_by: null })
+    .eq('id', imageId)
+  if (error) throw error
+
+  const { error: liError } = await supabase
+    .from('lyric_image')
+    .update({ is_selectable: false })
+    .eq('image_id', imageId)
+  if (liError) throw liError
+}
+
+export async function updateImageBlocklistReason(imageId: number, reasonId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ blocklist_reason: reasonId })
+    .eq('id', imageId)
+  if (error) throw error
+}
+
+export async function unblocklistImage(imageId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ is_blocklisted: false, blocklist_reason: null })
+    .eq('id', imageId)
+  if (error) throw error
+
+  const { error: liError } = await supabase
+    .from('lyric_image')
+    .update({ is_selectable: true })
+    .eq('image_id', imageId)
+  if (liError) throw liError
+}
+
+export async function bulkBlocklistImages(imageIds: number[], reasonId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ is_blocklisted: true, blocklist_reason: reasonId, is_flagged: false, flagged_by: null })
+    .in('id', imageIds)
+  if (error) throw error
+
+  const { error: liError } = await supabase
+    .from('lyric_image')
+    .update({ is_selectable: false })
+    .in('image_id', imageIds)
+  if (liError) throw liError
+}
+
+export async function bulkUpdateImageBlocklistReason(imageIds: number[], reasonId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ blocklist_reason: reasonId })
+    .in('id', imageIds)
+  if (error) throw error
+}
+
+export async function bulkUnblocklistImages(imageIds: number[]) {
+  const { error } = await supabase
+    .from('image')
+    .update({ is_blocklisted: false, blocklist_reason: null })
+    .in('id', imageIds)
+  if (error) throw error
+
+  const { error: liError } = await supabase
+    .from('lyric_image')
+    .update({ is_selectable: true })
+    .in('image_id', imageIds)
+  if (liError) throw liError
+}
+
 export async function getArtistsForDropdown(): Promise<{ id: number; name: string }[]> {
   const { data, error } = await supabase
     .from('artist')

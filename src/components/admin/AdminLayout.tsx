@@ -7,6 +7,7 @@ import { getAppConfig } from '../../services/adminService'
 const sidebarLinks = [
   { to: '/admin', label: 'Artists', end: true },
   { to: '/admin/lyrics', label: 'Lyrics' },
+  { to: '/admin/images', label: 'Images' },
   { to: '/admin/settings', label: 'Settings' },
 ]
 

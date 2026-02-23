@@ -157,6 +157,11 @@ export async function flagWord(lyricId: number): Promise<void> {
   if (error) throw error
 }
 
+export async function flagImage(url: string): Promise<void> {
+  const { error } = await supabase.rpc('flag_image', { p_url: url })
+  if (error) throw error
+}
+
 export async function getPlayedSongNames(songIds: number[]): Promise<string[]> {
   if (songIds.length === 0) return []
   const { data, error } = await supabase

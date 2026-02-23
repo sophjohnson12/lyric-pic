@@ -13,6 +13,7 @@ interface WordInputProps {
   onReveal: (wordIndex: number) => void
   onRefresh: (wordIndex: number) => void
   onFlag?: (lyricId: number) => void
+  onFlagImage?: (url: string) => void
   autoFocus?: boolean
   focusTrigger?: number
   debugMode?: boolean
@@ -25,6 +26,7 @@ export default function WordInput({
   onReveal,
   onRefresh,
   onFlag,
+  onFlagImage,
   autoFocus = false,
   focusTrigger,
   debugMode = false,
@@ -32,7 +34,18 @@ export default function WordInput({
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
   const [showFlagConfirm, setShowFlagConfirm] = useState(false)
+  const [showImageFlagConfirm, setShowImageFlagConfirm] = useState(false)
+  const [flaggedImageUrls, setFlaggedImageUrls] = useState<Set<string>>(new Set())
   const [isHoveringLock, setIsHoveringLock] = useState(false)
+
+  const currentImageUrl = puzzleWord.imageUrls[puzzleWord.currentImageIndex] ?? ''
+  const currentImageFlagged = flaggedImageUrls.has(currentImageUrl)
+
+  const handleImageFlagConfirm = () => {
+    setShowImageFlagConfirm(false)
+    setFlaggedImageUrls((prev) => new Set(prev).add(currentImageUrl))
+    onFlagImage?.(currentImageUrl)
+  }
   const inputRef = useRef<HTMLInputElement>(null)
 
   const isGuessed = puzzleWord.guessed || puzzleWord.revealed
@@ -84,6 +97,18 @@ export default function WordInput({
               <RefreshCw size={20} className="drop-shadow-md" />
             </button>
 
+            {/* Flag Image Icon */}
+            {onFlagImage && currentImageUrl && (
+              <button
+                onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
+                disabled={currentImageFlagged}
+                className={`absolute top-2 left-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
+              >
+                <Flag size={20} className="drop-shadow-md" />
+              </button>
+            )}
+
             {/* Overlay when solved */}
             {isGuessed && (
               <div className="absolute inset-0 bg-black/10" />
@@ -103,7 +128,7 @@ export default function WordInput({
                   <button
                     onClick={handleFlag}
                     disabled={flagged}
-                    className={`absolute bottom-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40' : 'hover:scale-110'}`}
+                    className={`absolute bottom-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
                     title={flagged ? 'Flagged' : 'Flag this word'}
                   >
                     <Flag size={20} className="drop-shadow-md" />
@@ -169,6 +194,16 @@ export default function WordInput({
           cancelLabel="Cancel"
           onConfirm={handleFlagConfirm}
           onCancel={() => setShowFlagConfirm(false)}
+        />
+      )}
+      {showImageFlagConfirm && (
+        <ConfirmPopup
+          title="Flag for Review?"
+          message="Are you sure you want to flag this image? It will be reviewed for appropriate and valid content."
+          confirmLabel="Flag"
+          cancelLabel="Cancel"
+          onConfirm={handleImageFlagConfirm}
+          onCancel={() => setShowImageFlagConfirm(false)}
         />
       )}
     </div>
