@@ -9,7 +9,10 @@ import ToggleSwitch from './ToggleSwitch'
 import {
   getLyricById,
   getLyricImages,
+  flagLyric,
+  unflagLyric,
   blocklistLyric,
+  unblocklistLyric,
   updateLyricImageSelectable,
   getBlocklistReasons,
 } from '../../services/adminService'
@@ -30,6 +33,7 @@ export default function LyricPage() {
   const [showBlocklistModal, setShowBlocklistModal] = useState(false)
   const [selectedReason, setSelectedReason] = useState('')
   const [blocklisting, setBlocklisting] = useState(false)
+  const [flagging, setFlagging] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   const lyricLabel = lyric?.root_word ?? 'Lyric'
@@ -76,6 +80,40 @@ export default function LyricPage() {
     }
   }
 
+  async function handleUnblocklist() {
+    if (!lyricId) return
+    setBlocklisting(true)
+    try {
+      await unblocklistLyric(Number(lyricId))
+      setLyric((prev) => prev ? { ...prev, is_blocklisted: false, blocklist_reason: null } : prev)
+      showToast('Lyric unblocked')
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unblock'}`)
+    } finally {
+      setBlocklisting(false)
+    }
+  }
+
+  async function handleFlag() {
+    if (!lyricId) return
+    setFlagging(true)
+    try {
+      if (lyric?.is_flagged) {
+        await unflagLyric(Number(lyricId))
+        setLyric((prev) => prev ? { ...prev, is_flagged: false } : prev)
+        showToast('Lyric unflagged')
+      } else {
+        await flagLyric(Number(lyricId))
+        setLyric((prev) => prev ? { ...prev, is_flagged: true } : prev)
+        showToast('Lyric flagged')
+      }
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to update flag'}`)
+    } finally {
+      setFlagging(false)
+    }
+  }
+
   async function handleToggleSelectable(imageId: number, value: boolean) {
     if (!lyricId) return
     setToggling(imageId)
@@ -102,14 +140,24 @@ export default function LyricPage() {
           </Link>
           <h1 className="text-2xl font-bold">Lyric</h1>
         </div>
-        <button
-          onClick={() => { setShowBlocklistModal(true); setSelectedReason('') }}
-          disabled={blocklisting || loading || !!lyric?.is_blocklisted}
-          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-        >
-          {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          {lyric?.is_blocklisted ? 'Blocklisted' : 'Blocklist'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleFlag}
+            disabled={flagging || loading}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            {lyric?.is_flagged ? 'Unflag' : 'Flag'}
+          </button>
+          <button
+            onClick={lyric?.is_blocklisted ? handleUnblocklist : () => { setShowBlocklistModal(true); setSelectedReason('') }}
+            disabled={blocklisting || loading}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            {lyric?.is_blocklisted ? 'Unblock' : 'Block'}
+          </button>
+        </div>
       </div>
       <div className="flex items-center gap-1.5 mb-4">
         <h2 className="text-xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
