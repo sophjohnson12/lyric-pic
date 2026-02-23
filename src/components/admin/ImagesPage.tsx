@@ -74,7 +74,7 @@ export default function ImagesPage() {
   const [clearing, setClearing] = useState(false)
   const [showReviewed, setShowReviewed] = useState(false)
 
-  const unknownWordId = String(reasons.find((r) => r.reason.toLowerCase() === 'unknown_word')?.id ?? '')
+  const unknownImageId = String(reasons.find((r) => r.reason.toLowerCase() === 'unknown_image')?.id ?? '')
 
   const unreviewedDuplicates = duplicates.filter((img) =>
     !(img.reviewed_at && (!img.updated_at || img.reviewed_at > img.updated_at))
@@ -422,7 +422,7 @@ export default function ImagesPage() {
               : 'Unflag All'}
           </button>
           <button
-            onClick={() => { setBulkBlockModal(true); setBulkBlockReason(unknownWordId) }}
+            onClick={() => { setBulkBlockModal(true); setBulkBlockReason(unknownImageId) }}
             disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
             className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
@@ -462,7 +462,7 @@ export default function ImagesPage() {
                   <FlagOff size={20} className="drop-shadow-md" />
                 </button>
                 <button
-                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownWordId) }}
+                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownImageId) }}
                   className="hover:opacity-70 cursor-pointer"
                   title="Blocklist"
                 >
@@ -502,7 +502,7 @@ export default function ImagesPage() {
             Review All
           </button>
           <button
-            onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason(unknownWordId) }}
+            onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason(unknownImageId) }}
             disabled={duplicatesSelectedIds.size === 0 || !!bulkLoading}
             className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
@@ -544,7 +544,7 @@ export default function ImagesPage() {
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
-                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownWordId) }}
+                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownImageId) }}
                   className="hover:opacity-70 cursor-pointer"
                   title="Blocklist"
                 >
