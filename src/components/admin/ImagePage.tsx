@@ -146,7 +146,7 @@ export default function ImagePage() {
       )}
 
       <AdminTable
-        data={[...lyrics].sort((a, b) => Number(b.is_selectable) - Number(a.is_selectable))}
+        data={[...lyrics].sort((a, b) => Number(b.is_selectable) - Number(a.is_selectable) || a.root_word.localeCompare(b.root_word))}
         keyFn={(l) => l.lyric_id}
         loading={loading}
         columns={[
