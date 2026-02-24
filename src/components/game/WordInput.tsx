@@ -92,7 +92,7 @@ export default function WordInput({
             {puzzleWord.imageUrls.length > 1 && (
               <button
                 onClick={() => onRefresh(wordIndex)}
-                className="absolute top-2 right-2 p-2 text-white/80 bg-primary border border-secondary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
+                className="absolute top-2 right-2 p-2 text-white/80 bg-primary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
                 title="Get different image"
               >
                 <RefreshCw size={20} className="drop-shadow-md" />
