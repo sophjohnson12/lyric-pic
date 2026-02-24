@@ -66,6 +66,8 @@ export interface Lyric {
   is_flagged: boolean
   flagged_by: string | null
   created_at: string
+  updated_at: string | null
+  reviewed_at: string | null
 }
 
 export interface ArtistLyric {

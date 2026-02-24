@@ -618,6 +618,14 @@ export interface AdminBlocklistedLyricRow {
   blocklist_reason: string | null
 }
 
+export interface AdminUnreviewedLyricRow {
+  id: number
+  root_word: string
+  image_count: number
+  reviewed_at: string | null
+  updated_at: string | null
+}
+
 export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
   const { data, error } = await supabase
     .from('lyric')
@@ -655,6 +663,42 @@ export async function getBlocklistedLyrics(): Promise<AdminBlocklistedLyricRow[]
     ...l,
     blocklist_reason: l.blocklist_reason ? reasonMap.get(l.blocklist_reason) ?? null : null,
   }))
+}
+
+export async function getUnreviewedLyrics(): Promise<AdminUnreviewedLyricRow[]> {
+  const all: AdminUnreviewedLyricRow[] = []
+  let from = 0
+  const batchSize = 1000
+  while (true) {
+    const { data, error } = await supabase.rpc('get_unreviewed_lyrics').range(from, from + batchSize - 1)
+    if (error) throw error
+    all.push(...data)
+    if (data.length < batchSize) break
+    from += batchSize
+  }
+  return all
+}
+
+export async function getReviewedLyrics(): Promise<AdminUnreviewedLyricRow[]> {
+  const all: AdminUnreviewedLyricRow[] = []
+  let from = 0
+  const batchSize = 1000
+  while (true) {
+    const { data, error } = await supabase.rpc('get_reviewed_lyrics').range(from, from + batchSize - 1)
+    if (error) throw error
+    all.push(...data)
+    if (data.length < batchSize) break
+    from += batchSize
+  }
+  return all
+}
+
+export async function markLyricReviewed(lyricId: number) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ reviewed_at: new Date().toISOString() })
+    .eq('id', lyricId)
+  if (error) throw error
 }
 
 export async function unflagLyric(lyricId: number) {

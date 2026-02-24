@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FlagOff, Ban, Trash2, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
 import ConfirmPopup from '../common/ConfirmPopup'
 import Toast from '../common/Toast'
+import ToggleSwitch from './ToggleSwitch'
 import {
   getFlaggedLyrics,
   getBlocklistedLyrics,
+  getUnreviewedLyrics,
+  getReviewedLyrics,
   unflagLyric,
   blocklistLyric,
   updateBlocklistReason,
@@ -21,12 +24,19 @@ import {
   resetArtistLyricCounts,
   deleteUnusedLyrics,
 } from '../../services/adminService'
-import type { AdminFlaggedLyricRow, AdminBlocklistedLyricRow } from '../../services/adminService'
+import type { AdminFlaggedLyricRow, AdminBlocklistedLyricRow, AdminUnreviewedLyricRow } from '../../services/adminService'
 
 export default function LyricsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const navigate = useNavigate()
   const [flagged, setFlagged] = useState<AdminFlaggedLyricRow[]>([])
   const [blocklisted, setBlocklisted] = useState<AdminBlocklistedLyricRow[]>([])
+  const [unreviewed, setUnreviewed] = useState<AdminUnreviewedLyricRow[]>([])
+  const [reviewed, setReviewed] = useState<AdminUnreviewedLyricRow[]>([])
+  const [unreviewedSelectedIds, setUnreviewedSelectedIds] = useState<Set<string | number>>(new Set())
+  const [showReviewedLyrics, setShowReviewedLyrics] = useState(false)
+  const [bulkBlockUnreviewedModal, setBulkBlockUnreviewedModal] = useState(false)
+  const [bulkBlockUnreviewedReason, setBulkBlockUnreviewedReason] = useState('')
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
@@ -71,16 +81,20 @@ export default function LyricsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const [f, b, r, a] = await Promise.all([
+      const [f, b, r, a, u, rv] = await Promise.all([
         getFlaggedLyrics(),
         getBlocklistedLyrics(),
         getBlocklistReasons(),
         getArtistsForDropdown(),
+        getUnreviewedLyrics(),
+        getReviewedLyrics(),
       ])
       setFlagged(f)
       setBlocklisted(b)
       setReasons(r)
       setArtists(a)
+      setUnreviewed(u)
+      setReviewed(rv)
     } finally {
       setLoading(false)
     }
@@ -242,6 +256,45 @@ export default function LyricsPage() {
     }
   }
 
+  function handleToggleUnreviewedSelect(key: string | number) {
+    setUnreviewedSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function handleToggleAllUnreviewedSelect(keys: (string | number)[]) {
+    setUnreviewedSelectedIds((prev) => {
+      const allSelected = keys.every((k) => prev.has(k))
+      const next = new Set(prev)
+      if (allSelected) {
+        keys.forEach((k) => next.delete(k))
+      } else {
+        keys.forEach((k) => next.add(k))
+      }
+      return next
+    })
+  }
+
+  async function handleBulkBlockUnreviewedConfirm() {
+    if (!bulkBlockUnreviewedReason || unreviewedSelectedIds.size === 0) return
+    setBulkLoading({ type: 'block-unreviewed', done: 0, total: 1 })
+    try {
+      await bulkBlocklistLyrics([...unreviewedSelectedIds] as number[], Number(bulkBlockUnreviewedReason))
+      showToast(`Blocklisted ${unreviewedSelectedIds.size} lyrics`)
+      setBulkBlockUnreviewedModal(false)
+      setBulkBlockUnreviewedReason('')
+      setUnreviewedSelectedIds(new Set())
+      loadData()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
+    } finally {
+      setBulkLoading(null)
+    }
+  }
+
   async function handleResetCounts() {
     if (!resetArtistId) return
     setResetting(true)
@@ -365,6 +418,67 @@ export default function LyricsPage() {
           },
         ]}
       />
+
+      {(() => {
+        const unreviewedTableData = showReviewedLyrics ? reviewed : unreviewed
+        return (
+          <>
+            <div className="flex items-center mt-8 mb-2">
+              <h2 className="text-lg font-semibold">Unreviewed Lyrics</h2>
+              <div className="flex items-center gap-2 ml-auto">
+                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                  Is Reviewed?
+                  <ToggleSwitch checked={showReviewedLyrics} onChange={setShowReviewedLyrics} />
+                </label>
+                <button
+                  onClick={() => {
+                    if (unreviewed.length === 0) return
+                    const [first, ...rest] = unreviewed
+                    navigate(`/admin/lyrics/${first.id}`, { state: { reviewQueue: rest.map((l) => l.id) } })
+                  }}
+                  disabled={unreviewed.length === 0 || loading}
+                  className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+                >
+                  Review All
+                </button>
+                <button
+                  onClick={() => { setBulkBlockUnreviewedModal(true); setBulkBlockUnreviewedReason('') }}
+                  disabled={unreviewedSelectedIds.size === 0 || !!bulkLoading}
+                  className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {bulkLoading?.type === 'block-unreviewed' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                  Block All
+                </button>
+              </div>
+            </div>
+            <AdminTable
+              data={unreviewedTableData}
+              keyFn={(l) => l.id}
+              loading={loading}
+              selection={{ selected: unreviewedSelectedIds, onToggle: handleToggleUnreviewedSelect, onToggleAll: handleToggleAllUnreviewedSelect }}
+              columns={[
+                { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">{l.root_word}</Link> },
+                { header: 'Images', accessor: (l) => l.image_count },
+                { header: 'Actions', accessor: (l) => (
+                    <div className="flex items-center gap-2">
+                      <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="Edit lyric">
+                        <Pencil size={20} className="drop-shadow-md" />
+                      </Link>
+                      <button
+                        onClick={() => { setBlocklistModal({ lyricId: l.id, word: l.root_word }); setSelectedReason('') }}
+                        className="hover:opacity-70 cursor-pointer"
+                        title="Blocklist"
+                      >
+                        <Ban size={20} className="drop-shadow-md" />
+                      </button>
+                    </div>
+                  )
+                },
+              ]}
+            />
+          </>
+        )
+      })()}
 
       <h2 className="text-lg font-semibold mt-8 mb-2">Blocklisted Words</h2>
       <div className="mb-4 flex items-center">
@@ -596,6 +710,41 @@ export default function LyricsPage() {
             <button
               onClick={handleBulkBlockConfirm}
               disabled={!bulkBlockReason}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              Blocklist
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {bulkBlockUnreviewedModal && (
+        <Modal onClose={() => { setBulkBlockUnreviewedModal(false); setBulkBlockUnreviewedReason('') }}>
+          <h2 className="text-lg font-bold mb-2">Blocklist Words</h2>
+          <p className="text-sm text-text/70 mb-4">
+            Blocklist all selected lyrics ({unreviewedSelectedIds.size}). This will disable them for existing songs.
+          </p>
+          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
+          <select
+            value={bulkBlockUnreviewedReason}
+            onChange={(e) => setBulkBlockUnreviewedReason(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="" disabled>Select a reason...</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.id}>{r.reason}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setBulkBlockUnreviewedModal(false); setBulkBlockUnreviewedReason('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleBulkBlockUnreviewedConfirm}
+              disabled={!bulkBlockUnreviewedReason}
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               Blocklist

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams, useLocation } from 'react-router-dom'
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
-import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
 import Toast from '../common/Toast'
 import ToggleSwitch from './ToggleSwitch'
@@ -15,6 +14,7 @@ import {
   unblocklistLyric,
   updateLyricImageSelectable,
   getBlocklistReasons,
+  markLyricReviewed,
 } from '../../services/adminService'
 import type { AdminLyricRow, AdminLyricImageRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
@@ -22,9 +22,11 @@ import type { Breadcrumb } from './AdminBreadcrumbContext'
 export default function LyricPage() {
   const { lyricId } = useParams<{ lyricId: string }>()
   const location = useLocation()
+  const navigate = useNavigate()
   const { setBreadcrumbs } = useAdminBreadcrumbs()
-  const state = location.state as { parentBreadcrumbs?: Breadcrumb[]; backUrl?: string } | null
+  const state = location.state as { reviewQueue?: number[]; parentBreadcrumbs?: Breadcrumb[]; backUrl?: string } | null
   const backUrl = state?.backUrl ?? '/admin/lyrics'
+  const reviewQueue: number[] = state?.reviewQueue ?? []
   const [lyric, setLyric] = useState<AdminLyricRow | null>(null)
   const [images, setImages] = useState<AdminLyricImageRow[]>([])
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
@@ -34,6 +36,7 @@ export default function LyricPage() {
   const [selectedReason, setSelectedReason] = useState('')
   const [blocklisting, setBlocklisting] = useState(false)
   const [flagging, setFlagging] = useState(false)
+  const [reviewing, setReviewing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   const lyricLabel = lyric?.root_word ?? 'Lyric'
@@ -47,6 +50,7 @@ export default function LyricPage() {
 
   useEffect(() => {
     if (!lyricId) return
+    setReviewing(false)
     setLoading(true)
     Promise.all([
       getLyricById(Number(lyricId)),
@@ -114,6 +118,27 @@ export default function LyricPage() {
     }
   }
 
+  function navigateNext() {
+    if (reviewQueue.length > 0) {
+      const [next, ...rest] = reviewQueue
+      navigate(`/admin/lyrics/${next}`, { state: { reviewQueue: rest } })
+    } else {
+      navigate(backUrl)
+    }
+  }
+
+  async function handleMarkReviewed() {
+    if (!lyricId) return
+    setReviewing(true)
+    try {
+      await markLyricReviewed(Number(lyricId))
+      navigateNext()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to mark as reviewed'}`)
+      setReviewing(false)
+    }
+  }
+
   async function handleToggleSelectable(imageId: number, value: boolean) {
     if (!lyricId) return
     setToggling(imageId)
@@ -139,8 +164,19 @@ export default function LyricPage() {
             Back
           </Link>
           <h1 className="text-2xl font-bold">Lyric</h1>
+          {reviewQueue.length > 0 && (
+            <span className="text-sm text-text/50">{reviewQueue.length} remaining</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleMarkReviewed}
+            disabled={reviewing || loading}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {reviewing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Mark as Reviewed
+          </button>
           <button
             onClick={handleFlag}
             disabled={flagging || loading}
@@ -159,41 +195,31 @@ export default function LyricPage() {
           </button>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 mb-4">
-        <h2 className="text-xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
-        {lyric && <span className="text-sm text-text/50">ID: {lyric.id}</span>}
+      <div className="items-center gap-4 mb-4 col-span-1">
+        <h2 className="text-4xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
+        <div>
+          {lyric && <span className="text-sm font-medium text-text/60">ID: {lyric.id}</span>}
+        </div>      
       </div>
-
-      <AdminTable
-        data={images}
-        keyFn={(img) => img.image_id}
-        loading={loading}
-        columns={[
-          {
-            header: 'Image',
-            accessor: (img) => (
-              <Link to={`/admin/images/${img.image_id}`} state={{ parentBreadcrumbs: currentBreadcrumbs, backUrl: `/admin/lyrics/${lyricId}`, backState: state }}>
-                <img
-                  src={img.url}
-                  alt=""
-                  className="w-30 h-30 object-cover rounded shrink-0 hover:opacity-80"
-                  loading="lazy"
-                />
-              </Link>
-            ),
-          },
-          {
-            header: 'Enabled?',
-            accessor: (img) => (
-              <ToggleSwitch
-                checked={img.is_selectable}
-                onChange={(value) => handleToggleSelectable(img.image_id, value)}
-                disabled={toggling === img.image_id}
+      <div className="grid grid-cols-5 gap-4">
+        {images.map((img) => (
+          <div key={img.image_id} className="flex flex-col items-center gap-2">
+            <Link to={`/admin/images/${img.image_id}`} state={{ parentBreadcrumbs: currentBreadcrumbs, backUrl: `/admin/lyrics/${lyricId}`, backState: state }}>
+              <img
+                src={img.url}
+                alt=""
+                className="w-full aspect-square object-cover rounded hover:opacity-80"
+                loading="lazy"
               />
-            ),
-          },
-        ]}
-      />
+            </Link>   
+            <ToggleSwitch
+              checked={img.is_selectable}
+              onChange={(value) => handleToggleSelectable(img.image_id, value)}
+              disabled={toggling === img.image_id}
+            />
+          </div>
+        ))}
+      </div>
 
       {showBlocklistModal && (
         <Modal onClose={() => { setShowBlocklistModal(false); setSelectedReason('') }}>
