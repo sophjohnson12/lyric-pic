@@ -1299,10 +1299,8 @@ export async function resetArtistLyricCounts(artistId: number) {
 }
 
 export async function deleteUnusedLyrics(): Promise<number> {
-  // Collect all lyric IDs referenced in song_lyric and artist_lyric
+  // Collect all lyric IDs referenced in song_lyric
   const referencedIds = new Set<number>()
-
-  // Paginate song_lyric
   let offset = 0
   const batchSize = 1000
   while (true) {
@@ -1316,21 +1314,8 @@ export async function deleteUnusedLyrics(): Promise<number> {
     offset += batchSize
   }
 
-  // Paginate artist_lyric
-  offset = 0
-  while (true) {
-    const { data, error } = await supabase
-      .from('artist_lyric')
-      .select('lyric_id')
-      .range(offset, offset + batchSize - 1)
-    if (error) throw error
-    for (const row of data) referencedIds.add(row.lyric_id)
-    if (data.length < batchSize) break
-    offset += batchSize
-  }
-
-  // Get all lyric IDs
-  const allLyricIds: number[] = []
+  // Get all lyric IDs not referenced in song_lyric
+  const unusedIds: number[] = []
   offset = 0
   while (true) {
     const { data, error } = await supabase
@@ -1339,20 +1324,24 @@ export async function deleteUnusedLyrics(): Promise<number> {
       .range(offset, offset + batchSize - 1)
     if (error) throw error
     for (const row of data) {
-      if (!referencedIds.has(row.id)) allLyricIds.push(row.id)
+      if (!referencedIds.has(row.id)) unusedIds.push(row.id)
     }
     if (data.length < batchSize) break
     offset += batchSize
   }
 
-  // Delete unused lyrics in batches
-  for (let i = 0; i < allLyricIds.length; i += 100) {
-    const batch = allLyricIds.slice(i, i + 100)
+  // Delete dependent rows first, then lyric rows
+  for (let i = 0; i < unusedIds.length; i += 100) {
+    const batch = unusedIds.slice(i, i + 100)
+    const { error: liError } = await supabase.from('lyric_image').delete().in('lyric_id', batch)
+    if (liError) throw liError
+    const { error: alError } = await supabase.from('artist_lyric').delete().in('lyric_id', batch)
+    if (alError) throw alError
     const { error } = await supabase.from('lyric').delete().in('id', batch)
     if (error) throw error
   }
 
-  return allLyricIds.length
+  return unusedIds.length
 }
 
 // ─── Fetch New Songs from Genius ─────────────────────────
