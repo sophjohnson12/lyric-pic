@@ -85,6 +85,7 @@ export default function LyricPage() {
     try {
       await blocklistLyric(Number(lyricId), Number(selectedReason))
       setLyric((prev) => prev ? { ...prev, is_blocklisted: true, blocklist_reason: Number(selectedReason) } : prev)
+      setSongs((prev) => prev.map((s) => ({ ...s, is_selectable: false })))
       setShowBlocklistModal(false)
       setSelectedReason('')
       showToast('Lyric blocklisted')
