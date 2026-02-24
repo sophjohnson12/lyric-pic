@@ -992,6 +992,25 @@ export async function getLyricsWithoutImages(): Promise<{ id: number; root_word:
   return result
 }
 
+export async function markLyricFetched(lyricId: number, hasImages: boolean, noImagesReasonId: number | null): Promise<void> {
+  const now = new Date().toISOString()
+  const lyricUpdate: Record<string, unknown> = { updated_at: now }
+  if (!hasImages && noImagesReasonId !== null) {
+    lyricUpdate.is_blocklisted = true
+    lyricUpdate.blocklist_reason = noImagesReasonId
+  }
+  const { error } = await supabase.from('lyric').update(lyricUpdate).eq('id', lyricId)
+  if (error) throw error
+
+  if (!hasImages && noImagesReasonId !== null) {
+    const { error: slError } = await supabase
+      .from('song_lyric')
+      .update({ is_selectable: false })
+      .eq('lyric_id', lyricId)
+    if (slError) throw slError
+  }
+}
+
 export async function getFlaggedImages(): Promise<AdminFlaggedImageRow[]> {
   const { data, error } = await supabase
     .from('image')

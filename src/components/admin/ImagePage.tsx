@@ -131,39 +131,45 @@ export default function ImagePage() {
         </div>
       </div>
 
-      {image && (
-        <div className="flex items-center gap-3 mb-6">
-          <img
-            src={image.url}
-            alt=""
-            className="w-75 h-75 object-cover rounded"
-          />
-          <div>
-            <p className="text-sm font-medium text-text/60">Image ID</p>
-            <p className="font-mono text-sm">{image.image_id}</p>
-          </div>
-        </div>
-      )}
-
-      <AdminTable
-        data={[...lyrics].sort((a, b) => Number(b.is_selectable) - Number(a.is_selectable) || a.root_word.localeCompare(b.root_word))}
-        keyFn={(l) => l.lyric_id}
-        loading={loading}
-        columns={[
-          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: state }} className="text-primary hover:underline">{l.root_word}</Link> },
-          { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
-          {
-            header: 'Enabled?',
-            accessor: (l) => (
-              <ToggleSwitch
-                checked={l.is_selectable}
-                onChange={(value) => handleToggleSelectable(l.lyric_id, value)}
-                disabled={toggling === l.lyric_id}
+      <div className="grid grid-cols-2">
+        <div> 
+          {image && (
+            <div >
+              <img
+                src={image.url}
+                alt=""
+                className="w-5/6 h-5/6 object-cover rounded mb-2"
               />
-            ),
-          },
-        ]}
-      />
+              <div>
+                <span className="text-sm font-medium text-text/60">Image ID: </span>
+                <span className="font-mono text-sm">{image.image_id}</span>
+              </div>
+            </div>
+          )}
+        </div>
+        <div>
+          <AdminTable
+            data={[...lyrics].sort((a, b) => Number(b.is_selectable) - Number(a.is_selectable) || a.root_word.localeCompare(b.root_word))}
+            keyFn={(l) => l.lyric_id}
+            loading={loading}
+            columns={[
+              { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: state }} className="text-primary hover:underline">{l.root_word}</Link> },
+              { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
+              {
+                header: 'Enabled?',
+                accessor: (l) => (
+                  <ToggleSwitch
+                    checked={l.is_selectable}
+                    onChange={(value) => handleToggleSelectable(l.lyric_id, value)}
+                    disabled={toggling === l.lyric_id}
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
+      </div>
+
       {showBlocklistConfirm && (
         <ConfirmPopup
           title="Blocklist Image?"

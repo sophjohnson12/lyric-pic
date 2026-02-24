@@ -18,6 +18,7 @@ import {
   bulkBlocklistImages,
   getBlocklistReasons,
   getLyricsWithoutImages,
+  markLyricFetched,
   getDuplicateImages,
   clearLyricsForBlocklistedImages,
 } from '../../services/adminService'
@@ -127,19 +128,21 @@ export default function ImagesPage() {
     setFetchJob({ done: 0, total: null })
     setFetchResult(null)
     try {
-      const lyrics = await getLyricsWithoutImages()
+      const [lyrics, blocklistReasons] = await Promise.all([getLyricsWithoutImages(), getBlocklistReasons()])
       if (fetchCancelRef.current) return
       if (lyrics.length === 0) {
         showToast('All lyrics already have images')
         setFetchJob(null)
         return
       }
+      const noImagesReasonId = blocklistReasons.find((r) => r.reason === 'no_images')?.id ?? null
       setFetchJob({ done: 0, total: lyrics.length })
       for (let i = 0; i < lyrics.length; i++) {
         if (fetchCancelRef.current) break
         try {
           const images = await searchImagesOrThrow(lyrics[i].root_word, IMAGES_TO_CACHE)
           if (images.length > 0) await saveLyricImages(lyrics[i].id, images)
+          await markLyricFetched(lyrics[i].id, images.length > 0, noImagesReasonId)
         } catch (err) {
           if (err instanceof RateLimitError) {
             setFetchResult({ done: i, total: lyrics.length, rateLimited: true })
