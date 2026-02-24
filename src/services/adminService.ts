@@ -817,14 +817,22 @@ export interface AdminDuplicateImageRow {
   updated_at: string | null
 }
 
-export async function getImageById(imageId: number): Promise<{ id: number; image_id: string; url: string } | null> {
+export async function getImageById(imageId: number): Promise<{ id: number; image_id: string; url: string; is_blocklisted: boolean; blocklist_reason: number | null; is_flagged: boolean } | null> {
   const { data, error } = await supabase
     .from('image')
-    .select('id, image_id, url')
+    .select('id, image_id, url, is_blocklisted, blocklist_reason, is_flagged')
     .eq('id', imageId)
     .maybeSingle()
   if (error) throw error
   return data
+}
+
+export async function flagImage(imageId: number) {
+  const { error } = await supabase
+    .from('image')
+    .update({ is_flagged: true, flagged_by: 'ADMIN' })
+    .eq('id', imageId)
+  if (error) throw error
 }
 
 export interface AdminImageLyricRow {
@@ -851,6 +859,31 @@ export async function blocklistImageUnknown(imageId: number) {
   if (error) throw error
   if (!data) throw new Error('"unknown_image" blocklist reason not found')
   await blocklistImage(imageId, data.id)
+}
+
+export async function getAllLyricsForDropdown(): Promise<{ id: number; root_word: string; is_blocklisted: boolean }[]> {
+  const all: { id: number; root_word: string; is_blocklisted: boolean }[] = []
+  const pageSize = 1000
+  let offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('id, root_word, is_blocklisted')
+      .order('root_word')
+      .range(offset, offset + pageSize - 1)
+    if (error) throw error
+    all.push(...(data as { id: number; root_word: string; is_blocklisted: boolean }[]))
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+  return all
+}
+
+export async function addLyricImage(imageId: number, lyricId: number): Promise<void> {
+  const { error } = await supabase
+    .from('lyric_image')
+    .insert({ image_id: imageId, lyric_id: lyricId, is_selectable: true })
+  if (error) throw error
 }
 
 export async function updateLyricImageSelectable(imageId: number, lyricId: number, isSelectable: boolean) {
