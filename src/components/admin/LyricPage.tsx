@@ -207,7 +207,12 @@ export default function LyricPage() {
             {lyric?.is_flagged ? 'Unflag' : 'Flag'}
           </button>
           <button
-            onClick={lyric?.is_blocklisted ? handleUnblocklist : () => { setShowBlocklistModal(true); setSelectedReason('') }}
+            onClick={lyric?.is_blocklisted ? handleUnblocklist : () => {
+              const hasSelectableImages = images.some((img) => img.is_selectable)
+              const noImagesReason = reasons.find((r) => r.reason === 'no_images')
+              setSelectedReason(!hasSelectableImages && noImagesReason ? String(noImagesReason.id) : '')
+              setShowBlocklistModal(true)
+            }}
             disabled={blocklisting || loading}
             className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
