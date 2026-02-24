@@ -16,7 +16,7 @@ RETURNS TABLE (
   LEFT JOIN lyric_image li ON li.lyric_id = l.id
   WHERE l.is_blocklisted = false
     AND l.reviewed_at IS NOT NULL
-    AND l.reviewed_at > l.updated_at
+    AND (l.updated_at IS NULL OR l.reviewed_at > l.updated_at)
   GROUP BY l.id, l.root_word, l.reviewed_at, l.updated_at
   HAVING COUNT(li.image_id) FILTER (WHERE li.is_selectable = true) >= 1
   ORDER BY l.root_word
