@@ -356,7 +356,7 @@ export default function LyricsPage() {
       </div>
 
       <div className="flex items-center mb-2">
-        <h2 className="text-lg font-semibold">Flagged Words</h2>
+        <h2 className="text-lg font-semibold">Flagged Lyrics</h2>
         <div className="flex items-center gap-2 ml-auto">
           <button
             onClick={handleBulkUnflag}
@@ -480,7 +480,7 @@ export default function LyricsPage() {
         )
       })()}
 
-      <h2 className="text-lg font-semibold mt-8 mb-2">Blocklisted Words</h2>
+      <h2 className="text-lg font-semibold mt-8 mb-2">Blocklisted Lyrics</h2>
       <div className="mb-4 flex items-center">
         <label className="text-sm font-medium mr-2">Blocklist Reason:</label>
         <select

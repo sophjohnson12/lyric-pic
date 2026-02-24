@@ -92,7 +92,7 @@ export default function WordInput({
             {puzzleWord.imageUrls.length > 1 && (
               <button
                 onClick={() => onRefresh(wordIndex)}
-                className="absolute top-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer"
+                className="absolute top-2 right-2 p-2 text-white/80 bg-primary border border-secondary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
                 title="Get different image"
               >
                 <RefreshCw size={20} className="drop-shadow-md" />
@@ -191,7 +191,7 @@ export default function WordInput({
       {showFlagConfirm && (
         <ConfirmPopup
           title="Flag for Review?"
-          message="Are you sure you want to flag this word? It will be reviewed for appropriate language and valid spelling."
+          message="Are you sure you want to flag this lyric? The word and its images will be reviewed for appropriate and valid content."
           confirmLabel="Flag"
           cancelLabel="Cancel"
           onConfirm={handleFlagConfirm}
