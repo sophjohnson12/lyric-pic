@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FlagOff, Ban, Pencil, Trash2, ExternalLink, Check } from 'lucide-react'
+import { FlagOff, Ban, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -528,13 +528,6 @@ export default function ImagesPage() {
         columns={[
           { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} /> },
           { header: 'Image ID', accessor: (img) => img.image_id },
-          {
-            header: 'Is Reviewed?',
-            accessor: (img) =>
-              img.reviewed_at && (!img.updated_at || img.reviewed_at > img.updated_at)
-                ? <Check size={16} />
-                : null,
-          },
           { header: 'Lyrics', accessor: (img) => img.lyric_count },
           {
             header: 'Actions',
