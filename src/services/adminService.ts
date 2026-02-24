@@ -1021,17 +1021,23 @@ export async function getLyricsWithoutImages(): Promise<{ id: number; root_word:
   return result
 }
 
-export async function markLyricFetched(lyricId: number, hasImages: boolean, noImagesReasonId: number | null): Promise<void> {
+export async function markLyricFetched(lyricId: number, noImagesReasonId: number | null): Promise<void> {
+  const { count } = await supabase
+    .from('lyric_image')
+    .select('*', { count: 'exact', head: true })
+    .eq('lyric_id', lyricId)
+  const hasImages = (count ?? 0) > 0
+
   const now = new Date().toISOString()
   const lyricUpdate: Record<string, unknown> = { updated_at: now }
-  if (!hasImages && noImagesReasonId !== null) {
+  if (!hasImages) {
     lyricUpdate.is_blocklisted = true
-    lyricUpdate.blocklist_reason = noImagesReasonId
+    if (noImagesReasonId !== null) lyricUpdate.blocklist_reason = noImagesReasonId
   }
   const { error } = await supabase.from('lyric').update(lyricUpdate).eq('id', lyricId)
   if (error) throw error
 
-  if (!hasImages && noImagesReasonId !== null) {
+  if (!hasImages) {
     const { error: slError } = await supabase
       .from('song_lyric')
       .update({ is_selectable: false })

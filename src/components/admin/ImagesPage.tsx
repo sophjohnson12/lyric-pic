@@ -142,7 +142,7 @@ export default function ImagesPage() {
         try {
           const images = await searchImagesOrThrow(lyrics[i].root_word, IMAGES_TO_CACHE)
           if (images.length > 0) await saveLyricImages(lyrics[i].id, images)
-          await markLyricFetched(lyrics[i].id, images.length > 0, noImagesReasonId)
+          await markLyricFetched(lyrics[i].id, noImagesReasonId)
         } catch (err) {
           if (err instanceof RateLimitError) {
             setFetchResult({ done: i, total: lyrics.length, rateLimited: true })
