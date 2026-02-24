@@ -118,6 +118,7 @@ export interface AppConfig {
   theme_secondary_color: string
   theme_background_color: string
   enable_images: boolean
-  enable_user_flag: boolean
+  enable_lyric_flag: boolean
+  enable_image_flag: boolean
   updated_at: string
 }

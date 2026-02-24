@@ -52,7 +52,8 @@ export function useGame(artistSlug: string) {
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([])
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [enableImages, setEnableImages] = useState(true)
-  const [enableUserFlag, setEnableUserFlag] = useState(true)
+  const [enableLyricFlag, setEnableLyricFlag] = useState(true)
+  const [enableImageFlag, setEnableImageFlag] = useState(true)
 
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songLyricIdsRef = useRef<number[]>([])
@@ -165,7 +166,8 @@ export function useGame(artistSlug: string) {
         if (config) {
           setImagesEnabled(config.enable_images)
           setEnableImages(config.enable_images)
-          setEnableUserFlag(config.enable_user_flag)
+          setEnableLyricFlag(config.enable_lyric_flag)
+          setEnableImageFlag(config.enable_image_flag)
         }
 
         applyArtistTheme(artist)
@@ -387,7 +389,8 @@ export function useGame(artistSlug: string) {
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,
     toastMessage,
     enableImages,
-    enableUserFlag,
+    enableLyricFlag,
+    enableImageFlag,
     guessWord,
     revealWord,
     refreshImage,

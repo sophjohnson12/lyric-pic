@@ -207,9 +207,9 @@ export default function GamePage() {
                 onGuess={game.guessWord}
                 onReveal={game.revealWord}
                 onRefresh={game.refreshImage}
-                onFlag={game.enableUserFlag ? (lyricId) => flagWord(lyricId) : undefined}
-                onFlagImage={game.enableUserFlag ? (url) => flagImage(url) : undefined}
-                debugMode={game.enableUserFlag}
+                onFlag={game.enableLyricFlag ? (lyricId) => flagWord(lyricId) : undefined}
+                onFlagImage={game.enableImageFlag ? (url) => flagImage(url) : undefined}
+                debugMode={game.enableLyricFlag}
                 autoFocus={isMd && index === deferredFocusIndex}
                 focusTrigger={focusTrigger}
               />

@@ -20,7 +20,8 @@ export default function SettingsPage() {
   const [secondaryColor, setSecondaryColor] = useState('')
   const [backgroundColor, setBackgroundColor] = useState('')
   const [enableImages, setEnableImages] = useState(true)
-  const [enableUserFlag, setEnableUserFlag] = useState(true)
+  const [enableLyricFlag, setEnableLyricFlag] = useState(true)
+  const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -37,7 +38,8 @@ export default function SettingsPage() {
         setSecondaryColor(config.theme_secondary_color)
         setBackgroundColor(config.theme_background_color)
         setEnableImages(config.enable_images)
-        setEnableUserFlag(config.enable_user_flag)
+        setEnableLyricFlag(config.enable_lyric_flag)
+        setEnableImageFlag(config.enable_image_flag)
         applyDefaultTheme(config.theme_primary_color, config.theme_secondary_color, config.theme_background_color)
       } catch (err) {
         console.error('Failed to load app config:', err)
@@ -60,14 +62,26 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleToggleFlag(value: boolean) {
-    setEnableUserFlag(value)
+  async function handleToggleLyricFlag(value: boolean) {
+    setEnableLyricFlag(value)
     try {
-      await updateAppConfig({ enable_user_flag: value })
+      await updateAppConfig({ enable_lyric_flag: value })
       showToast('Saved')
     } catch (err) {
       console.error('Failed to save:', err)
-      setEnableUserFlag(!value)
+      setEnableLyricFlag(!value)
+      showToast('Failed to save')
+    }
+  }
+
+  async function handleToggleImageFlag(value: boolean) {
+    setEnableImageFlag(value)
+    try {
+      await updateAppConfig({ enable_image_flag: value })
+      showToast('Saved')
+    } catch (err) {
+      console.error('Failed to save:', err)
+      setEnableImageFlag(!value)
       showToast('Failed to save')
     }
   }
@@ -129,10 +143,17 @@ export default function SettingsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium">Enable Flagging</div>
+                  <div className="text-sm font-medium">Enable Lyric Flagging</div>
                   <div className="text-xs text-text/60">Players can flag puzzle words for review</div>
                 </div>
-                <ToggleSwitch checked={enableUserFlag} onChange={handleToggleFlag} />
+                <ToggleSwitch checked={enableLyricFlag} onChange={handleToggleLyricFlag} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Enable Image Flagging</div>
+                  <div className="text-xs text-text/60">Players can flag puzzle images for review</div>
+                </div>
+                <ToggleSwitch checked={enableImageFlag} onChange={handleToggleImageFlag} />
               </div>
             </div>
           </div>
