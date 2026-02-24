@@ -1,22 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Check } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
+import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
 import Toast from '../common/Toast'
 import ToggleSwitch from './ToggleSwitch'
 import {
   getLyricById,
   getLyricImages,
+  getLyricSongs,
   flagLyric,
   unflagLyric,
   blocklistLyric,
   unblocklistLyric,
   updateLyricImageSelectable,
+  toggleSongLyricSelectable,
   getBlocklistReasons,
   markLyricReviewed,
 } from '../../services/adminService'
-import type { AdminLyricRow, AdminLyricImageRow } from '../../services/adminService'
+import type { AdminLyricRow, AdminLyricImageRow, AdminLyricSongRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
 
 export default function LyricPage() {
@@ -29,6 +32,7 @@ export default function LyricPage() {
   const reviewQueue: number[] = state?.reviewQueue ?? []
   const [lyric, setLyric] = useState<AdminLyricRow | null>(null)
   const [images, setImages] = useState<AdminLyricImageRow[]>([])
+  const [songs, setSongs] = useState<AdminLyricSongRow[]>([])
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<number | null>(null)
@@ -43,6 +47,11 @@ export default function LyricPage() {
   const currentBreadcrumbs: Breadcrumb[] = state?.parentBreadcrumbs
     ? [...state.parentBreadcrumbs, { label: lyricLabel }]
     : [{ label: 'Lyrics', to: '/admin/lyrics' }, { label: lyricLabel }]
+  const currentBreadcrumbsWithTo: Breadcrumb[] = lyricId
+    ? currentBreadcrumbs.map((b, i) =>
+        i === currentBreadcrumbs.length - 1 ? { ...b, to: `/admin/lyrics/${lyricId}` } : b
+      )
+    : currentBreadcrumbs
 
   useEffect(() => {
     setBreadcrumbs(currentBreadcrumbs)
@@ -55,10 +64,12 @@ export default function LyricPage() {
     Promise.all([
       getLyricById(Number(lyricId)),
       getLyricImages(Number(lyricId)),
+      getLyricSongs(Number(lyricId)),
       getBlocklistReasons(),
-    ]).then(([lyr, imgs, rsnList]) => {
+    ]).then(([lyr, imgs, sngs, rsnList]) => {
       setLyric(lyr)
       setImages(imgs)
+      setSongs(sngs)
       setReasons(rsnList)
     }).finally(() => setLoading(false))
   }, [lyricId])
@@ -152,6 +163,16 @@ export default function LyricPage() {
     }
   }
 
+  async function handleToggleSongLyricSelectable(songId: number, value: boolean) {
+    if (!lyricId) return
+    try {
+      await toggleSongLyricSelectable(songId, Number(lyricId), value)
+      setSongs((prev) => prev.map((s) => s.song_id === songId ? { ...s, is_selectable: value } : s))
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Toggle failed'}`)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -199,9 +220,9 @@ export default function LyricPage() {
         <h2 className="text-4xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
         <div>
           {lyric && <span className="text-sm font-medium text-text/60">ID: {lyric.id}</span>}
-        </div>      
+        </div>
       </div>
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-5 gap-4 mb-6">
         {images.map((img) => (
           <div key={img.image_id} className="flex flex-col items-center gap-2">
             <Link to={`/admin/images/${img.image_id}`} state={{ parentBreadcrumbs: currentBreadcrumbs, backUrl: `/admin/lyrics/${lyricId}`, backState: state }}>
@@ -219,6 +240,38 @@ export default function LyricPage() {
             />
           </div>
         ))}
+      </div>
+      <div>
+        <AdminTable
+          data={songs}
+          keyFn={(s) => s.song_id}
+          loading={loading}
+          columns={[
+            {
+              header: 'Song',
+              accessor: (s) => (
+                <Link
+                  to={`/admin/artists/${s.artist_id}/songs/${s.song_id}/lyrics`}
+                  state={{ parentBreadcrumbs: currentBreadcrumbsWithTo, backUrl: `/admin/lyrics/${lyricId}`, backState: state }}
+                  className="text-primary hover:underline"
+                >
+                  {s.song_name}
+                </Link>
+              ),
+            },
+            { header: 'Lyric Count', accessor: (s) => s.count },
+            { header: 'In Title?', accessor: (s) => (s.is_in_title ? <Check size={20} className="drop-shadow-md" /> : null) },
+            {
+              header: 'Enabled?',
+              accessor: (s) => (
+                <ToggleSwitch
+                  checked={s.is_selectable}
+                  onChange={(value) => handleToggleSongLyricSelectable(s.song_id, value)}
+                />
+              ),
+            },
+          ]}
+        />
       </div>
 
       {showBlocklistModal && (

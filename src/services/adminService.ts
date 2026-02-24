@@ -885,6 +885,35 @@ export interface AdminLyricRow {
   is_flagged: boolean
 }
 
+export interface AdminLyricSongRow {
+  song_id: number
+  artist_id: number
+  song_name: string
+  count: number
+  is_in_title: boolean
+  is_selectable: boolean
+}
+
+export async function getLyricSongs(lyricId: number): Promise<AdminLyricSongRow[]> {
+  const { data, error } = await supabase
+    .from('song_lyric')
+    .select('song_id, count, is_in_title, is_selectable, song!inner(name, artist_id)')
+    .eq('lyric_id', lyricId)
+    .order('count', { ascending: false })
+  if (error) throw error
+
+  const rows = data as unknown as { song_id: number; count: number; is_in_title: boolean; is_selectable: boolean; song: { name: string; artist_id: number } }[]
+
+  return rows.map((r) => ({
+    song_id: r.song_id,
+    artist_id: r.song.artist_id,
+    song_name: r.song.name,
+    count: r.count,
+    is_in_title: r.is_in_title,
+    is_selectable: r.is_selectable,
+  }))
+}
+
 export async function getLyricById(lyricId: number): Promise<AdminLyricRow | null> {
   const { data, error } = await supabase
     .from('lyric')

@@ -7,6 +7,7 @@ import ToggleSwitch from './ToggleSwitch'
 import Toast from '../common/Toast'
 import { getAdminSongLyrics, getAdminSongById, getAdminArtistById, getAlbumsForDropdown, flagLyric, toggleSongLyricSelectable } from '../../services/adminService'
 import type { AdminSongLyricRow } from '../../services/adminService'
+import type { Breadcrumb } from './AdminBreadcrumbContext'
 
 export default function SongLyricsPage() {
   const { artistId, songId } = useParams()
@@ -16,8 +17,10 @@ export default function SongLyricsPage() {
   const backParams = new URLSearchParams()
   if (searchParams.get('album')) backParams.set('album', searchParams.get('album')!)
   if (searchParams.get('enabled')) backParams.set('enabled', searchParams.get('enabled')!)
-  const backUrl = `/admin/artists/${aid}/songs${backParams.toString() ? `?${backParams.toString()}` : ''}`
+  const songsBackUrl = `/admin/artists/${aid}/songs${backParams.toString() ? `?${backParams.toString()}` : ''}`
   const location = useLocation()
+  const locationState = location.state as { parentBreadcrumbs?: Breadcrumb[]; backUrl?: string; backState?: unknown } | null
+  const backUrl = locationState?.backUrl ?? songsBackUrl
   const { breadcrumbs, setBreadcrumbs } = useAdminBreadcrumbs()
   const [lyrics, setLyrics] = useState<AdminSongLyricRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +41,16 @@ export default function SongLyricsPage() {
   }, [aid, sid])
 
   useEffect(() => {
-    if (!artistName || !songName) return
+    if (!songName) return
+    if (locationState?.parentBreadcrumbs) {
+      setBreadcrumbs([
+        ...locationState.parentBreadcrumbs,
+        { label: songName },
+        { label: 'Lyrics' },
+      ])
+      return
+    }
+    if (!artistName) return
     const albumParam = searchParams.get('album')
     const albumName = albumParam && albumParam !== 'none'
       ? albums.find((a) => a.id === Number(albumParam))?.name
@@ -48,11 +60,11 @@ export default function SongLyricsPage() {
       { label: artistName },
       { label: 'Albums', to: `/admin/artists/${aid}/albums` },
       ...(albumName ? [{ label: albumName }] : []),
-      { label: 'Songs', to: backUrl },
+      { label: 'Songs', to: songsBackUrl },
       { label: songName },
       { label: 'Lyrics' },
     ])
-  }, [aid, artistName, songName, albums, searchParams, setBreadcrumbs, backUrl])
+  }, [aid, artistName, songName, albums, searchParams, setBreadcrumbs, songsBackUrl, locationState])
 
   const loadLyrics = useCallback(async () => {
     setLoading(true)
@@ -96,7 +108,7 @@ export default function SongLyricsPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <Link to={backUrl} className="text-primary hover:opacity-70" title="Back to Songs">
+        <Link to={backUrl} state={locationState?.backState ?? undefined} className="text-primary hover:opacity-70" title="Back">
           <ArrowLeft size={24} />
         </Link>
         <h1 className="text-2xl font-bold">Song Lyrics</h1>
