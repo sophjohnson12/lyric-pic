@@ -21,6 +21,7 @@ import {
   markLyricFetched,
   getDuplicateImages,
   clearLyricsForBlocklistedImages,
+  saveSharedImages,
 } from '../../services/adminService'
 import type { AdminFlaggedImageRow, AdminBlocklistedImageRow, AdminDuplicateImageRow } from '../../services/adminService'
 import ToggleSwitch from './ToggleSwitch'
@@ -74,6 +75,7 @@ export default function ImagesPage() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [showReviewed, setShowReviewed] = useState(false)
+  const [savingShared, setSavingShared] = useState(false)
 
   const unknownImageId = String(reasons.find((r) => r.reason.toLowerCase() === 'unknown_image')?.id ?? '')
 
@@ -90,11 +92,11 @@ export default function ImagesPage() {
   }, [])
 
   useEffect(() => {
-    if (!bulkLoading && !fetchJob) return
+    if (!bulkLoading && !fetchJob && !savingShared) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading, fetchJob])
+  }, [bulkLoading, fetchJob, savingShared])
 
   useEffect(() => {
     return () => { fetchCancelRef.current = true }
@@ -158,6 +160,22 @@ export default function ImagesPage() {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to load lyrics'}`)
     } finally {
       setFetchJob(null)
+    }
+  }
+
+  async function handleSaveSharedImages() {
+    setSavingShared(true)
+    try {
+      const { inserted, lyricsUpdated } = await saveSharedImages()
+      if (inserted === 0) {
+        showToast('All stem groups already share their images')
+      } else {
+        showToast(`Saved ${inserted} lyric_image records across ${lyricsUpdated} lyrics`)
+      }
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to save shared images'}`)
+    } finally {
+      setSavingShared(false)
     }
   }
 
@@ -397,6 +415,16 @@ export default function ImagesPage() {
                   ? 'Loading...'
                   : `Fetching... ${fetchJob.done.toLocaleString()} / ${fetchJob.total.toLocaleString()}`
                 : 'Fetch New Images'}
+            </button>
+            <button
+              onClick={handleSaveSharedImages}
+              disabled={savingShared || !!fetchJob || clearing}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {savingShared && (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              )}
+              Save Shared Images
             </button>
           </div>
           {fetchResult && (

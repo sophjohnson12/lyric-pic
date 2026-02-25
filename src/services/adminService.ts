@@ -1079,6 +1079,107 @@ export async function markLyricFetched(lyricId: number, noImagesReasonId: number
   }
 }
 
+export async function saveSharedImages(): Promise<{ inserted: number; lyricsUpdated: number }> {
+  // 1. Fetch all non-blocklisted lyrics
+  const allLyrics: { id: number; root_word: string }[] = []
+  let offset = 0
+  const pageSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('id, root_word')
+      .eq('is_blocklisted', false)
+      .order('id')
+      .range(offset, offset + pageSize - 1)
+    if (error) throw error
+    allLyrics.push(...(data as { id: number; root_word: string }[]))
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+
+  // 2. Group lyric IDs by Porter stem, keep only groups with 2+ lyrics
+  const stemGroups = new Map<string, number[]>()
+  for (const lyric of allLyrics) {
+    const stem = porterStem(lyric.root_word)
+    if (!stemGroups.has(stem)) stemGroups.set(stem, [])
+    stemGroups.get(stem)!.push(lyric.id)
+  }
+  const multiGroups = [...stemGroups.values()].filter((ids) => ids.length >= 2)
+  if (multiGroups.length === 0) return { inserted: 0, lyricsUpdated: 0 }
+
+  // 3. Fetch lyric_image records for all relevant lyric IDs (batched by 100)
+  const allLyricIds = multiGroups.flat()
+  const lyricImageMap = new Map<number, Map<number, boolean>>() // lyric_id -> Map<image_id, is_selectable>
+  for (let i = 0; i < allLyricIds.length; i += 100) {
+    const batch = allLyricIds.slice(i, i + 100)
+    const { data, error } = await supabase
+      .from('lyric_image')
+      .select('lyric_id, image_id, is_selectable')
+      .in('lyric_id', batch)
+    if (error) throw error
+    for (const row of data as { lyric_id: number; image_id: number; is_selectable: boolean }[]) {
+      if (!lyricImageMap.has(row.lyric_id)) lyricImageMap.set(row.lyric_id, new Map())
+      lyricImageMap.get(row.lyric_id)!.set(row.image_id, row.is_selectable)
+    }
+  }
+
+  // 4. Compute missing rows per group
+  const toInsert: { lyric_id: number; image_id: number; is_selectable: boolean }[] = []
+  const lyricsToUpdate = new Set<number>()
+
+  for (const lyricIds of multiGroups) {
+    // Union of all image_ids across the group
+    const allImageIds = new Set<number>()
+    for (const id of lyricIds) {
+      for (const imgId of (lyricImageMap.get(id) ?? new Map()).keys()) allImageIds.add(imgId)
+    }
+    if (allImageIds.size === 0) continue
+
+    // is_selectable = true if ANY lyric in the group has that image as selectable
+    const imageSelectable = new Map<number, boolean>()
+    for (const imgId of allImageIds) {
+      const anyTrue = lyricIds.some((id) => lyricImageMap.get(id)?.get(imgId) === true)
+      imageSelectable.set(imgId, anyTrue)
+    }
+
+    // Collect missing (lyric_id, image_id) pairs
+    for (const lyricId of lyricIds) {
+      const existing = lyricImageMap.get(lyricId) ?? new Map()
+      for (const imgId of allImageIds) {
+        if (!existing.has(imgId)) {
+          toInsert.push({ lyric_id: lyricId, image_id: imgId, is_selectable: imageSelectable.get(imgId) ?? true })
+          lyricsToUpdate.add(lyricId)
+        }
+      }
+    }
+  }
+
+  if (toInsert.length === 0) return { inserted: 0, lyricsUpdated: 0 }
+
+  // 5. Insert new lyric_image rows in batches of 500
+  for (let i = 0; i < toInsert.length; i += 500) {
+    const { error } = await supabase.from('lyric_image').insert(toInsert.slice(i, i + 500))
+    if (error) throw error
+  }
+
+  // 6. Update updated_at on affected lyrics (batches of 100)
+  const lyricIdList = [...lyricsToUpdate]
+  const now = new Date().toISOString()
+  for (let i = 0; i < lyricIdList.length; i += 100) {
+    const { error } = await supabase.from('lyric').update({ updated_at: now }).in('id', lyricIdList.slice(i, i + 100))
+    if (error) throw error
+  }
+
+  // 7. Update updated_at on affected images (batches of 100)
+  const imageIdsToUpdate = [...new Set(toInsert.map((r) => r.image_id))]
+  for (let i = 0; i < imageIdsToUpdate.length; i += 100) {
+    const { error } = await supabase.from('image').update({ updated_at: now }).in('id', imageIdsToUpdate.slice(i, i + 100))
+    if (error) throw error
+  }
+
+  return { inserted: toInsert.length, lyricsUpdated: lyricsToUpdate.size }
+}
+
 export async function getFlaggedImages(): Promise<AdminFlaggedImageRow[]> {
   const { data, error } = await supabase
     .from('image')
