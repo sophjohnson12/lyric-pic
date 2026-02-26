@@ -190,7 +190,7 @@ export default function ImagePage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <div className="flex items-center gap-3">
           <Link
             to={backUrl}
@@ -205,11 +205,11 @@ export default function ImagePage() {
             <span className="text-sm text-text/50">{reviewQueue.length} remaining</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={handleMarkReviewed}
             disabled={reviewing || blocklisting || flagging || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {reviewing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             Mark as Reviewed
@@ -217,7 +217,7 @@ export default function ImagePage() {
           <button
             onClick={handleFlag}
             disabled={flagging || blocklisting || reviewing || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             {image?.is_flagged ? 'Unflag' : 'Flag'}
@@ -225,7 +225,7 @@ export default function ImagePage() {
           <button
             onClick={image?.is_blocklisted ? handleUnblock : openBlockModal}
             disabled={blocklisting || reviewing || flagging || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             {image?.is_blocklisted ? 'Unblock' : 'Block'}
@@ -233,7 +233,7 @@ export default function ImagePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2">
         <div>
           {image && (
             <div>
@@ -250,11 +250,11 @@ export default function ImagePage() {
           )}
         </div>
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">Lyrics</h2>
+          <div className="mb-2">
+            <h2 className="text-lg font-semibold mb-2">Lyrics</h2>
             <button
               onClick={openAddLyricModal}
-              className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90"
+              className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 w-full sm:w-auto flex items-center justify-center"
             >
               Add Lyric
             </button>
@@ -265,7 +265,6 @@ export default function ImagePage() {
             loading={loading}
             columns={[
               { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: state }} className="text-primary hover:underline">{l.root_word}</Link> },
-              { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
               {
                 header: 'Enabled?',
                 accessor: (l) => (
@@ -276,6 +275,7 @@ export default function ImagePage() {
                   />
                 ),
               },
+              { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
             ]}
           />
         </div>
@@ -291,7 +291,7 @@ export default function ImagePage() {
           <select
             value={selectedReason}
             onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -324,7 +324,7 @@ export default function ImagePage() {
             placeholder="Search lyrics..."
             value={lyricSearch}
             onChange={(e) => setLyricSearch(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-2"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
             autoFocus
           />
           {lyricSearch.trim() && (

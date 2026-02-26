@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminBreadcrumbProvider, useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import { getAppConfig } from '../../services/adminService'
@@ -11,29 +12,45 @@ const sidebarLinks = [
   { to: '/admin/settings', label: 'Settings' },
 ]
 
-function AdminSidebar() {
+function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const linkClass = (isActive: boolean) =>
     `block px-4 py-2 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-text hover:bg-primary/10'}`
 
   return (
-    <aside className="w-48 shrink-0 border-r border-primary/20">
-      <nav className="flex flex-col gap-1 p-4">
-        {sidebarLinks.map((link) => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            end={link.end}
-            className={({ isActive }) => linkClass(isActive)}
-          >
-            {link.label}
-          </NavLink>
-        ))}
-      </nav>
-    </aside>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-40 w-48 bg-bg border-r border-primary/20 transition-transform duration-200
+          md:static md:translate-x-0 md:z-auto md:shrink-0
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <nav className="flex flex-col gap-1 p-4 pt-16 md:pt-4">
+          {sidebarLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.end}
+              className={({ isActive }) => linkClass(isActive)}
+              onClick={onClose}
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+    </>
   )
 }
 
-function AdminHeader() {
+function AdminHeader({ onMenuToggle }: { onMenuToggle: () => void }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -44,9 +61,18 @@ function AdminHeader() {
 
   return (
     <header className="bg-primary text-white px-6 py-3 flex items-center justify-between">
-      <Link to="/admin" className="text-lg font-bold hover:opacity-90">
-        Lyric Pic Admin
-      </Link>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuToggle}
+          className="md:hidden -ml-2 p-1.5 rounded-lg hover:bg-white/20"
+          aria-label="Toggle menu"
+        >
+          <Menu size={20} />
+        </button>
+        <Link to="/admin" className="text-lg font-bold hover:opacity-90">
+          Lyric Pic Admin
+        </Link>
+      </div>
       <button
         onClick={handleSignOut}
         className="rounded-lg bg-white/20 px-4 py-1.5 text-sm font-medium hover:bg-white/30"
@@ -80,6 +106,8 @@ function Breadcrumbs() {
 }
 
 export default function AdminLayout() {
+  const [mobileOpen, setMobileOpen] = useState(false)
+
   useEffect(() => {
     getAppConfig().then((config) => {
       document.documentElement.style.setProperty('--color-theme-primary', config.theme_primary_color)
@@ -91,10 +119,10 @@ export default function AdminLayout() {
   return (
     <AdminBreadcrumbProvider>
       <div className="min-h-screen bg-bg text-text">
-        <AdminHeader />
+        <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} />
         <div className="flex">
-          <AdminSidebar />
-          <div className="flex-1 flex flex-col">
+          <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+          <div className="flex-1 flex flex-col min-w-0">
             <Breadcrumbs />
             <main className="flex-1 p-6">
               <Outlet />

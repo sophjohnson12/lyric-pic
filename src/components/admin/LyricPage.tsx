@@ -41,6 +41,7 @@ export default function LyricPage() {
   const [blocklisting, setBlocklisting] = useState(false)
   const [flagging, setFlagging] = useState(false)
   const [reviewing, setReviewing] = useState(false)
+  const [disablingAll, setDisablingAll] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   const lyricLabel = lyric?.root_word ?? 'Lyric'
@@ -166,6 +167,20 @@ export default function LyricPage() {
     }
   }
 
+  async function handleDisableAll() {
+    if (!lyricId) return
+    setDisablingAll(true)
+    try {
+      await Promise.all(images.map((img) => updateLyricImageSelectable(img.image_id, Number(lyricId), false)))
+      setImages((prev) => prev.map((img) => ({ ...img, is_selectable: false })))
+      showToast('All images disabled')
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to disable all'}`)
+    } finally {
+      setDisablingAll(false)
+    }
+  }
+
   async function handleToggleSongLyricSelectable(songId: number, value: boolean) {
     if (!lyricId) return
     try {
@@ -178,7 +193,7 @@ export default function LyricPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <div className="flex items-center gap-3">
           <Link
             to={backUrl}
@@ -192,11 +207,11 @@ export default function LyricPage() {
             <span className="text-sm text-text/50">{reviewQueue.length} remaining</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={handleMarkReviewed}
             disabled={reviewing || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {reviewing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             Mark as Reviewed
@@ -204,7 +219,7 @@ export default function LyricPage() {
           <button
             onClick={handleFlag}
             disabled={flagging || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             {lyric?.is_flagged ? 'Unflag' : 'Flag'}
@@ -216,7 +231,7 @@ export default function LyricPage() {
               setShowBlocklistModal(true)
             }}
             disabled={blocklisting || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             {lyric?.is_blocklisted ? 'Unblock' : 'Block'}
@@ -229,7 +244,17 @@ export default function LyricPage() {
           {lyric && <span className="text-sm font-medium text-text/60">ID: {lyric.id}</span>}
         </div>
       </div>
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="mb-4">
+        <button
+          onClick={handleDisableAll}
+          disabled={disablingAll || loading || images.length === 0}
+          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5 w-full sm:w-auto"
+        >
+          {disablingAll && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          Disable All
+        </button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
         {images.map((img) => (
           <div key={img.image_id} className="flex flex-col items-center gap-2">
             <Link to={`/admin/images/${img.image_id}`} state={{ parentBreadcrumbs: currentBreadcrumbs, backUrl: `/admin/lyrics/${lyricId}`, backState: state }}>
@@ -296,7 +321,7 @@ export default function LyricPage() {
           <select
             value={selectedReason}
             onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (

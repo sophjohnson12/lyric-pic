@@ -390,14 +390,14 @@ export default function ImagesPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex flex-wrap items-start justify-between gap-y-3 mb-4">
         <h1 className="text-2xl font-bold">Images</h1>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowClearConfirm(true)}
               disabled={clearing || !!fetchJob}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {clearing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
               Clear Lyrics For Blocklist
@@ -405,7 +405,7 @@ export default function ImagesPage() {
             <button
               onClick={handleFetchNewImages}
               disabled={!!fetchJob || clearing}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {fetchJob && (
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -419,7 +419,7 @@ export default function ImagesPage() {
             <button
               onClick={handleSaveSharedImages}
               disabled={savingShared || !!fetchJob || clearing}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {savingShared && (
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -437,13 +437,13 @@ export default function ImagesPage() {
         </div>
       </div>
 
-      <div className="flex items-center mb-2">
+      <div className="flex flex-wrap items-center gap-y-2 mb-2">
         <h2 className="text-lg font-semibold">Flagged Images</h2>
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
           <button
             onClick={handleBulkUnflag}
             disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {bulkLoading?.type === 'unflag' && (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -455,7 +455,7 @@ export default function ImagesPage() {
           <button
             onClick={() => { setBulkBlockModal(true); setBulkBlockReason(unknownImageId) }}
             disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {bulkLoading?.type === 'block' && (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -514,35 +514,37 @@ export default function ImagesPage() {
         ]}
       />
 
-      <div className="flex items-center mt-8 mb-2">
-        <h2 className="text-lg font-semibold">Duplicate Images</h2>
-        <div className="flex items-center gap-4 ml-auto">
-          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-            Is Reviewed?
-            <ToggleSwitch checked={showReviewed} onChange={setShowReviewed} />
-          </label>
-          <button
-            onClick={() => {
-              if (unreviewedDuplicates.length === 0) return
-              const [first, ...rest] = unreviewedDuplicates
-              navigate(`/admin/images/${first.id}`, { state: { reviewQueue: rest.map((r) => r.id) } })
-            }}
-            disabled={unreviewedDuplicates.length === 0 || loading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
-          >
-            Review All
-          </button>
-          <button
-            onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason(unknownImageId) }}
-            disabled={duplicatesSelectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {bulkLoading?.type === 'block-dupes' && (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            )}
-            Block All
-          </button>
+      <div className="mt-8 mb-2">
+        <div className="flex flex-wrap items-center gap-y-2 mb-2">
+          <h2 className="text-lg font-semibold">Duplicate Images</h2>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+            <button
+              onClick={() => {
+                if (unreviewedDuplicates.length === 0) return
+                const [first, ...rest] = unreviewedDuplicates
+                navigate(`/admin/images/${first.id}`, { state: { reviewQueue: rest.map((r) => r.id) } })
+              }}
+              disabled={unreviewedDuplicates.length === 0 || loading}
+              className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center"
+            >
+              Review All
+            </button>
+            <button
+              onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason(unknownImageId) }}
+              disabled={duplicatesSelectedIds.size === 0 || !!bulkLoading}
+              className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {bulkLoading?.type === 'block-dupes' && (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              )}
+              Block All
+            </button>
+          </div>
         </div>
+        <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+          Is Reviewed?
+          <ToggleSwitch checked={showReviewed} onChange={setShowReviewed} />
+        </label>
       </div>
       <AdminTable
         data={duplicates.filter((img) => {
@@ -589,24 +591,14 @@ export default function ImagesPage() {
         ]}
       />
 
-      <h2 className="text-lg font-semibold mt-8 mb-2">Blocklisted Images</h2>
-      <div className="mb-4 flex items-center">
-        <label className="text-sm font-medium mr-2">Blocklist Reason:</label>
-        <select
-          value={reasonFilter}
-          onChange={(e) => setReasonFilter(e.target.value)}
-          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
-        >
-          <option value="">All Reasons</option>
-          {reasons.map((r) => (
-            <option key={r.id} value={r.reason}>{r.reason}</option>
-          ))}
-        </select>
-        <div className="flex items-center gap-2 ml-auto">
+      <div className="mt-8 mb-2">
+        <div className="flex flex-wrap items-center gap-y-2 mb-2">
+          <h2 className="text-lg font-semibold">Blocklisted Images</h2>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
           <button
             onClick={() => { setBulkEditModal(true); setBulkEditReason('') }}
             disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {bulkLoading?.type === 'edit' && (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -616,13 +608,27 @@ export default function ImagesPage() {
           <button
             onClick={() => setBulkUnblockConfirm(true)}
             disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {bulkLoading?.type === 'unblock' && (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             )}
             Unblock All
           </button>
+        </div>
+        </div>
+        <div className="flex items-center gap-2 mb-4">
+          <label className="text-sm font-medium">Blocklist Reason:</label>
+          <select
+            value={reasonFilter}
+            onChange={(e) => setReasonFilter(e.target.value)}
+            className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          >
+            <option value="">All Reasons</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.reason}>{r.reason}</option>
+            ))}
+          </select>
         </div>
       </div>
       <AdminTable
