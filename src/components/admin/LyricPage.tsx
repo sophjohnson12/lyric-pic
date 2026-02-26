@@ -82,10 +82,12 @@ export default function LyricPage() {
   async function handleBlocklistConfirm() {
     if (!lyricId || !selectedReason) return
     setBlocklisting(true)
+    const isNoImages = reasons.find((r) => r.id === Number(selectedReason))?.reason === 'no_images'
     try {
-      await blocklistLyric(Number(lyricId), Number(selectedReason))
+      await blocklistLyric(Number(lyricId), Number(selectedReason), isNoImages)
       setLyric((prev) => prev ? { ...prev, is_blocklisted: true, blocklist_reason: Number(selectedReason) } : prev)
       setSongs((prev) => prev.map((s) => ({ ...s, is_selectable: false })))
+      if (isNoImages) setImages((prev) => prev.map((img) => ({ ...img, is_selectable: false })))
       setShowBlocklistModal(false)
       setSelectedReason('')
       showToast('Lyric blocklisted')
@@ -209,9 +211,8 @@ export default function LyricPage() {
           </button>
           <button
             onClick={lyric?.is_blocklisted ? handleUnblocklist : () => {
-              const hasSelectableImages = images.some((img) => img.is_selectable)
               const noImagesReason = reasons.find((r) => r.reason === 'no_images')
-              setSelectedReason(!hasSelectableImages && noImagesReason ? String(noImagesReason.id) : '')
+              setSelectedReason(noImagesReason ? String(noImagesReason.id) : '')
               setShowBlocklistModal(true)
             }}
             disabled={blocklisting || loading}

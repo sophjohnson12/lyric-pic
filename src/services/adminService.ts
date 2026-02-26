@@ -709,7 +709,7 @@ export async function unflagLyric(lyricId: number) {
   if (error) throw error
 }
 
-export async function blocklistLyric(lyricId: number, reasonId: number) {
+export async function blocklistLyric(lyricId: number, reasonId: number, disableImages = false) {
   const { error } = await supabase
     .from('lyric')
     .update({ is_blocklisted: true, blocklist_reason: reasonId, is_flagged: false, flagged_by: null })
@@ -721,6 +721,14 @@ export async function blocklistLyric(lyricId: number, reasonId: number) {
     .update({ is_selectable: false })
     .eq('lyric_id', lyricId)
   if (slError) throw slError
+
+  if (disableImages) {
+    const { error: liError } = await supabase
+      .from('lyric_image')
+      .update({ is_selectable: false })
+      .eq('lyric_id', lyricId)
+    if (liError) throw liError
+  }
 }
 
 export async function updateBlocklistReason(lyricId: number, reasonId: number) {
