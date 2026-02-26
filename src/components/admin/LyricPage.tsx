@@ -249,16 +249,6 @@ export default function LyricPage() {
           {lyric && <span className="text-sm font-medium text-text/60">ID: {lyric.id}</span>}
         </div>
       </div>
-      <div className="mb-4">
-        <button
-          onClick={handleDisableAll}
-          disabled={disablingAll || loading || images.length === 0}
-          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5 w-full sm:w-auto"
-        >
-          {disablingAll && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          Disable All
-        </button>
-      </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
         {images.map((img) => (
           <div key={img.image_id} className="flex flex-col items-center gap-2">
@@ -277,6 +267,16 @@ export default function LyricPage() {
             />
           </div>
         ))}
+      </div>
+      <div className="mb-4">
+        <button
+          onClick={handleDisableAll}
+          disabled={disablingAll || loading || images.length === 0}
+          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5 w-full sm:w-auto"
+        >
+          {disablingAll && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          Disable All Images
+        </button>
       </div>
       <div>
         <AdminTable
