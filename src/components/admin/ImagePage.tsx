@@ -202,10 +202,31 @@ export default function ImagePage() {
           </Link>
           <h1 className="text-2xl font-bold">Image</h1>
           {reviewQueue.length > 0 && (
-            <span className="text-sm text-text/50">{reviewQueue.length} remaining</span>
+            <span className="hidden sm:inline text-sm text-text/50">{reviewQueue.length} remaining</span>
           )}
         </div>
+        {reviewQueue.length > 0 && (
+          <span className="sm:hidden w-full text-sm text-text/50">{reviewQueue.length} remaining</span>
+        )}
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-2 sm:contents gap-2">
+            <button
+              onClick={handleFlag}
+              disabled={flagging || blocklisting || reviewing || loading}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              {image?.is_flagged ? 'Unflag' : 'Flag'}
+            </button>
+            <button
+              onClick={image?.is_blocklisted ? handleUnblock : openBlockModal}
+              disabled={blocklisting || reviewing || flagging || loading}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              {image?.is_blocklisted ? 'Unblock' : 'Block'}
+            </button>
+          </div>
           <button
             onClick={handleMarkReviewed}
             disabled={reviewing || blocklisting || flagging || loading}
@@ -213,22 +234,6 @@ export default function ImagePage() {
           >
             {reviewing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             Mark as Reviewed
-          </button>
-          <button
-            onClick={handleFlag}
-            disabled={flagging || blocklisting || reviewing || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            {image?.is_flagged ? 'Unflag' : 'Flag'}
-          </button>
-          <button
-            onClick={image?.is_blocklisted ? handleUnblock : openBlockModal}
-            disabled={blocklisting || reviewing || flagging || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            {image?.is_blocklisted ? 'Unblock' : 'Block'}
           </button>
         </div>
       </div>
