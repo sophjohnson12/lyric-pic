@@ -270,6 +270,7 @@ export default function ImagePage() {
             loading={loading}
             columns={[
               { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: state }} className="text-primary hover:underline">{l.root_word}</Link> },
+              { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
               {
                 header: 'Enabled?',
                 accessor: (l) => (
@@ -280,7 +281,6 @@ export default function ImagePage() {
                   />
                 ),
               },
-              { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
             ]}
           />
         </div>

@@ -357,7 +357,7 @@ export default function LyricsPage() {
 
       <div className="flex flex-wrap items-center gap-y-2 mb-2">
         <h2 className="text-lg font-semibold">Flagged Lyrics</h2>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
           <button
             onClick={handleBulkUnflag}
             disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
@@ -425,7 +425,7 @@ export default function LyricsPage() {
             <div className="mt-8 mb-2">
               <div className="flex flex-wrap items-center gap-y-2 mb-2">
                 <h2 className="text-lg font-semibold">Unreviewed Lyrics</h2>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+                <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
                   <button
                     onClick={() => {
                       if (unreviewed.length === 0) return
@@ -484,7 +484,7 @@ export default function LyricsPage() {
       <div className="mt-8 mb-2">
         <div className="flex flex-wrap items-center gap-y-2 mb-2">
           <h2 className="text-lg font-semibold">Blocklisted Lyrics</h2>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
           <button
             onClick={() => { setBulkEditModal(true); setBulkEditReason('') }}
             disabled={selectedIds.size === 0 || !!bulkLoading}
