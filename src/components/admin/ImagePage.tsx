@@ -333,7 +333,7 @@ export default function ImagePage() {
             autoFocus
           />
           {lyricSearch.trim() && (
-            <ul className="max-h-48 overflow-y-auto border border-primary/20 rounded-lg mb-4 text-sm">
+            <ul className="max-h-48 overflow-y-auto border border-primary/20 rounded-lg mb-4 text-base sm:text-sm">
               {(() => {
                 const filtered = allLyrics.filter((l) =>
                   l.root_word.toLowerCase().includes(lyricSearch.trim().toLowerCase()) &&
@@ -363,11 +363,11 @@ export default function ImagePage() {
               })()}
             </ul>
           )}
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-sm text-text/50">
-              {selectedLyricIds.size > 0 ? `${selectedLyricIds.size} selected` : ''}
-            </span>
-            <div className="flex gap-3">
+          <div className="mt-2">
+            {selectedLyricIds.size > 0 && (
+              <span className="text-sm text-text/50 block mb-2">{selectedLyricIds.size} selected</span>
+            )}
+            <div className="grid grid-cols-2 sm:flex sm:justify-end gap-3">
               <button
                 onClick={() => setShowAddLyricModal(false)}
                 className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
