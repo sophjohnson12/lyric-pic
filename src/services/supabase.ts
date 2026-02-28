@@ -174,7 +174,7 @@ export async function getPlayedSongNames(songIds: number[]): Promise<string[]> {
   return data.map((d: { name: string }) => d.name)
 }
 
-export async function getCachedImages(lyricId: number): Promise<string[]> {
+export async function getCachedImages(lyricId: number, maxCount?: number): Promise<string[]> {
   try {
     const { data, error } = await supabase
       .from('lyric_image')
@@ -187,7 +187,9 @@ export async function getCachedImages(lyricId: number): Promise<string[]> {
       console.error('Failed to fetch cached images:', error)
       return []
     }
-    return (data as unknown as { image: { url: string } }[]).map((r) => r.image.url)
+    const urls = (data as unknown as { image: { url: string } }[]).map((r) => r.image.url)
+    const shuffled = urls.sort(() => Math.random() - 0.5)
+    return maxCount != null ? shuffled.slice(0, maxCount) : shuffled
   } catch {
     return []
   }

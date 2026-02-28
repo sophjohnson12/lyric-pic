@@ -58,6 +58,7 @@ export function useGame(artistSlug: string) {
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songLyricIdsRef = useRef<number[]>([])
   const currentAlbumRef = useRef<Album | null>(null)
+  const maxImageCountRef = useRef<number | undefined>(undefined)
 
   // Keep state.playedSongIds in sync
   useEffect(() => {
@@ -92,13 +93,13 @@ export function useGame(artistSlug: string) {
       // Cache-first image loading
       const imageUrls = await Promise.all(
         selected.map(async (w) => {
-          const cached = await getCachedImages(w.lyric_id)
+          const cached = await getCachedImages(w.lyric_id, maxImageCountRef.current)
           if (cached.length > 0) return cached
 
           const fetched = await searchImages(w.word, IMAGES_TO_CACHE)
           if (fetched.length > 0) {
             await saveLyricImages(w.lyric_id, fetched)
-            return getCachedImages(w.lyric_id)
+            return getCachedImages(w.lyric_id, maxImageCountRef.current)
           }
           return []
         })
@@ -168,6 +169,7 @@ export function useGame(artistSlug: string) {
           setEnableImages(config.enable_images)
           setEnableLyricFlag(config.enable_lyric_flag)
           setEnableImageFlag(config.enable_image_flag)
+          maxImageCountRef.current = config.max_image_count
         }
 
         applyArtistTheme(artist)
