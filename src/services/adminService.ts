@@ -176,6 +176,7 @@ export interface ArtistFormData {
   name: string
   slug: string
   success_message: string
+  load_message: string
   genius_artist_id: number | null
   theme_primary_color: string
   theme_secondary_color: string
@@ -454,6 +455,7 @@ export interface SongFormData {
   featured_artists: string[] | null
   lyrics_full_text: string | null
   success_message: string | null
+  load_message: string | null
 }
 
 export async function createSong(data: SongFormData) {

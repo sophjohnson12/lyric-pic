@@ -78,24 +78,32 @@ export default function AlbumFormPage() {
     <>
       <Toast message={toast} />
       <AdminFormPage title={isEdit ? 'Edit Album' : 'Add Album'} onSubmit={handleSubmit} onCancel={() => navigate(`/admin/artists/${aid}/albums`)} loading={saving} backUrl={`/admin/artists/${aid}/albums`}>
-        <FormField label="Name" required>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
-        </FormField>
-        <FormField label="Release Year" required>
-          <input type="number" value={releaseYear} onChange={(e) => setReleaseYear(e.target.value)} required className={inputClass} />
-        </FormField>
-        <FormField label="Primary Color">
-          <ColorField value={primaryColor} onChange={setPrimaryColor} />
-        </FormField>
-        <FormField label="Secondary Color">
-          <ColorField value={secondaryColor} onChange={setSecondaryColor} />
-        </FormField>
-        <FormField label="Background Color">
-          <ColorField value={bgColor} onChange={setBgColor} />
-        </FormField>
-        <FormField label="Image URL">
-          <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className={inputClass} />
-        </FormField>
+        <div className="space-y-5">
+          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Name" required>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+            </FormField>
+            <FormField label="Release Year" required>
+              <input type="number" value={releaseYear} onChange={(e) => setReleaseYear(e.target.value)} required className={inputClass} />
+            </FormField>
+          </div>
+          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Themes</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Primary Color">
+              <ColorField value={primaryColor} onChange={setPrimaryColor} />
+            </FormField>
+            <FormField label="Secondary Color">
+              <ColorField value={secondaryColor} onChange={setSecondaryColor} />
+            </FormField>
+            <FormField label="Background Color">
+              <ColorField value={bgColor} onChange={setBgColor} />
+            </FormField>
+          </div>
+          <FormField label="Image URL">
+            <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className={inputClass} />
+          </FormField>
+        </div>     
       </AdminFormPage>
     </>
   )

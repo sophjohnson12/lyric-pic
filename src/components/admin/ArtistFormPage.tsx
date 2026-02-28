@@ -16,6 +16,7 @@ export default function ArtistFormPage() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [loadMessage, setLoadMessage] = useState('')
   const [geniusArtistId, setGeniusArtistId] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#722F37')
   const [secondaryColor, setSecondaryColor] = useState('#5C2028')
@@ -40,6 +41,7 @@ export default function ArtistFormPage() {
         setName(a.name)
         setSlug(a.slug)
         setSuccessMessage(a.success_message ?? '')
+        setLoadMessage(a.load_message ?? '')
         setGeniusArtistId(a.genius_artist_id?.toString() ?? '')
         setPrimaryColor(a.theme_primary_color)
         setSecondaryColor(a.theme_secondary_color)
@@ -74,6 +76,7 @@ export default function ArtistFormPage() {
         name,
         slug,
         success_message: successMessage,
+        load_message: loadMessage,
         genius_artist_id: geniusArtistId ? Number(geniusArtistId) : null,
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
@@ -103,44 +106,64 @@ export default function ArtistFormPage() {
     <>
       <Toast message={toast} />
       <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} onCancel={() => navigate('/admin')} loading={saving} canSubmit={canSubmit} backUrl="/admin">
-        <FormField label="Name" required>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
-        </FormField>
-        <FormField label="Slug" required>
-          <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required className={inputClass} />
-        </FormField>
-        <FormField label="Success Message" required>
-          <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} required className={inputClass} />
-        </FormField>
-        <FormField label="Genius Artist ID" required>
-          <div className="flex items-center gap-2">
-            <input type="number" value={geniusArtistId} readOnly required className={`${inputClass} bg-gray-100 cursor-not-allowed`} />
-            <button
-              type="button"
-              onClick={handleFindGeniusId}
-              disabled={findingGenius || !name.trim()}
-              className="shrink-0 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
-            >
-              {findingGenius ? 'Finding...' : 'Find ID'}
-            </button>
+      <div>
+        <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
+        <div className="space-y-5">
+          <div className="grid grid-cols-3 gap-4">
+            <FormField label="Name" required>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+            </FormField>
+            <FormField label="Slug" required>
+              <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required className={inputClass} />
+            </FormField>
+            <FormField label="Genius Artist ID" required>
+              <div className="flex items-center gap-4">
+                <input type="number" value={geniusArtistId} readOnly required className={`${inputClass} bg-gray-100 cursor-not-allowed`} />
+                <button
+                  type="button"
+                  onClick={handleFindGeniusId}
+                  disabled={findingGenius || !name.trim()}
+                  className="shrink-0 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+                >
+                  {findingGenius ? 'Finding...' : 'Find ID'}
+                </button>
+              </div>
+              {geniusError && <p className="text-red-500 text-sm mt-1">{geniusError}</p>}
+            </FormField>
           </div>
-          {geniusError && <p className="text-red-500 text-sm mt-1">{geniusError}</p>}
-        </FormField>
-        <FormField label="Primary Color">
-          <ColorField value={primaryColor} onChange={setPrimaryColor} />
-        </FormField>
-        <FormField label="Secondary Color">
-          <ColorField value={secondaryColor} onChange={setSecondaryColor} />
-        </FormField>
-        <FormField label="Background Color">
-          <ColorField value={bgColor} onChange={setBgColor} />
-        </FormField>
-        <FormField label="Text Color">
-          <ColorField value={textColor} onChange={setTextColor} />
-        </FormField>
-        <FormField label="Font">
-          <input type="text" value={font} onChange={(e) => setFont(e.target.value)} className={inputClass} />
-        </FormField>
+          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
+          <FormField label="Success Message" required>
+            <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} required className={inputClass} />
+          </FormField>
+          <FormField label="Load Message" required>
+            <input type="text" value={loadMessage} onChange={(e) => setLoadMessage(e.target.value)} required className={inputClass} />
+          </FormField>
+        </div>
+      </div>
+      <div>
+        <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Themes</h2>
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Primary Color">
+              <ColorField value={primaryColor} onChange={setPrimaryColor} />
+            </FormField>
+            <FormField label="Secondary Color">
+              <ColorField value={secondaryColor} onChange={setSecondaryColor} />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Background Color">
+              <ColorField value={bgColor} onChange={setBgColor} />
+            </FormField>
+            <FormField label="Text Color">
+              <ColorField value={textColor} onChange={setTextColor} />
+            </FormField>
+          </div>
+          <FormField label="Font">
+            <input type="text" value={font} onChange={(e) => setFont(e.target.value)} className={inputClass} />
+          </FormField>
+        </div>
+      </div>
       </AdminFormPage>
     </>
   )

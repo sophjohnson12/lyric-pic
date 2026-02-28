@@ -142,50 +142,58 @@ export default function SongFormPage() {
         />
       )}
       <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} onCancel={() => navigate(songsUrl)} loading={saving} backUrl={songsUrl}>
-        <FormField label="Name" required>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
-        </FormField>
-        <FormField label="Genius Song ID">
-          <input type="number" value={geniusSongId} onChange={(e) => setGeniusSongId(e.target.value)} className={inputClass} />
-        </FormField>
-        <FormField label="Album">
-          <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} className={inputClass}>
-            <option value="">None</option>
-            {albums.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label="Track Number">
-          <input type="number" value={trackNumber} onChange={(e) => setTrackNumber(e.target.value)} className={inputClass} />
-        </FormField>
-        <FormField label="Featured Artists">
-          <input
-            type="text"
-            value={featuredArtists}
-            onChange={(e) => setFeaturedArtists(e.target.value)}
-            placeholder="Comma-separated names"
-            className={inputClass}
-          />
-        </FormField>
-        <FormField label="Success Message">
-          <input
-            type="text"
-            value={successMessage}
-            onChange={(e) => setSuccessMessage(e.target.value)}
-            className={inputClass}
-          />
-        </FormField>
-        <FormField label="Full Lyrics">
-          <textarea
-            value={fullLyrics}
-            onChange={(e) => setFullLyrics(e.target.value)}
-            rows={10}
-            className={inputClass}
-          />
-        </FormField>
+        <div className="space-y-5">
+          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Name" required>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+            </FormField>
+            <FormField label="Genius Song ID">
+              <input type="number" value={geniusSongId} onChange={(e) => setGeniusSongId(e.target.value)} className={inputClass} />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Album">
+              <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} className={inputClass}>
+                <option value="">None</option>
+                {albums.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <FormField label="Track Number">
+              <input type="number" value={trackNumber} onChange={(e) => setTrackNumber(e.target.value)} className={inputClass} />
+            </FormField>
+          </div>
+          <FormField label="Featured Artists">
+            <input
+              type="text"
+              value={featuredArtists}
+              onChange={(e) => setFeaturedArtists(e.target.value)}
+              placeholder="Comma-separated names"
+              className={inputClass}
+            />
+          </FormField>
+          <FormField label="Full Lyrics">
+            <textarea
+              value={fullLyrics}
+              onChange={(e) => setFullLyrics(e.target.value)}
+              rows={5}
+              className={inputClass}
+            />
+          </FormField>
+          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
+          <FormField label="Success Message">
+            <input
+              type="text"
+              value={successMessage}
+              onChange={(e) => setSuccessMessage(e.target.value)}
+              className={inputClass}
+            />
+          </FormField>
+      </div>
       </AdminFormPage>
     </>
   )

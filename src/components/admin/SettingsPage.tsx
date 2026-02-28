@@ -132,25 +132,23 @@ export default function SettingsPage() {
     <>
       <AdminFormPage title="Settings" onSubmit={handleSubmit} loading={saving}>
         <div className="space-y-6">
-          <div>
-            <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Default Theme Colors</h2>
-            <div className="space-y-5">
-              <FormField label="Primary Color">
-                <ColorField value={primaryColor} onChange={setPrimaryColor} />
-              </FormField>
-              <FormField label="Secondary Color">
-                <ColorField value={secondaryColor} onChange={setSecondaryColor} />
-              </FormField>
-              <FormField label="Background Color">
-                <ColorField value={backgroundColor} onChange={setBackgroundColor} />
-              </FormField>
-            </div>
+          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Default Themes</h2>
+          <div className="grid grid-cols-2 gap-4 space-y-5">
+            <FormField label="Primary Color">
+              <ColorField value={primaryColor} onChange={setPrimaryColor} />
+            </FormField>
+            <FormField label="Secondary Color">
+              <ColorField value={secondaryColor} onChange={setSecondaryColor} />
+            </FormField>
+            <FormField label="Background Color">
+              <ColorField value={backgroundColor} onChange={setBackgroundColor} />
+            </FormField>
           </div>
 
           <div>
             <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
             <div className="space-y-4">
-              <div className="flex gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField label="Min Image Count" required>
                   <input
                     type="number"
