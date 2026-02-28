@@ -36,24 +36,24 @@ export default function Header({
           <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
         </div>
 
-        <div className="flex items-center gap-2 text-gray-600">
+        <div className="flex items-center md:gap-2 text-gray-600">
           <button
             onClick={onInfo}
-            className="p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
+            className="h-12 w-12 flex items-center md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="How to play"
           >
             <Info size={20} />
           </button>
           <button
             onClick={onHistory}
-            className="p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
+            className="h-12 w-12 md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="Song history"
           >
             <History size={20} />
           </button>
           <button
             onClick={onSkip}
-            className="w-auto h-auto py-2 px-3 flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
+            className="h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
           >
             <SkipForward size={20} color="white"/>
           </button>

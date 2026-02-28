@@ -17,6 +17,7 @@ const sidebarLinks: SidebarLink[] = [
       { to: '/admin/lyrics/all', label: 'All Lyrics' },
       { to: '/admin/lyrics', label: 'Unreviewed', end: true },
       { to: '/admin/lyrics/blocklisted', label: 'Blocklisted' },
+      { to: '/admin/lyrics/groups', label: 'Groups' },
     ],
   },
   {

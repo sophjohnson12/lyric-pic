@@ -285,6 +285,17 @@ export default function AllLyricsPage() {
           },
           { header: 'Images', accessor: (l) => l.image_count },
           {
+            header: 'Group',
+            accessor: (l) => l.lyric_group ? (
+              <Link
+                to={`/admin/lyrics/groups/${l.lyric_group.id}`}
+                className="text-primary hover:underline"
+              >
+                {l.lyric_group.name}-
+              </Link>
+            ) : null,
+          },
+          {
             header: 'Flagged?',
             accessor: (l) => l.is_flagged ? <Check size={16} className="text-primary" /> : null,
           },

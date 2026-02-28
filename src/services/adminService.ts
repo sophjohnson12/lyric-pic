@@ -641,6 +641,7 @@ export interface AdminAllLyricRow {
   is_flagged: boolean
   is_blocklisted: boolean
   image_count: number
+  lyric_group: { id: number; name: string } | null
 }
 
 async function getSelectableImageCountsForLyrics(lyricIds: number[]): Promise<Map<number, number>> {
@@ -667,7 +668,7 @@ export async function getAllLyrics(
   const buildQuery = (from: number, to: number) => {
     let q = supabase
       .from('lyric')
-      .select('id, root_word, is_flagged, is_blocklisted', { count: 'exact' })
+      .select('id, root_word, is_flagged, is_blocklisted, lyric_group!lyric_group_id(id, name)', { count: 'exact' })
       .order('root_word')
       .range(from, to)
     if (search) q = q.ilike('root_word', `%${search}%`)
@@ -677,7 +678,7 @@ export async function getAllLyrics(
   }
 
   if (pageSize === 0) {
-    const all: { id: number; root_word: string; is_flagged: boolean; is_blocklisted: boolean }[] = []
+    const all: any[] = []
     let from = 0
     const batchSize = 1000
     let total = 0
@@ -690,17 +691,17 @@ export async function getAllLyrics(
       from += batchSize
     }
     const imageCounts = await getSelectableImageCountsForLyrics(all.map((l) => l.id))
-    return { data: all.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })), total }
+    return { data: all.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })) as AdminAllLyricRow[], total }
   }
 
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
   const { data, error, count } = await buildQuery(from, to)
   if (error) throw error
-  const rows = data ?? []
+  const rows = (data ?? []) as any[]
   const imageCounts = await getSelectableImageCountsForLyrics(rows.map((l) => l.id))
   return {
-    data: rows.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })),
+    data: rows.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })) as AdminAllLyricRow[],
     total: count ?? 0,
   }
 }
@@ -1529,6 +1530,157 @@ export async function resetArtistLyricCounts(artistId: number) {
     const { error } = await supabase.from('artist_lyric').upsert(batch, { onConflict: 'artist_id,lyric_id' })
     if (error) throw error
   }
+}
+
+export async function backfillLyricStems(): Promise<number> {
+  let filled = 0
+  const pageSize = 500
+  while (true) {
+    // Always fetch from offset 0 — as stems are filled, the null set shrinks
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('id, root_word')
+      .is('stem', null)
+      .range(0, pageSize - 1)
+    if (error) throw error
+    if (!data?.length) break
+
+    for (let i = 0; i < data.length; i += 100) {
+      const batch = data.slice(i, i + 100) as { id: number; root_word: string }[]
+      for (const lyric of batch) {
+        const stem = porterStem(lyric.root_word)
+        const { error: updateError } = await supabase.from('lyric').update({ stem }).eq('id', lyric.id)
+        if (updateError) throw updateError
+      }
+    }
+
+    filled += data.length
+    if (data.length < pageSize) break
+  }
+  return filled
+}
+
+// ─── Lyric Groups ─────────────────────────────────────────
+
+export interface AdminLyricGroupRow {
+  id: number
+  name: string
+  member_count: number
+  created_at: string
+}
+
+export interface AdminLyricGroupMemberRow {
+  id: number
+  root_word: string
+  is_blocklisted: boolean
+}
+
+export async function getLyricGroups(): Promise<AdminLyricGroupRow[]> {
+  const { data: groups, error: gErr } = await supabase
+    .from('lyric_group')
+    .select('id, name, created_at')
+    .order('name')
+  if (gErr) throw gErr
+
+  // Count members per group
+  const countMap = new Map<number, number>()
+  let offset = 0
+  const pageSize = 1000
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('lyric_group_id')
+      .not('lyric_group_id', 'is', null)
+      .range(offset, offset + pageSize - 1)
+    if (error) throw error
+    for (const row of data as { lyric_group_id: number }[]) {
+      countMap.set(row.lyric_group_id, (countMap.get(row.lyric_group_id) ?? 0) + 1)
+    }
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+
+  return (groups as { id: number; name: string; created_at: string }[]).map((g) => ({
+    ...g,
+    member_count: countMap.get(g.id) ?? 0,
+  }))
+}
+
+export async function getLyricGroupById(id: number): Promise<{ id: number; name: string; created_at: string } | null> {
+  const { data, error } = await supabase
+    .from('lyric_group')
+    .select('id, name, created_at')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return data as { id: number; name: string; created_at: string } | null
+}
+
+export async function getLyricGroupMembers(groupId: number): Promise<AdminLyricGroupMemberRow[]> {
+  const { data, error } = await supabase
+    .from('lyric')
+    .select('id, root_word, is_blocklisted')
+    .eq('lyric_group_id', groupId)
+    .order('root_word')
+  if (error) throw error
+  return data as AdminLyricGroupMemberRow[]
+}
+
+export async function createLyricGroup(name: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('lyric_group')
+    .insert({ name })
+    .select('id')
+    .single()
+  if (error) throw error
+  return (data as { id: number }).id
+}
+
+export async function updateLyricGroup(id: number, name: string): Promise<void> {
+  const { error } = await supabase.from('lyric_group').update({ name }).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteLyricGroup(id: number): Promise<void> {
+  // Clear FK on members first
+  const { error: clearErr } = await supabase
+    .from('lyric')
+    .update({ lyric_group_id: null })
+    .eq('lyric_group_id', id)
+  if (clearErr) throw clearErr
+  const { error } = await supabase.from('lyric_group').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function addLyricToGroup(lyricId: number, groupId: number): Promise<void> {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ lyric_group_id: groupId, updated_at: new Date().toISOString() })
+    .eq('id', lyricId)
+  if (error) throw error
+}
+
+export async function removeLyricFromGroup(lyricId: number): Promise<void> {
+  const { error } = await supabase.from('lyric').update({ lyric_group_id: null }).eq('id', lyricId)
+  if (error) throw error
+}
+
+export async function searchLyricsForGroup(query: string): Promise<{ id: number; root_word: string }[]> {
+  const { data, error } = await supabase
+    .from('lyric')
+    .select('id, root_word')
+    .ilike('root_word', `${query}%`)
+    .eq('is_blocklisted', false)
+    .order('root_word')
+    .limit(20)
+  if (error) throw error
+  return data as { id: number; root_word: string }[]
+}
+
+export async function seedLyricGroups(): Promise<{ created: number; assigned: number }> {
+  const { data, error } = await supabase.rpc('seed_lyric_groups')
+  if (error) throw error
+  return data as { created: number; assigned: number }
 }
 
 export async function deleteUnusedLyrics(): Promise<number> {

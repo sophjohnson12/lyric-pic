@@ -59,9 +59,17 @@ export interface Song {
   created_at: string
 }
 
+export interface LyricGroup {
+  id: number
+  name: string
+  created_at: string
+}
+
 export interface Lyric {
   id: number
   root_word: string
+  stem: string | null
+  lyric_group_id: number | null
   is_blocklisted: boolean
   blocklist_reason: number | null
   is_flagged: boolean

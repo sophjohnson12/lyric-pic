@@ -15,6 +15,8 @@ import LyricsPage from './components/admin/LyricsPage'
 import LyricPage from './components/admin/LyricPage'
 import AllLyricsPage from './components/admin/AllLyricsPage'
 import BlocklistedLyricsPage from './components/admin/BlocklistedLyricsPage'
+import LyricGroupsPage from './components/admin/LyricGroupsPage'
+import LyricGroupPage from './components/admin/LyricGroupPage'
 import ImagesPage from './components/admin/ImagesPage'
 import ImagePage from './components/admin/ImagePage'
 import AllImagesPage from './components/admin/AllImagesPage'
@@ -42,6 +44,8 @@ export default function App() {
           <Route path="lyrics" element={<LyricsPage />} />
           <Route path="lyrics/all" element={<AllLyricsPage />} />
           <Route path="lyrics/blocklisted" element={<BlocklistedLyricsPage />} />
+          <Route path="lyrics/groups" element={<LyricGroupsPage />} />
+          <Route path="lyrics/groups/:groupId" element={<LyricGroupPage />} />
           <Route path="lyrics/:lyricId" element={<LyricPage />} />
           <Route path="images" element={<ImagesPage />} />
           <Route path="images/all" element={<AllImagesPage />} />
