@@ -196,13 +196,13 @@ export default function BlocklistedLyricsPage() {
           onToggleAll: handleToggleAllSelect,
         }}
         columns={[
-          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">{l.root_word}</Link> },
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/blocklisted' }} className="text-primary hover:underline">{l.root_word}</Link> },
           { header: 'Blocklist Reason', accessor: (l) => l.blocklist_reason ?? '—' },
           {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="View lyric">
+                <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/blocklisted' }} className="hover:opacity-70" title="View lyric">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button

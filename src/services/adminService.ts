@@ -603,6 +603,14 @@ export async function flagLyric(lyricId: number) {
   if (error) throw error
 }
 
+export async function bulkFlagLyrics(lyricIds: number[]) {
+  const { error } = await supabase
+    .from('lyric')
+    .update({ is_flagged: true, flagged_by: 'ADMIN' })
+    .in('id', lyricIds)
+  if (error) throw error
+}
+
 // ─── Lyrics Management ──────────────────────────────────
 
 export interface AdminFlaggedLyricRow {

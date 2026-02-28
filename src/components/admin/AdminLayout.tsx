@@ -14,7 +14,7 @@ const sidebarLinks: SidebarLink[] = [
   {
     label: 'Lyrics',
     children: [
-      { to: '/admin/lyrics/all', label: 'All' },
+      { to: '/admin/lyrics/all', label: 'All Lyrics' },
       { to: '/admin/lyrics', label: 'Unreviewed', end: true },
       { to: '/admin/lyrics/blocklisted', label: 'Blocklisted' },
     ],
@@ -22,7 +22,7 @@ const sidebarLinks: SidebarLink[] = [
   {
     label: 'Images',
     children: [
-      { to: '/admin/images/all', label: 'All' },
+      { to: '/admin/images/all', label: 'All Images' },
       { to: '/admin/images', label: 'Unreviewed', end: true },
       { to: '/admin/images/blocklisted', label: 'Blocklisted' },
     ],

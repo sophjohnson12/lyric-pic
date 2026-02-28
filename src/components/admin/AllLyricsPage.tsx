@@ -4,12 +4,18 @@ import { Check, Pencil, Flag, Ban } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
+import ConfirmPopup from '../common/ConfirmPopup'
 import Toast from '../common/Toast'
 import {
   getAllLyrics,
   flagLyric,
+  bulkFlagLyrics,
   blocklistLyric,
+  bulkBlocklistLyrics,
   getBlocklistReasons,
+  getArtistsForDropdown,
+  resetArtistLyricCounts,
+  deleteUnusedLyrics,
 } from '../../services/adminService'
 import type { AdminAllLyricRow } from '../../services/adminService'
 
@@ -29,11 +35,28 @@ export default function AllLyricsPage() {
   const [blocklistModal, setBlocklistModal] = useState<{ lyricId: number; word: string } | null>(null)
   const [selectedReason, setSelectedReason] = useState('')
   const [blocklisting, setBlocklisting] = useState(false)
+  const [bulkBlockModal, setBulkBlockModal] = useState(false)
+  const [bulkBlockReason, setBulkBlockReason] = useState('')
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [artists, setArtists] = useState<{ id: number; name: string }[]>([])
+  const [resetCountsModal, setResetCountsModal] = useState(false)
+  const [resetArtistId, setResetArtistId] = useState('')
+  const [resetting, setResetting] = useState(false)
+  const [deleteUnusedConfirm, setDeleteUnusedConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'All Lyrics' }])
     getBlocklistReasons().then(setReasons)
+    getArtistsForDropdown().then(setArtists)
   }, [setBreadcrumbs])
+
+  useEffect(() => {
+    if (!bulkLoading && !deleting) return
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [bulkLoading, deleting])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -92,6 +115,68 @@ export default function AllLyricsPage() {
     }
   }
 
+  async function handleBulkFlag() {
+    if (selectedIds.size === 0) return
+    setBulkLoading(true)
+    try {
+      await bulkFlagLyrics([...selectedIds] as number[])
+      setData((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, is_flagged: true } : l))
+      showToast(`Flagged ${selectedIds.size} lyrics`)
+      setSelectedIds(new Set())
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to flag'}`)
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  async function handleBulkBlockConfirm() {
+    if (!bulkBlockReason || selectedIds.size === 0) return
+    setBulkLoading(true)
+    try {
+      await bulkBlocklistLyrics([...selectedIds] as number[], Number(bulkBlockReason))
+      setData((prev) => prev.map((l) =>
+        selectedIds.has(l.id) ? { ...l, is_blocklisted: true, is_flagged: false } : l
+      ))
+      showToast(`Blocklisted ${selectedIds.size} lyrics`)
+      setBulkBlockModal(false)
+      setBulkBlockReason('')
+      setSelectedIds(new Set())
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  async function handleResetCounts() {
+    if (!resetArtistId) return
+    setResetting(true)
+    try {
+      await resetArtistLyricCounts(Number(resetArtistId))
+      showToast('Lyric counts reset successfully')
+      setResetCountsModal(false)
+      setResetArtistId('')
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to reset counts'}`)
+    } finally {
+      setResetting(false)
+    }
+  }
+
+  async function handleDeleteUnused() {
+    setDeleteUnusedConfirm(false)
+    setDeleting(true)
+    try {
+      const count = await deleteUnusedLyrics()
+      showToast(`Deleted ${count} unused lyrics`)
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to delete unused lyrics'}`)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   function handleToggleSelect(key: string | number) {
     setSelectedIds((prev) => {
       const next = new Set(prev)
@@ -113,7 +198,44 @@ export default function AllLyricsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">All Lyrics</h1>
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
+        <h1 className="text-2xl font-bold">All Lyrics</h1>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setDeleteUnusedConfirm(true)}
+            disabled={deleting}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {deleting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Delete Unused Lyrics
+          </button>
+          <button
+            onClick={() => { setResetCountsModal(true); setResetArtistId('') }}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center"
+          >
+            Reset Lyric Counts
+          </button>
+        </div>
+      </div>
+      <div className="flex justify-end mb-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
+          <button
+            onClick={handleBulkFlag}
+            disabled={selectedIds.size === 0 || bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {bulkLoading && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Flag All
+          </button>
+          <button
+            onClick={() => { setBulkBlockModal(true); setBulkBlockReason('') }}
+            disabled={selectedIds.size === 0 || bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            Block All
+          </button>
+        </div>
+      </div>
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <input
           type="text"
@@ -135,6 +257,7 @@ export default function AllLyricsPage() {
           </select>
         </label>
       </div>
+
       <AdminTable
         data={data}
         keyFn={(l) => l.id}
@@ -155,7 +278,7 @@ export default function AllLyricsPage() {
           {
             header: 'Lyric',
             accessor: (l) => (
-              <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">
+              <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/all' }} className="text-primary hover:underline">
                 {l.root_word}
               </Link>
             ),
@@ -173,7 +296,7 @@ export default function AllLyricsPage() {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="Edit lyric">
+                <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/all' }} className="hover:opacity-70" title="Edit lyric">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
@@ -232,6 +355,84 @@ export default function AllLyricsPage() {
             </button>
           </div>
         </Modal>
+      )}
+
+      {bulkBlockModal && (
+        <Modal onClose={() => { setBulkBlockModal(false); setBulkBlockReason('') }}>
+          <h2 className="text-lg font-bold mb-2">Blocklist Words</h2>
+          <p className="text-sm text-text/70 mb-4">
+            Blocklist all selected lyrics ({selectedIds.size}). This will disable them for existing songs.
+          </p>
+          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
+          <select
+            value={bulkBlockReason}
+            onChange={(e) => setBulkBlockReason(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="" disabled>Select a reason...</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.id}>{r.reason}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setBulkBlockModal(false); setBulkBlockReason('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleBulkBlockConfirm}
+              disabled={!bulkBlockReason || bulkLoading}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              Blocklist
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {resetCountsModal && (
+        <Modal onClose={() => { setResetCountsModal(false); setResetArtistId('') }}>
+          <h2 className="text-lg font-bold mb-2">Reset Lyric Counts</h2>
+          <p className="text-sm text-text/70 mb-4">
+            This action will reset all total lyric counts for the selected artist based on the songs that are currently enabled.
+          </p>
+          <label className="block text-sm font-semibold mb-1">Artist *</label>
+          <select
+            value={resetArtistId}
+            onChange={(e) => setResetArtistId(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="" disabled>Select an artist...</option>
+            {artists.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setResetCountsModal(false); setResetArtistId('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleResetCounts}
+              disabled={!resetArtistId || resetting}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              {resetting ? 'Resetting...' : 'Reset'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {deleteUnusedConfirm && (
+        <ConfirmPopup
+          message="Are you sure? This will permanently delete all lyric records that are not referenced by any song or artist."
+          onConfirm={handleDeleteUnused}
+          onCancel={() => setDeleteUnusedConfirm(false)}
+        />
       )}
 
       <Toast message={toast} />

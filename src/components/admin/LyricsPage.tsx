@@ -4,7 +4,6 @@ import { FlagOff, Ban, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
-import ConfirmPopup from '../common/ConfirmPopup'
 import Toast from '../common/Toast'
 import ToggleSwitch from './ToggleSwitch'
 import {
@@ -15,9 +14,6 @@ import {
   blocklistLyric,
   bulkBlocklistLyrics,
   getBlocklistReasons,
-  getArtistsForDropdown,
-  resetArtistLyricCounts,
-  deleteUnusedLyrics,
 } from '../../services/adminService'
 import type { AdminFlaggedLyricRow, AdminUnreviewedLyricRow } from '../../services/adminService'
 
@@ -40,12 +36,6 @@ export default function LyricsPage() {
   const [bulkBlockModal, setBulkBlockModal] = useState(false)
   const [bulkBlockReason, setBulkBlockReason] = useState('')
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
-  const [artists, setArtists] = useState<{ id: number; name: string }[]>([])
-  const [resetCountsModal, setResetCountsModal] = useState(false)
-  const [resetArtistId, setResetArtistId] = useState('')
-  const [resetting, setResetting] = useState(false)
-  const [deleteUnusedConfirm, setDeleteUnusedConfirm] = useState(false)
-  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([
@@ -58,25 +48,23 @@ export default function LyricsPage() {
   }, [])
 
   useEffect(() => {
-    if (!bulkLoading && !deleting) return
+    if (!bulkLoading) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading, deleting])
+  }, [bulkLoading])
 
   async function loadData() {
     setLoading(true)
     try {
-      const [f, r, a, u, rv] = await Promise.all([
+      const [f, r, u, rv] = await Promise.all([
         getFlaggedLyrics(),
         getBlocklistReasons(),
-        getArtistsForDropdown(),
         getUnreviewedLyrics(),
         getReviewedLyrics(),
       ])
       setFlagged(f)
       setReasons(r)
-      setArtists(a)
       setUnreviewed(u)
       setReviewed(rv)
     } finally {
@@ -209,55 +197,9 @@ export default function LyricsPage() {
     }
   }
 
-  async function handleResetCounts() {
-    if (!resetArtistId) return
-    setResetting(true)
-    try {
-      await resetArtistLyricCounts(Number(resetArtistId))
-      showToast('Lyric counts reset successfully')
-      setResetCountsModal(false)
-      setResetArtistId('')
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to reset counts'}`)
-    } finally {
-      setResetting(false)
-    }
-  }
-
-  async function handleDeleteUnused() {
-    setDeleteUnusedConfirm(false)
-    setDeleting(true)
-    try {
-      const count = await deleteUnusedLyrics()
-      showToast(`Deleted ${count} unused lyrics`)
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to delete unused lyrics'}`)
-    } finally {
-      setDeleting(false)
-    }
-  }
-
-  return (
+return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
-        <h1 className="text-2xl font-bold">Unreviewed Lyrics</h1>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <button
-            onClick={() => setDeleteUnusedConfirm(true)}
-            disabled={deleting}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {deleting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Delete Unused Lyrics
-          </button>
-          <button
-            onClick={() => { setResetCountsModal(true); setResetArtistId('') }}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center"
-          >
-            Reset Lyric Counts
-          </button>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold mb-4">Unreviewed Lyrics</h1>
 
       <div className="flex flex-wrap items-center gap-y-2 mb-2">
         <h2 className="text-lg font-semibold">Flagged Lyrics</h2>
@@ -493,48 +435,6 @@ export default function LyricsPage() {
         </Modal>
       )}
 
-      {resetCountsModal && (
-        <Modal onClose={() => { setResetCountsModal(false); setResetArtistId('') }}>
-          <h2 className="text-lg font-bold mb-2">Reset Lyric Counts</h2>
-          <p className="text-sm text-text/70 mb-4">
-            This action will reset all total lyric counts for the selected artist based on the songs that are currently enabled.
-          </p>
-          <label className="block text-sm font-semibold mb-1">Artist *</label>
-          <select
-            value={resetArtistId}
-            onChange={(e) => setResetArtistId(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
-          >
-            <option value="" disabled>Select an artist...</option>
-            {artists.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setResetCountsModal(false); setResetArtistId('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleResetCounts}
-              disabled={!resetArtistId || resetting}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              {resetting ? 'Resetting...' : 'Reset'}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {deleteUnusedConfirm && (
-        <ConfirmPopup
-          message="Are you sure? This will permanently delete all lyric records that are not referenced by any song or artist."
-          onConfirm={handleDeleteUnused}
-          onCancel={() => setDeleteUnusedConfirm(false)}
-        />
-      )}
       <Toast message={toast} />
     </div>
   )

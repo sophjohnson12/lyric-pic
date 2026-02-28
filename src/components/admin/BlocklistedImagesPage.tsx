@@ -18,7 +18,7 @@ import type { AdminBlocklistedImageRow } from '../../services/adminService'
 
 function ImageThumb({ url, imageId }: { url: string; imageId: number }) {
   return (
-    <Link to={`/admin/images/${imageId}`}>
+    <Link to={`/admin/images/${imageId}`} state={{ backUrl: '/admin/images/blocklisted' }}>
       <img
         src={url}
         alt=""
@@ -222,7 +222,7 @@ export default function BlocklistedImagesPage() {
             header: 'Actions',
             accessor: (img) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/images/${img.id}`} className="hover:opacity-70" title="View image">
+                <Link to={`/admin/images/${img.id}`} state={{ backUrl: '/admin/images/blocklisted' }} className="hover:opacity-70" title="View image">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
