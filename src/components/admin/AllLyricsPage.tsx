@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check } from 'lucide-react'
+import { Check, Pencil, Flag, Ban } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
-import { getAllLyrics } from '../../services/adminService'
+import Modal from '../common/Modal'
+import Toast from '../common/Toast'
+import {
+  getAllLyrics,
+  flagLyric,
+  blocklistLyric,
+  getBlocklistReasons,
+} from '../../services/adminService'
 import type { AdminAllLyricRow } from '../../services/adminService'
 
 export default function AllLyricsPage() {
@@ -17,9 +24,15 @@ export default function AllLyricsPage() {
   const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+  const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
+  const [toast, setToast] = useState<string | null>(null)
+  const [blocklistModal, setBlocklistModal] = useState<{ lyricId: number; word: string } | null>(null)
+  const [selectedReason, setSelectedReason] = useState('')
+  const [blocklisting, setBlocklisting] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'All Lyrics' }])
+    getBlocklistReasons().then(setReasons)
   }, [setBreadcrumbs])
 
   useEffect(() => {
@@ -45,6 +58,39 @@ export default function AllLyricsPage() {
     loadData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, debouncedSearch, blocklistedFilter])
+
+  function showToast(message: string) {
+    setToast(message)
+    setTimeout(() => setToast(null), 5000)
+  }
+
+  async function handleFlag(lyricId: number) {
+    try {
+      await flagLyric(lyricId)
+      setData((prev) => prev.map((l) => l.id === lyricId ? { ...l, is_flagged: true } : l))
+      showToast('Lyric flagged')
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to flag'}`)
+    }
+  }
+
+  async function handleBlocklistConfirm() {
+    if (!blocklistModal || !selectedReason) return
+    setBlocklisting(true)
+    try {
+      await blocklistLyric(blocklistModal.lyricId, Number(selectedReason))
+      setData((prev) => prev.map((l) =>
+        l.id === blocklistModal.lyricId ? { ...l, is_blocklisted: true, is_flagged: false } : l
+      ))
+      showToast('Lyric blocklisted')
+      setBlocklistModal(null)
+      setSelectedReason('')
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
+    } finally {
+      setBlocklisting(false)
+    }
+  }
 
   function handleToggleSelect(key: string | number) {
     setSelectedIds((prev) => {
@@ -123,9 +169,72 @@ export default function AllLyricsPage() {
             header: 'Blocklisted?',
             accessor: (l) => l.is_blocklisted ? <Check size={16} className="text-primary" /> : null,
           },
-          { header: 'Actions', accessor: () => null },
+          {
+            header: 'Actions',
+            accessor: (l) => (
+              <div className="flex items-center gap-2">
+                <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="Edit lyric">
+                  <Pencil size={20} className="drop-shadow-md" />
+                </Link>
+                <button
+                  onClick={() => handleFlag(l.id)}
+                  className="hover:opacity-70 cursor-pointer"
+                  title="Flag"
+                >
+                  <Flag size={20} className="drop-shadow-md" />
+                </button>
+                <button
+                  onClick={() => { setBlocklistModal({ lyricId: l.id, word: l.root_word }); setSelectedReason('') }}
+                  className="hover:opacity-70 cursor-pointer"
+                  title="Blocklist"
+                >
+                  <Ban size={20} className="drop-shadow-md" />
+                </button>
+              </div>
+            ),
+          },
         ]}
       />
+
+      {blocklistModal && (
+        <Modal onClose={() => { setBlocklistModal(null); setSelectedReason('') }}>
+          <h2 className="text-lg font-bold mb-2">Blocklist Word</h2>
+          <p className="text-sm text-text/70 mb-4">
+            Are you sure? This lyric will be disabled for existing songs.
+          </p>
+          <p className="text-sm font-semibold mb-3">
+            Word: <span className="text-primary">{blocklistModal.word}</span>
+          </p>
+          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
+          <select
+            value={selectedReason}
+            onChange={(e) => setSelectedReason(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+          >
+            <option value="" disabled>Select a reason...</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.id}>{r.reason}</option>
+            ))}
+          </select>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setBlocklistModal(null); setSelectedReason('') }}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              No
+            </button>
+            <button
+              onClick={handleBlocklistConfirm}
+              disabled={!selectedReason || blocklisting}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              Yes
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      <Toast message={toast} />
     </div>
   )
 }
