@@ -455,7 +455,6 @@ export interface SongFormData {
   featured_artists: string[] | null
   lyrics_full_text: string | null
   success_message: string | null
-  load_message: string | null
 }
 
 export async function createSong(data: SongFormData) {

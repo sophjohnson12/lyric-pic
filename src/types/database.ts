@@ -3,6 +3,7 @@ export interface Artist {
   name: string
   slug: string
   success_message: string | null
+  load_message: string | null
   is_selectable: boolean
   theme_primary_color: string
   theme_secondary_color: string
