@@ -377,8 +377,11 @@ export function useGame(artistSlug: string) {
   const skipSong = useCallback(() => {
     if (!state.artist) return
     applyArtistTheme(state.artist)
-    loadNewSong(state.artist, playedSongIds)
-  }, [state.artist, playedSongIds, applyArtistTheme, loadNewSong])
+    const excludeIds = state.currentSong
+      ? [...playedSongIds, state.currentSong.id]
+      : playedSongIds
+    loadNewSong(state.artist, excludeIds)
+  }, [state.artist, state.currentSong, playedSongIds, applyArtistTheme, loadNewSong])
 
   const clearHistory = useCallback(() => {
     setPlayedSongIds([])
