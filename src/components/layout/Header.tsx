@@ -39,23 +39,23 @@ export default function Header({
         <div className="flex items-center md:gap-2 text-gray-600">
           <button
             onClick={onInfo}
-            className="h-12 w-12 flex items-center md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
+            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="How to play"
           >
             <Info size={20} />
           </button>
           <button
             onClick={onHistory}
-            className="h-12 w-12 md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
+            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="Song history"
           >
             <History size={20} />
           </button>
           <button
             onClick={onSkip}
-            className="h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
+            className="h-12 w-14 md:w-auto md:h-auto py-2 px-3 text-white/80 hover:text-white flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
           >
-            <SkipForward size={20} color="white"/>
+            <SkipForward size={24}/>
           </button>
         </div>
       </div>

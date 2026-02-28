@@ -95,7 +95,7 @@ export default function WordInput({
                 className="absolute top-2 right-2 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-white/80 bg-primary border border-secondary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
                 title="Get different image"
               >
-                <RefreshCw size={20} className="drop-shadow-md" />
+                <RefreshCw size={24} className="drop-shadow-md" />
               </button>
             )}
 
@@ -130,7 +130,7 @@ export default function WordInput({
                   <button
                     onClick={handleFlag}
                     disabled={flagged}
-                    className={`absolute bottom-1 right-1 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
+                    className={`absolute bottom-1.5 right-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
                     title={flagged ? 'Flagged' : 'Flag this word'}
                   >
                     <Flag size={20} className="drop-shadow-md" />
@@ -140,7 +140,7 @@ export default function WordInput({
             ) : (
               <>
                 <motion.button
-                  className="h-full flex items-center justify-center z-10 px-3 bg-primary text-white rounded-bl-xl cursor-pointer border border-secondary"
+                  className="h-full flex items-center justify-center z-10 px-3 bg-primary text-white/80 hover:text-white rounded-bl-xl cursor-pointer border border-secondary"
                   onHoverStart={() => setIsHoveringLock(true)}
                   onHoverEnd={() => setIsHoveringLock(false)}
                   onClick={() => onReveal(wordIndex)}
@@ -157,7 +157,7 @@ export default function WordInput({
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <LockOpen size={20} />
+                        <LockOpen size={24} />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -167,7 +167,7 @@ export default function WordInput({
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <Lock size={20} />
+                        <Lock size={24} />
                       </motion.div>
                     )}
                   </AnimatePresence>
