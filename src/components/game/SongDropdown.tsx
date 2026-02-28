@@ -108,7 +108,7 @@ export default function SongDropdown({
         <Dropdown
           key={incorrectGuesses.length}
           options={options}
-          placeholder="Guess a song..."
+          placeholder="Guess the song..."
           onSelect={handleSelect}
           excludeLabels={incorrectGuesses}
         />
