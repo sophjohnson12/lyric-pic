@@ -653,6 +653,7 @@ export async function getAllLyrics(
   page: number,
   pageSize: number,
   search: string,
+  blocklistedFilter: 'all' | 'yes' | 'no' = 'no',
 ): Promise<{ data: AdminAllLyricRow[]; total: number }> {
   const buildQuery = (from: number, to: number) => {
     let q = supabase
@@ -661,6 +662,8 @@ export async function getAllLyrics(
       .order('root_word')
       .range(from, to)
     if (search) q = q.ilike('root_word', `%${search}%`)
+    if (blocklistedFilter === 'yes') q = q.eq('is_blocklisted', true)
+    if (blocklistedFilter === 'no') q = q.or('is_blocklisted.eq.false,is_blocklisted.is.null')
     return q
   }
 

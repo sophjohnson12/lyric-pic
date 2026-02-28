@@ -14,6 +14,7 @@ export default function AllLyricsPage() {
   const [pageSize, setPageSize] = useState(20)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
 
@@ -32,7 +33,7 @@ export default function AllLyricsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const result = await getAllLyrics(page, pageSize, debouncedSearch)
+      const result = await getAllLyrics(page, pageSize, debouncedSearch, blocklistedFilter)
       setData(result.data)
       setTotal(result.total)
     } finally {
@@ -43,7 +44,7 @@ export default function AllLyricsPage() {
   useEffect(() => {
     loadData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, debouncedSearch])
+  }, [page, pageSize, debouncedSearch, blocklistedFilter])
 
   function handleToggleSelect(key: string | number) {
     setSelectedIds((prev) => {
@@ -67,7 +68,7 @@ export default function AllLyricsPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">All Lyrics</h1>
-      <div className="mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
         <input
           type="text"
           placeholder="Search lyrics..."
@@ -75,6 +76,18 @@ export default function AllLyricsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
         />
+        <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+          Blocklisted:
+          <select
+            value={blocklistedFilter}
+            onChange={(e) => { setBlocklistedFilter(e.target.value as 'all' | 'yes' | 'no'); setPage(1) }}
+            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          >
+            <option value="all">All</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
       </div>
       <AdminTable
         data={data}
