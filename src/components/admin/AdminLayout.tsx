@@ -5,15 +5,36 @@ import { useAuth } from '../../hooks/useAuth'
 import { AdminBreadcrumbProvider, useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import { getAppConfig } from '../../services/adminService'
 
-const sidebarLinks = [
+type SidebarLink =
+  | { to: string; label: string; end?: boolean }
+  | { label: string; children: { to: string; label: string; end?: boolean }[] }
+
+const sidebarLinks: SidebarLink[] = [
   { to: '/admin', label: 'Artists', end: true },
-  { to: '/admin/lyrics', label: 'Lyrics' },
-  { to: '/admin/images', label: 'Images' },
+  {
+    label: 'Lyrics',
+    children: [
+      { to: '/admin/lyrics/all', label: 'All' },
+      { to: '/admin/lyrics', label: 'Unreviewed', end: true },
+      { to: '/admin/lyrics/blocklisted', label: 'Blocklisted' },
+    ],
+  },
+  {
+    label: 'Images',
+    children: [
+      { to: '/admin/images/all', label: 'All' },
+      { to: '/admin/images', label: 'Unreviewed', end: true },
+      { to: '/admin/images/blocklisted', label: 'Blocklisted' },
+    ],
+  },
   { to: '/admin/settings', label: 'Settings' },
 ]
 
 function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const linkClass = (isActive: boolean) =>
+    `block pl-8 pr-4 py-1.5 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-text hover:bg-primary/10'}`
+
+  const topLinkClass = (isActive: boolean) =>
     `block px-4 py-2 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-text hover:bg-primary/10'}`
 
   return (
@@ -33,17 +54,39 @@ function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         `}
       >
         <nav className="flex flex-col gap-1 p-4 pt-16 md:pt-4">
-          {sidebarLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
-              className={({ isActive }) => linkClass(isActive)}
-              onClick={onClose}
-            >
-              {link.label}
-            </NavLink>
-          ))}
+          {sidebarLinks.map((link) => {
+            if ('children' in link) {
+              return (
+                <div key={link.label}>
+                  <span className="block px-4 py-1 text-xs font-semibold uppercase tracking-wide text-text/50">
+                    {link.label}
+                  </span>
+                  {link.children.map((child) => (
+                    <NavLink
+                      key={child.to}
+                      to={child.to}
+                      end={child.end}
+                      className={({ isActive }) => linkClass(isActive)}
+                      onClick={onClose}
+                    >
+                      {child.label}
+                    </NavLink>
+                  ))}
+                </div>
+              )
+            }
+            return (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={({ isActive }) => topLinkClass(isActive)}
+                onClick={onClose}
+              >
+                {link.label}
+              </NavLink>
+            )
+          })}
         </nav>
       </aside>
     </>

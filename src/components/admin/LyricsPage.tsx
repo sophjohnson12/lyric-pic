@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FlagOff, Ban, Trash2, Pencil } from 'lucide-react'
+import { FlagOff, Ban, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -9,28 +9,22 @@ import Toast from '../common/Toast'
 import ToggleSwitch from './ToggleSwitch'
 import {
   getFlaggedLyrics,
-  getBlocklistedLyrics,
   getUnreviewedLyrics,
   getReviewedLyrics,
   unflagLyric,
   blocklistLyric,
-  updateBlocklistReason,
-  unblocklistLyric,
-  bulkUpdateBlocklistReason,
-  bulkUnblocklistLyrics,
   bulkBlocklistLyrics,
   getBlocklistReasons,
   getArtistsForDropdown,
   resetArtistLyricCounts,
   deleteUnusedLyrics,
 } from '../../services/adminService'
-import type { AdminFlaggedLyricRow, AdminBlocklistedLyricRow, AdminUnreviewedLyricRow } from '../../services/adminService'
+import type { AdminFlaggedLyricRow, AdminUnreviewedLyricRow } from '../../services/adminService'
 
 export default function LyricsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const navigate = useNavigate()
   const [flagged, setFlagged] = useState<AdminFlaggedLyricRow[]>([])
-  const [blocklisted, setBlocklisted] = useState<AdminBlocklistedLyricRow[]>([])
   const [unreviewed, setUnreviewed] = useState<AdminUnreviewedLyricRow[]>([])
   const [reviewed, setReviewed] = useState<AdminUnreviewedLyricRow[]>([])
   const [unreviewedSelectedIds, setUnreviewedSelectedIds] = useState<Set<string | number>>(new Set())
@@ -42,14 +36,6 @@ export default function LyricsPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [blocklistModal, setBlocklistModal] = useState<{ lyricId: number; word: string } | null>(null)
   const [selectedReason, setSelectedReason] = useState('')
-  const [unblocklistId, setUnblocklistId] = useState<number | null>(null)
-  const [reasonFilter, setReasonFilter] = useState('')
-  const [editReasonModal, setEditReasonModal] = useState<{ lyricId: number; word: string; currentReason: string } | null>(null)
-  const [editReasonValue, setEditReasonValue] = useState('')
-  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
-  const [bulkEditModal, setBulkEditModal] = useState(false)
-  const [bulkEditReason, setBulkEditReason] = useState('')
-  const [bulkUnblockConfirm, setBulkUnblockConfirm] = useState(false)
   const [flaggedSelectedIds, setFlaggedSelectedIds] = useState<Set<string | number>>(new Set())
   const [bulkBlockModal, setBulkBlockModal] = useState(false)
   const [bulkBlockReason, setBulkBlockReason] = useState('')
@@ -81,16 +67,14 @@ export default function LyricsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const [f, b, r, a, u, rv] = await Promise.all([
+      const [f, r, a, u, rv] = await Promise.all([
         getFlaggedLyrics(),
-        getBlocklistedLyrics(),
         getBlocklistReasons(),
         getArtistsForDropdown(),
         getUnreviewedLyrics(),
         getReviewedLyrics(),
       ])
       setFlagged(f)
-      setBlocklisted(b)
       setReasons(r)
       setArtists(a)
       setUnreviewed(u)
@@ -125,76 +109,6 @@ export default function LyricsPage() {
       loadData()
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
-    }
-  }
-
-  async function handleEditReasonConfirm() {
-    if (!editReasonModal || !editReasonValue) return
-    try {
-      await updateBlocklistReason(editReasonModal.lyricId, Number(editReasonValue))
-      const reasonLabel = reasons.find((r) => r.id === Number(editReasonValue))?.reason ?? null
-      setBlocklisted((prev) => prev.map((l) => (l.id === editReasonModal.lyricId ? { ...l, blocklist_reason: reasonLabel } : l)))
-      showToast('Blocklist reason updated')
-      setEditReasonModal(null)
-      setEditReasonValue('')
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to update reason'}`)
-    }
-  }
-
-  function handleToggleSelect(key: string | number) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
-
-  function handleToggleAllSelect(keys: (string | number)[]) {
-    setSelectedIds((prev) => {
-      const allSelected = keys.every((k) => prev.has(k))
-      const next = new Set(prev)
-      if (allSelected) {
-        keys.forEach((k) => next.delete(k))
-      } else {
-        keys.forEach((k) => next.add(k))
-      }
-      return next
-    })
-  }
-
-  async function handleBulkEditConfirm() {
-    if (!bulkEditReason || selectedIds.size === 0) return
-    setBulkLoading({ type: 'edit', done: 0, total: 1 })
-    try {
-      await bulkUpdateBlocklistReason([...selectedIds] as number[], Number(bulkEditReason))
-      const reasonLabel = reasons.find((r) => r.id === Number(bulkEditReason))?.reason ?? null
-      setBlocklisted((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, blocklist_reason: reasonLabel } : l))
-      showToast(`Updated ${selectedIds.size} lyrics`)
-      setBulkEditModal(false)
-      setBulkEditReason('')
-      setSelectedIds(new Set())
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to update'}`)
-    } finally {
-      setBulkLoading(null)
-    }
-  }
-
-  async function handleBulkUnblockConfirm() {
-    if (selectedIds.size === 0) return
-    setBulkLoading({ type: 'unblock', done: 0, total: 1 })
-    try {
-      await bulkUnblocklistLyrics([...selectedIds] as number[])
-      setBlocklisted((prev) => prev.filter((l) => !selectedIds.has(l.id)))
-      showToast(`Removed ${selectedIds.size} lyrics from blocklist`)
-      setBulkUnblockConfirm(false)
-      setSelectedIds(new Set())
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unblocklist'}`)
-    } finally {
-      setBulkLoading(null)
     }
   }
 
@@ -323,20 +237,10 @@ export default function LyricsPage() {
     }
   }
 
-  async function handleUnblocklist(lyricId: number) {
-    try {
-      await unblocklistLyric(lyricId)
-      setBlocklisted((prev) => prev.filter((l) => l.id !== lyricId))
-      showToast('Lyric removed from blocklist')
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to remove from blocklist'}`)
-    }
-  }
-
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
-        <h1 className="text-2xl font-bold">Lyrics</h1>
+        <h1 className="text-2xl font-bold">Unreviewed Lyrics</h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={() => setDeleteUnusedConfirm(true)}
@@ -481,85 +385,6 @@ export default function LyricsPage() {
         )
       })()}
 
-      <div className="mt-8 mb-2">
-        <div className="flex flex-wrap items-center gap-y-2 mb-2">
-          <h2 className="text-lg font-semibold">Blocklisted Lyrics</h2>
-          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
-          <button
-            onClick={() => { setBulkEditModal(true); setBulkEditReason('') }}
-            disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {bulkLoading?.type === 'edit' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Edit All
-          </button>
-          <button
-            onClick={() => setBulkUnblockConfirm(true)}
-            disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {bulkLoading?.type === 'unblock' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Unblock All
-          </button>
-        </div>
-        </div>
-        <div className="flex items-center gap-2 mb-4">
-          <label className="text-sm font-medium">Blocklist Reason:</label>
-          <select
-            value={reasonFilter}
-            onChange={(e) => setReasonFilter(e.target.value)}
-            className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
-          >
-            <option value="">All Reasons</option>
-            {reasons.map((r) => (
-              <option key={r.id} value={r.reason}>{r.reason}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <AdminTable
-        data={reasonFilter ? blocklisted.filter((l) => l.blocklist_reason === reasonFilter) : blocklisted}
-        keyFn={(l) => l.id}
-        loading={loading}
-        selection={{
-          selected: selectedIds,
-          onToggle: handleToggleSelect,
-          onToggleAll: handleToggleAllSelect,
-        }}
-        columns={[
-          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">{l.root_word}</Link> },
-          { header: 'Blocklist Reason', accessor: (l) => l.blocklist_reason ?? '—' },
-          {
-            header: 'Actions',
-            accessor: (l) => (
-              <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="View lyric">
-                  <Pencil size={20} className="drop-shadow-md" />
-                </Link>
-                <button
-                  onClick={() => {
-                    const currentReasonId = reasons.find((r) => r.reason === l.blocklist_reason)?.id
-                    setEditReasonModal({ lyricId: l.id, word: l.root_word, currentReason: l.blocklist_reason ?? '' })
-                    setEditReasonValue(currentReasonId?.toString() ?? '')
-                  }}
-                  className="hover:opacity-70 cursor-pointer"
-                  title="Edit blocklist reason"
-                >
-                  <Ban size={20} className="drop-shadow-md" />
-                </button>
-                <button
-                  onClick={() => setUnblocklistId(l.id)}
-                  className="hover:opacity-70 cursor-pointer"
-                  title="Remove from blocklist"
-                >
-                  <Trash2 size={20} className="drop-shadow-md" />
-                </button>
-              </div>
-            ),
-          },
-        ]}
-      />
-
       {blocklistModal && (
         <Modal onClose={() => { setBlocklistModal(null); setSelectedReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Word</h2>
@@ -596,96 +421,6 @@ export default function LyricsPage() {
             </button>
           </div>
         </Modal>
-      )}
-
-      {unblocklistId && (
-        <ConfirmPopup
-          message="Are you sure? This lyric will be enabled for existing songs."
-          onConfirm={() => {
-            const id = unblocklistId
-            setUnblocklistId(null)
-            handleUnblocklist(id)
-          }}
-          onCancel={() => setUnblocklistId(null)}
-        />
-      )}
-
-      {editReasonModal && (
-        <Modal onClose={() => { setEditReasonModal(null); setEditReasonValue('') }}>
-          <h2 className="text-lg font-bold mb-2">Edit Blocklist Reason</h2>
-          <p className="text-sm font-semibold mb-3">
-            Word: <span className="text-primary">{editReasonModal.word}</span>
-          </p>
-          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
-          <select
-            value={editReasonValue}
-            onChange={(e) => setEditReasonValue(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
-          >
-            <option value="" disabled>Select a reason...</option>
-            {reasons.map((r) => (
-              <option key={r.id} value={r.id}>{r.reason}</option>
-            ))}
-          </select>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setEditReasonModal(null); setEditReasonValue('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleEditReasonConfirm}
-              disabled={!editReasonValue}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              Save
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {bulkEditModal && (
-        <Modal onClose={() => { setBulkEditModal(false); setBulkEditReason('') }}>
-          <h2 className="text-lg font-bold mb-2">Edit Blocklist Reason</h2>
-          <p className="text-sm text-text/70 mb-4">
-            Update blocklist reason for all selected lyrics ({selectedIds.size}).
-          </p>
-          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
-          <select
-            value={bulkEditReason}
-            onChange={(e) => setBulkEditReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
-          >
-            <option value="" disabled>Select a reason...</option>
-            {reasons.map((r) => (
-              <option key={r.id} value={r.id}>{r.reason}</option>
-            ))}
-          </select>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setBulkEditModal(false); setBulkEditReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleBulkEditConfirm}
-              disabled={!bulkEditReason}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              Save
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {bulkUnblockConfirm && (
-        <ConfirmPopup
-          message={`Are you sure? All selected lyrics (${selectedIds.size}) will be enabled for existing songs.`}
-          onConfirm={handleBulkUnblockConfirm}
-          onCancel={() => setBulkUnblockConfirm(false)}
-        />
       )}
 
       {bulkBlockModal && (
