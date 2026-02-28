@@ -56,7 +56,7 @@ export default function HistoryModal({ playedSongIds, playedCount, totalSongs, o
       {songNames.length > 0 && (
         <button
           onClick={handleClear}
-          className="w-full py-2 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
+          className="w-full py-2 h-12 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
         >
           Clear History
         </button>

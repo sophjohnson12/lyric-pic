@@ -19,7 +19,7 @@ export default function Modal({ children, onClose, showClose = true }: ModalProp
         {showClose && onClose && (
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 text-text/60 hover:text-text text-xl leading-none cursor-pointer"
+            className="absolute top-2 right-2 h-12 w-12 flex items-center justify-center text-text/60 hover:text-text text-xl leading-none cursor-pointer"
           >
             &times;
           </button>

@@ -39,9 +39,9 @@ export default function SongDropdown({
           <input
             type="text"
             readOnly
-            placeholder="Select a song..."
+            placeholder="Guess the song..."
             onClick={() => setShowModal(true)}
-            className="w-full px-3 py-2 rounded-lg bg-white shadow-sm text-text text-base cursor-pointer border border-secondary"
+            className="h-12 md:h-auto w-full px-3 py-2 rounded-lg bg-white shadow-sm text-text text-base cursor-pointer border border-secondary"
           />
         </div>
         {incorrectGuesses.length > 0 && (
@@ -54,7 +54,7 @@ export default function SongDropdown({
           </p>
         )}
         {showModal && (
-          <Modal onClose={() => setShowModal(false)}>
+          <Modal showClose={false} onClose={() => setShowModal(false)}>
             <SongWheelPicker
               songs={songs}
               incorrectGuesses={incorrectGuesses}
