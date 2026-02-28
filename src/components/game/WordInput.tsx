@@ -92,7 +92,7 @@ export default function WordInput({
             {puzzleWord.imageUrls.length > 1 && (
               <button
                 onClick={() => onRefresh(wordIndex)}
-                className="absolute top-2 right-2 p-2 text-white/80 bg-primary border border-secondary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
+                className="absolute top-2 right-2 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-white/80 bg-primary border border-secondary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
                 title="Get different image"
               >
                 <RefreshCw size={20} className="drop-shadow-md" />
@@ -104,7 +104,7 @@ export default function WordInput({
               <button
                 onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
                 disabled={currentImageFlagged}
-                className={`absolute top-2 left-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                className={`absolute top-2 left-2 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
                 title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
               >
                 <Flag size={20} className="drop-shadow-md" />

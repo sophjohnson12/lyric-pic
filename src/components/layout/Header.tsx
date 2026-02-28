@@ -37,23 +37,23 @@ export default function Header({
         </div>
 
         <div className="flex items-center gap-2 text-gray-600">
-          <button 
+          <button
             onClick={onInfo}
             className="p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="How to play"
           >
             <Info size={20} />
           </button>
-          <button 
+          <button
             onClick={onHistory}
             className="p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="Song history"
           >
             <History size={20} />
           </button>
-          <button 
+          <button
             onClick={onSkip}
-            className="flex items-center py-2 px-3 bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
+            className="w-16 h-12 md:w-auto md:h-auto md:py-2 md:px-3 flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
           >
             <SkipForward size={20} color="white"/>
           </button>
