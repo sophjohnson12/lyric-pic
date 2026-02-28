@@ -67,7 +67,7 @@ export default function SongDropdown({
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-200 
+                className="h-12 flex-1 px-4 py-2 rounded-lg border border-gray-200 
                 text-text text-base font-medium hover:bg-gray-50 cursor-pointer"
               >
                 Cancel
@@ -75,7 +75,7 @@ export default function SongDropdown({
               <button
                 onClick={handleModalGuess}
                 disabled={!modalSelection}
-                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default border border-secondary"
+                className="h-12 flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default border border-secondary"
               >
                 Submit
               </button>

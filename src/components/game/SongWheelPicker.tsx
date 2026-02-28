@@ -129,7 +129,7 @@ export default function SongWheelPicker({
           <button
             onClick={handleSubmit}
             disabled={items.length === 0}
-            className="w-3/4 max-w-xs px-4 py-2 h-12 md:h-auto bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
+            className="w-3/4 max-w-xs h-12 md:px-4 md:py-2 md:h-auto bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
           >
             Submit
           </button>

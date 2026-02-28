@@ -118,7 +118,7 @@ export default function WordInput({
           </div>
 
           {/* Input Container */}
-          <div className="relative h-14 bg-white flex items-center shrink-0">
+          <div className="relative h-12 bg-white flex items-center shrink-0">
             {isGuessed ? (
               <motion.div
                 initial={{ width: "3rem" }}
@@ -130,7 +130,7 @@ export default function WordInput({
                   <button
                     onClick={handleFlag}
                     disabled={flagged}
-                    className={`absolute bottom-2 right-2 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
+                    className={`absolute bottom-1 right-1 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
                     title={flagged ? 'Flagged' : 'Flag this word'}
                   >
                     <Flag size={20} className="drop-shadow-md" />
@@ -140,7 +140,7 @@ export default function WordInput({
             ) : (
               <>
                 <motion.button
-                  className="h-full flex items-center justify-center z-10 px-4 bg-primary text-white rounded-bl-xl cursor-pointer border border-secondary"
+                  className="h-full flex items-center justify-center z-10 px-3 bg-primary text-white rounded-bl-xl cursor-pointer border border-secondary"
                   onHoverStart={() => setIsHoveringLock(true)}
                   onHoverEnd={() => setIsHoveringLock(false)}
                   onClick={() => onReveal(wordIndex)}
