@@ -20,7 +20,7 @@ export default function GamePage() {
   const [showHistory, setShowHistory] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
  
-  const loadMessage = game.artist && game.artist.load_message || 'Loading...'
+  const loadMessage = game.artist && game.artist.load_message
 
   // Carousel state
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -119,7 +119,7 @@ export default function GamePage() {
   if (game.loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="text-primary font-[Quicksand] text-xl animate-pulse">{loadMessage}</div>
+        {loadMessage && <div className="text-primary font-[Quicksand] text-xl animate-pulse">{loadMessage}</div>}
       </div>
     )
   }
