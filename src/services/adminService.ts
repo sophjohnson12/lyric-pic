@@ -878,6 +878,51 @@ export async function getBlocklistReasons(): Promise<{ id: number; reason: strin
 
 // ─── Image Admin ─────────────────────────────────────────
 
+export interface AdminAllImageRow {
+  id: number
+  url: string
+  is_blocklisted: boolean
+  is_flagged: boolean
+}
+
+export async function getAllImages(
+  page: number,
+  pageSize: number,
+  blocklistedFilter: 'all' | 'yes' | 'no' = 'no',
+): Promise<{ data: AdminAllImageRow[]; total: number }> {
+  const buildQuery = () => {
+    let q = supabase
+      .from('image')
+      .select('id, url, is_blocklisted, is_flagged', { count: 'exact' })
+      .order('id')
+    if (blocklistedFilter === 'yes') q = q.eq('is_blocklisted', true)
+    if (blocklistedFilter === 'no') q = q.or('is_blocklisted.eq.false,is_blocklisted.is.null')
+    return q
+  }
+
+  if (pageSize === 0) {
+    const all: AdminAllImageRow[] = []
+    let from = 0
+    const batchSize = 1000
+    let total = 0
+    while (true) {
+      const { data, error, count } = await buildQuery().range(from, from + batchSize - 1)
+      if (error) throw error
+      if (count !== null) total = count
+      all.push(...(data ?? []))
+      if ((data ?? []).length < batchSize) break
+      from += batchSize
+    }
+    return { data: all, total }
+  }
+
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+  const { data, error, count } = await buildQuery().range(from, to)
+  if (error) throw error
+  return { data: data ?? [], total: count ?? 0 }
+}
+
 export interface AdminFlaggedImageRow {
   id: number
   image_id: string
