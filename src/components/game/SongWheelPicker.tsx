@@ -17,7 +17,7 @@ export default function SongWheelPicker({
   onGuess,
   onSelectionChange,
   showSubmit = true,
-  itemHeight = 40,
+  itemHeight = 48,
   visibleCount = 3,
 }: SongWheelPickerProps) {
   const filteredSongs = songs.filter((s) => !incorrectGuesses.includes(s.name))
