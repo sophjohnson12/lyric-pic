@@ -59,7 +59,7 @@ export default function Dropdown({ options, placeholder, onSelect, disabled = fa
         onFocus={() => setIsOpen(true)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full px-3 py-2 rounded-lg bg-white shadow-sm border border-secondary text-text disabled:opacity-50 text-base focus:border-primary focus:outline-none"
+        className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm border border-secondary text-text disabled:opacity-50 text-base focus:border-primary focus:outline-none"
       />
       {isOpen && filteredOptions.length > 0 && (
         <ul className="absolute z-30 w-full bg-white border border-secondary rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -67,7 +67,7 @@ export default function Dropdown({ options, placeholder, onSelect, disabled = fa
             <li
               key={`${opt.id}-${opt.label}`}
               onClick={() => handleSelect(opt)}
-              className="px-3 py-2 hover:bg-primary/10 cursor-pointer text-sm text-text"
+              className="h-12 px-3 flex items-center hover:bg-primary/10 cursor-pointer text-sm text-text"
             >
               {opt.label}
             </li>

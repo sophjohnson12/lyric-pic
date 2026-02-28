@@ -41,7 +41,7 @@ export default function SongDropdown({
             readOnly
             placeholder="Guess the song..."
             onClick={() => setShowModal(true)}
-            className="h-12 md:h-auto w-full px-3 py-2 rounded-lg bg-white shadow-sm text-text text-base cursor-pointer border border-secondary"
+            className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm text-text text-base cursor-pointer border border-secondary"
           />
         </div>
         {incorrectGuesses.length > 0 && (
@@ -108,14 +108,14 @@ export default function SongDropdown({
         <Dropdown
           key={incorrectGuesses.length}
           options={options}
-          placeholder="Select a song..."
+          placeholder="Guess a song..."
           onSelect={handleSelect}
           excludeLabels={incorrectGuesses}
         />
         <button
           onClick={handleSubmit}
           disabled={selectedId === undefined}
-          className="px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0 border border-secondary"
+          className="h-12 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0 border border-secondary"
         >
           Submit
         </button>
