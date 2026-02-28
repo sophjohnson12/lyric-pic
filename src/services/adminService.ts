@@ -626,6 +626,73 @@ export interface AdminUnreviewedLyricRow {
   updated_at: string | null
 }
 
+export interface AdminAllLyricRow {
+  id: number
+  root_word: string
+  is_flagged: boolean
+  is_blocklisted: boolean
+  image_count: number
+}
+
+async function getSelectableImageCountsForLyrics(lyricIds: number[]): Promise<Map<number, number>> {
+  const counts = new Map<number, number>()
+  if (lyricIds.length === 0) return counts
+  const { data, error } = await supabase
+    .from('lyric_image')
+    .select('lyric_id')
+    .in('lyric_id', lyricIds)
+    .eq('is_selectable', true)
+  if (error) throw error
+  for (const row of data ?? []) {
+    counts.set(row.lyric_id, (counts.get(row.lyric_id) ?? 0) + 1)
+  }
+  return counts
+}
+
+export async function getAllLyrics(
+  page: number,
+  pageSize: number,
+  search: string,
+): Promise<{ data: AdminAllLyricRow[]; total: number }> {
+  const buildQuery = (from: number, to: number) => {
+    let q = supabase
+      .from('lyric')
+      .select('id, root_word, is_flagged, is_blocklisted', { count: 'exact' })
+      .order('root_word')
+      .range(from, to)
+    if (search) q = q.ilike('root_word', `%${search}%`)
+    return q
+  }
+
+  if (pageSize === 0) {
+    const all: { id: number; root_word: string; is_flagged: boolean; is_blocklisted: boolean }[] = []
+    let from = 0
+    const batchSize = 1000
+    let total = 0
+    while (true) {
+      const { data, error, count } = await buildQuery(from, from + batchSize - 1)
+      if (error) throw error
+      if (count !== null) total = count
+      all.push(...(data ?? []))
+      if ((data ?? []).length < batchSize) break
+      from += batchSize
+    }
+    const imageCounts = await getSelectableImageCountsForLyrics(all.map((l) => l.id))
+    return { data: all.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })), total }
+  }
+
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+  const { data, error, count } = await buildQuery(from, to)
+  if (error) throw error
+  const rows = data ?? []
+  const imageCounts = await getSelectableImageCountsForLyrics(rows.map((l) => l.id))
+  return {
+    data: rows.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })),
+    total: count ?? 0,
+  }
+}
+
 export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
   const { data, error } = await supabase
     .from('lyric')
