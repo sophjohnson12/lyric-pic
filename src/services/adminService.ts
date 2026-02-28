@@ -1928,7 +1928,7 @@ export async function getAppConfig(): Promise<AppConfig> {
 }
 
 export async function updateAppConfig(
-  updates: Partial<Pick<AppConfig, 'theme_primary_color' | 'theme_secondary_color' | 'theme_background_color' | 'enable_images' | 'enable_lyric_flag' | 'enable_image_flag'>>
+  updates: Partial<Pick<AppConfig, 'theme_primary_color' | 'theme_secondary_color' | 'theme_background_color' | 'enable_images' | 'enable_lyric_flag' | 'enable_image_flag' | 'min_image_count' | 'max_image_count'>>
 ): Promise<void> {
   const { error } = await supabase
     .from('app_config')

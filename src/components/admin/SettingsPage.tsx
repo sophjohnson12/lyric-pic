@@ -22,6 +22,8 @@ export default function SettingsPage() {
   const [enableImages, setEnableImages] = useState(true)
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
+  const [minImageCount, setMinImageCount] = useState('')
+  const [maxImageCount, setMaxImageCount] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -40,6 +42,8 @@ export default function SettingsPage() {
         setEnableImages(config.enable_images)
         setEnableLyricFlag(config.enable_lyric_flag)
         setEnableImageFlag(config.enable_image_flag)
+        setMinImageCount(String(config.min_image_count))
+        setMaxImageCount(String(config.max_image_count))
         applyDefaultTheme(config.theme_primary_color, config.theme_secondary_color, config.theme_background_color)
       } catch (err) {
         console.error('Failed to load app config:', err)
@@ -88,15 +92,27 @@ export default function SettingsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const min = parseInt(minImageCount, 10)
+    const max = parseInt(maxImageCount, 10)
+    if (isNaN(min) || isNaN(max)) {
+      showToast('Image counts must be valid numbers')
+      return
+    }
+    if (max < min) {
+      showToast('Max image count must be ≥ min image count')
+      return
+    }
     setSaving(true)
     try {
       await updateAppConfig({
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
         theme_background_color: backgroundColor,
+        min_image_count: min,
+        max_image_count: max,
       })
       applyDefaultTheme(primaryColor, secondaryColor, backgroundColor)
-      showToast('Colors saved')
+      showToast('Settings saved')
     } catch (err) {
       console.error('Failed to save:', err)
       showToast('Failed to save')
@@ -134,6 +150,28 @@ export default function SettingsPage() {
           <div>
             <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
             <div className="space-y-4">
+              <div className="flex gap-4">
+                <FormField label="Min Image Count" required>
+                  <input
+                    type="number"
+                    min={1}
+                    value={minImageCount}
+                    onChange={e => setMinImageCount(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                  />
+                </FormField>
+                <FormField label="Max Image Count" required>
+                  <input
+                    type="number"
+                    min={1}
+                    value={maxImageCount}
+                    onChange={e => setMaxImageCount(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                  />
+                </FormField>
+              </div>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium">Show Images</div>
