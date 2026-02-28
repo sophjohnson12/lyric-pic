@@ -1,4 +1,5 @@
 import { Info, History, SkipForward } from 'lucide-react';
+import ProgressBar from '../common/ProgressBar';
 
 interface HeaderProps {
   artistName: string | null
@@ -17,7 +18,6 @@ export default function Header({
   onHistory,
   onSkip,
 }: HeaderProps) {
-  const progressPercentage = totalSongs > 0 ? (playedCount / totalSongs) * 100 : 0;
   return (
     <header className="sticky bg-bg top-0 z-50 px-4 py-3">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -32,16 +32,8 @@ export default function Header({
           )}
         </div>
 
-        <div className="hidden md:flex flex-1 mx-8 max-w-md flex-col gap-1">
-          <div className="h-2 w-full bg-gray-100 bg-secondary/50 rounded-full overflow-hidden mt-5">
-            <div 
-              className="h-full bg-primary transition-all duration-500" 
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <div className="text-xs text-text/60 text-center font-medium">
-            {playedCount} / {totalSongs} songs
-          </div>
+        <div className="hidden md:flex flex-1 mx-8 max-w-md mt-5">
+          <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
         </div>
 
         <div className="flex items-center gap-2 text-gray-600">

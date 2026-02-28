@@ -92,7 +92,7 @@ export default function WordInput({
             {puzzleWord.imageUrls.length > 1 && (
               <button
                 onClick={() => onRefresh(wordIndex)}
-                className="absolute top-2 right-2 p-2 text-white/80 bg-primary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
+                className="absolute top-2 right-2 p-2 text-white/80 bg-primary border border-secondary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
                 title="Get different image"
               >
                 <RefreshCw size={20} className="drop-shadow-md" />
@@ -140,7 +140,7 @@ export default function WordInput({
             ) : (
               <>
                 <motion.button
-                  className="h-full flex items-center justify-center z-10 px-4 bg-primary text-white rounded-bl-xl cursor-pointer"
+                  className="h-full flex items-center justify-center z-10 px-4 bg-primary text-white rounded-bl-xl cursor-pointer border border-secondary"
                   onHoverStart={() => setIsHoveringLock(true)}
                   onHoverEnd={() => setIsHoveringLock(false)}
                   onClick={() => onReveal(wordIndex)}
@@ -179,7 +179,7 @@ export default function WordInput({
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    className="w-full h-full px-4 outline-none text-gray-800 placeholder-gray-400 text-base rounded-br-xl border border-secondary focus:border-primary"
+                    className="w-full h-full px-4 text-gray-800 placeholder-gray-400 text-base rounded-br-xl border border-secondary"
                     placeholder="Guess the word..."
                   />
                 </form>

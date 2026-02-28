@@ -195,7 +195,7 @@ export function useGame(artistSlug: string) {
 
       const prevGuesses = state.incorrectWordGuesses[wordIndex] || []
       if (prevGuesses.map((g) => g.toLowerCase()).includes(trimmed)) {
-        showToast('Already guessed!')
+        showToast('Already guessed')
         return 'already_guessed'
       }
 
@@ -221,7 +221,7 @@ export function useGame(artistSlug: string) {
       // Check if this lyric was already guessed
       for (const pw of state.puzzleWords) {
         if (pw.guessed && pw.lyricId === lyricId) {
-          showToast('Already guessed!')
+          showToast('Already guessed')
           return 'already_guessed'
         }
       }
@@ -234,6 +234,7 @@ export function useGame(artistSlug: string) {
           newIncorrect[wordIndex] = [...existing, trimmed].sort()
           return { ...prev, incorrectWordGuesses: newIncorrect }
         })
+        showToast('Incorrect')
         return 'incorrect'
       }
 
@@ -255,6 +256,7 @@ export function useGame(artistSlug: string) {
         newIncorrect[wordIndex] = [...existing, trimmed].sort()
         return { ...prev, incorrectWordGuesses: newIncorrect }
       })
+      showToast('Incorrect')
       return 'incorrect'
     },
     [state.puzzleWords, state.incorrectWordGuesses, showToast]

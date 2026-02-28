@@ -150,6 +150,8 @@ export default function GamePage() {
         {showHistory && (
           <HistoryModal
             playedSongIds={game.playedSongIds}
+            playedCount={game.playedSongIds.length}
+            totalSongs={game.totalPlayableSongs}
             onClose={() => setShowHistory(false)}
             onClearHistory={game.clearHistory}
           />
@@ -275,6 +277,8 @@ export default function GamePage() {
       {showHistory && (
         <HistoryModal
           playedSongIds={game.playedSongIds}
+          playedCount={game.playedSongIds.length}
+          totalSongs={game.totalPlayableSongs}
           onClose={() => setShowHistory(false)}
           onClearHistory={game.clearHistory}
         />

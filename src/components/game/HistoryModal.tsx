@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import Modal from '../common/Modal'
+import ProgressBar from '../common/ProgressBar'
 import { getPlayedSongNames } from '../../services/supabase'
 
 interface HistoryModalProps {
   playedSongIds: number[]
+  playedCount: number
+  totalSongs: number
   onClose: () => void
   onClearHistory: () => void
 }
 
-export default function HistoryModal({ playedSongIds, onClose, onClearHistory }: HistoryModalProps) {
+export default function HistoryModal({ playedSongIds, playedCount, totalSongs, onClose, onClearHistory }: HistoryModalProps) {
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -33,7 +36,10 @@ export default function HistoryModal({ playedSongIds, onClose, onClearHistory }:
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="text-xl font-bold text-primary mb-4">Songs You've Played</h2>
+      <h2 className="text-xl font-bold text-primary mb-2">Game History</h2>
+      <div className="md:hidden mb-2">
+        <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
+      </div>
       {loading ? (
         <p className="text-text/60 text-sm">Loading...</p>
       ) : songNames.length === 0 ? (

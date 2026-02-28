@@ -1,5 +1,5 @@
 import Modal from '../common/Modal'
-import { LockOpen, History, SkipForward, RefreshCw } from 'lucide-react';
+import { LockOpen, History, SkipForward, RefreshCw, Flag } from 'lucide-react';
 import type { Album } from '../../types/database'
 import AlbumButtons from './AlbumDropdown'
 
@@ -19,6 +19,7 @@ export default function InfoModal({ albums, onClose }: InfoModalProps) {
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"><RefreshCw size={15} strokeWidth={3} className="mr-2 text-primary"/> Load new picture</li>
             <li className="flex items-center"><LockOpen size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
+            <li className="flex items-center"><Flag size={15} strokeWidth={3} className="mr-2 text-primary"/> Flag word for review</li>
           </ul>
         </div>
         <div>
