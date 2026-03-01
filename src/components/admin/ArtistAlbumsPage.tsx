@@ -18,12 +18,10 @@ export default function ArtistAlbumsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [albums, setAlbums] = useState<AdminAlbumRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [artistName, setArtistName] = useState('')
   const [disableAlbumId, setDisableAlbumId] = useState<number | null>(null)
 
   useEffect(() => {
     getAdminArtistById(aid).then((a) => {
-      setArtistName(a.name)
       setBreadcrumbs([
         { label: 'Artists', to: '/admin' },
         { label: a.name },
