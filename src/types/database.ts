@@ -133,6 +133,7 @@ export interface AppConfig {
   enable_image_flag: boolean
   max_guess_count: number
   min_image_count: number
+  min_song_lyric_count: number
   max_image_count: number
   updated_at: string
 }

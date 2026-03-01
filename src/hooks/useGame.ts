@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { stem } from '../utils/stem'
 import type { Artist, Album, Song } from '../types/database'
-import type { PuzzleWord, GameState } from '../types/game'
+import type { PuzzleWord, GameState, WordWithStats } from '../types/game'
 import {
   getArtistBySlug,
   getTotalPlayableSongCount,
@@ -18,10 +18,25 @@ import {
   saveLyricImages,
 } from '../services/supabase'
 import { searchImages, setImagesEnabled } from '../services/pexels'
-import { selectPuzzleWords } from '../services/wordSelection'
 import { useLocalStorage } from './useLocalStorage'
 import { useTheme } from './useTheme'
-import { LOCAL_STORAGE_KEY_PREFIX, IMAGES_TO_CACHE } from '../utils/constants'
+import { LOCAL_STORAGE_KEY_PREFIX, IMAGES_TO_CACHE, PUZZLE_WORD_COUNT, TOP_DISTINCTIVE_WORDS } from '../utils/constants'
+
+// DB already filters title words and enforces image counts — just rank by distinctiveness and sample.
+// Words with null song_count are missing from artist_lyric (data issue) and are excluded.
+function selectPuzzleWords(words: WordWithStats[]): WordWithStats[] {
+  const ranked = words.filter((w) => w.song_count !== null)
+  if (ranked.length <= PUZZLE_WORD_COUNT) return ranked
+  const sorted = [...ranked].sort((a, b) => a.song_count! - b.song_count!)
+  const pool = sorted.slice(0, Math.min(TOP_DISTINCTIVE_WORDS, sorted.length))
+  const selected: WordWithStats[] = []
+  const remaining = [...pool]
+  while (selected.length < PUZZLE_WORD_COUNT && remaining.length > 0) {
+    const index = Math.floor(Math.random() * remaining.length)
+    selected.push(remaining.splice(index, 1)[0])
+  }
+  return selected
+}
 
 export function useGame(artistSlug: string) {
   const [playedSongIds, setPlayedSongIds] = useLocalStorage<number[]>(
@@ -83,9 +98,9 @@ export function useGame(artistSlug: string) {
         }
 
         const wordVariations = await getSongWords(song.id)
-        const selected = selectPuzzleWords(wordVariations, song.name)
+        const selected = selectPuzzleWords(wordVariations)
 
-        if (selected.length < 3) {
+        if (selected.length < PUZZLE_WORD_COUNT) {
           const newExclude = [...excludeIds, song.id]
           await loadNewSong(artist, newExclude)
           return

@@ -12,7 +12,7 @@ export interface PuzzleWord {
 export interface WordWithStats {
   lyric_id: number
   word: string
-  song_count: number
+  song_count: number | null
 }
 
 export interface GameState {

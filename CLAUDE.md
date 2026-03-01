@@ -35,13 +35,33 @@ Lyric Pic is a music lyric guessing game. Players are shown images representing 
 1. Admin imports artists/songs from Genius API via edge functions
 2. Lyrics are copy/pasted from Genius pages (cloud IPs are blocked by Genius for scraping)
 3. `processSongLyrics()` in adminService parses lyrics into individual words, applies a two-stage blocklist (contractions first, then common words/pronouns/vocalizations after quote cleanup), and creates `lyric` + `song_lyric` records
-4. Game loads words via `get_song_words` RPC, selects puzzle words via `selectPuzzleWords()`, fetches images from Pexels API
+4. Game loads words via `get_song_lyrics` RPC, selects puzzle words via `selectPuzzleWords()` (local function in `useGame.ts`), fetches images from Pexels API
 
 ### Database Tables
 
 Core tables: `artist`, `album`, `song`, `lyric`, `song_lyric`, `artist_lyric`, `album_import`, `load_status`, `blocklist_reason`. Interfaces in `src/types/database.ts`.
 
-Key relationships: Songs belong to albums and artists. `song_lyric` is the junction between songs and lyrics with occurrence counts and `is_selectable` flag. `is_selectable` flags on artist/album/song/song_lyric control what appears in the game.
+Key relationships: Songs belong to albums and artists. `song_lyric` is the junction between songs and lyrics with occurrence counts and `is_selectable` flag.
+
+### Playability Hierarchy
+
+Each level requires `is_selectable = true` plus a content requirement. The **`playable_song` view** and **`get_song_lyrics` RPC** are the single source of truth — all TypeScript queries build on these. Thresholds live in `app_config` so they can be adjusted without code changes.
+
+| Level | Playable when |
+|---|---|
+| `lyric_image` | `is_selectable = true` |
+| `song_lyric` | `is_selectable = true`, `is_in_title = false`, and `>= app_config.min_image_count` playable images |
+| `song` | `is_selectable = true` and `>= app_config.min_song_lyric_count` playable song_lyrics |
+| `album` | `is_selectable = true` and has at least 1 playable song |
+| `artist` | `is_selectable = true` and has at least 1 playable album |
+
+**DB objects (source of truth):**
+- `playable_song` view — enforces song + song_lyric + lyric_image rules using `app_config` thresholds
+- `playable_album` view — enforces album rule (requires a row in `playable_song`)
+- `playable_artist` view — enforces artist rule (requires a row in `playable_album`)
+- `get_song_lyrics(p_song_id)` RPC — returns the exact words that `playable_song` counted, using the same `min_image_count` threshold
+
+**TypeScript:** `supabase.ts` queries the playable views directly; no redundant `is_selectable` filtering in TS. `selectPuzzleWords()` in `useGame.ts` only ranks/samples from the already-filtered word list returned by the RPC.
 
 ## Supabase Gotchas
 

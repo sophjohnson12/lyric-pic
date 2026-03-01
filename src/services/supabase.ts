@@ -19,9 +19,8 @@ export async function getArtistBySlug(slug: string): Promise<Artist> {
 
 export async function getAllArtists(): Promise<Artist[]> {
   const { data, error } = await supabase
-    .from('artist')
+    .from('playable_artist')
     .select('*')
-    .eq('is_selectable', true)
     .order('name')
   if (error) throw error
   return data
@@ -32,7 +31,6 @@ export async function getTotalPlayableSongCount(artistId: number): Promise<numbe
     .from('playable_song')
     .select('*, album!inner(is_selectable)', { count: 'exact', head: true })
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
     .eq('album.is_selectable', true)
   if (error) throw error
   return count ?? 0
@@ -43,7 +41,6 @@ export async function getRandomSong(artistId: number, excludeIds: number[]): Pro
     .from('playable_song')
     .select('*, album!inner(is_selectable)')
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
     .eq('album.is_selectable', true)
 
   if (excludeIds.length > 0) {
@@ -68,10 +65,9 @@ export async function getSongWords(songId: number): Promise<WordWithStats[]> {
 
 export async function getArtistAlbums(artistId: number): Promise<Album[]> {
   const { data, error } = await supabase
-    .from('album')
+    .from('playable_album')
     .select('*')
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
     .order('release_year', { ascending: true })
     .order('id', { ascending: true })
   if (error) throw error
@@ -93,7 +89,6 @@ export async function getArtistSongs(artistId: number, excludeIds: number[]): Pr
     .from('playable_song')
     .select('*, album!inner(is_selectable)')
     .eq('artist_id', artistId)
-    .eq('is_selectable', true)
     .eq('album.is_selectable', true)
     .order('name')
 
@@ -166,9 +161,8 @@ export async function getPlayedSongNames(songIds: number[]): Promise<string[]> {
   if (songIds.length === 0) return []
   const { data, error } = await supabase
     .from('song')
-    .select('name, album!inner(is_selectable)')
+    .select('name')
     .in('id', songIds)
-    .eq('album.is_selectable', true)
     .order('name')
   if (error) throw error
   return data.map((d: { name: string }) => d.name)

@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState('')
+  const [minSongLyricCount, setMinSongLyricCount] = useState('')
   const [minImageCount, setMinImageCount] = useState('')
   const [maxImageCount, setMaxImageCount] = useState('')
   const [loading, setLoading] = useState(true)
@@ -44,6 +45,7 @@ export default function SettingsPage() {
         setEnableLyricFlag(config.enable_lyric_flag)
         setEnableImageFlag(config.enable_image_flag)
         setMaxGuessCount(String(config.max_guess_count))
+        setMinSongLyricCount(String(config.min_song_lyric_count))
         setMinImageCount(String(config.min_image_count))
         setMaxImageCount(String(config.max_image_count))
         applyDefaultTheme(config.theme_primary_color, config.theme_secondary_color, config.theme_background_color)
@@ -95,10 +97,11 @@ export default function SettingsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const maxGuess = parseInt(maxGuessCount, 10)
+    const minSongLyric = parseInt(minSongLyricCount, 10)
     const min = parseInt(minImageCount, 10)
     const max = parseInt(maxImageCount, 10)
-    if (isNaN(maxGuess) || isNaN(min) || isNaN(max)) {
-      showToast('Image counts must be valid numbers')
+    if (isNaN(maxGuess) || isNaN(minSongLyric) || isNaN(min) || isNaN(max)) {
+      showToast('Counts must be valid numbers')
       return
     }
     if (max < min) {
@@ -112,6 +115,7 @@ export default function SettingsPage() {
         theme_secondary_color: secondaryColor,
         theme_background_color: backgroundColor,
         max_guess_count: maxGuess,
+        min_song_lyric_count: minSongLyric,
         min_image_count: min,
         max_image_count: max,
       })
@@ -158,6 +162,16 @@ export default function SettingsPage() {
                     min={1}
                     value={maxGuessCount}
                     onChange={e => setMaxGuessCount(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                  />
+                </FormField>
+                <FormField label="Min Song Lyric Count" required>
+                  <input
+                    type="number"
+                    min={1}
+                    value={minSongLyricCount}
+                    onChange={e => setMinSongLyricCount(e.target.value)}
                     required
                     className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
                   />
