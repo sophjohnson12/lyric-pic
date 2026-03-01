@@ -1,4 +1,4 @@
-import type { WordVariationWithStats } from '../types/game'
+import type { WordWithStats } from '../types/game'
 import { PUZZLE_WORD_COUNT, TOP_DISTINCTIVE_WORDS } from '../utils/constants'
 
 function isValidWord(word: string): boolean {
@@ -9,7 +9,7 @@ function isValidWord(word: string): boolean {
   return true
 }
 
-export function selectPuzzleWords(wordVariations: WordVariationWithStats[], songName: string): WordVariationWithStats[] {
+export function selectPuzzleWords(wordVariations: WordWithStats[], songName: string): WordWithStats[] {
   // Extract words from the song title to exclude them
   const titleWords = new Set(
     songName.toLowerCase().replace(/[^a-z']/g, ' ').split(/\s+/).filter((w) => w.length >= 2)
@@ -29,7 +29,7 @@ export function selectPuzzleWords(wordVariations: WordVariationWithStats[], song
   const topWords = sorted.slice(0, Math.min(TOP_DISTINCTIVE_WORDS, sorted.length))
 
   // Randomly select 3 from the top words
-  const selected: WordVariationWithStats[] = []
+  const selected: WordWithStats[] = []
   const remaining = [...topWords]
 
   while (selected.length < PUZZLE_WORD_COUNT && remaining.length > 0) {

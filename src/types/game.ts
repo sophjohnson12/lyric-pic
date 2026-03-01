@@ -9,7 +9,7 @@ export interface PuzzleWord {
   revealed: boolean
 }
 
-export interface WordVariationWithStats {
+export interface WordWithStats {
   lyric_id: number
   word: string
   song_count: number

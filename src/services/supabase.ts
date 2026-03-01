@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Artist, Album, Song, AppConfig } from '../types/database'
-import type { WordVariationWithStats, PexelsImage } from '../types/game'
+import type { WordWithStats, PexelsImage } from '../types/game'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -58,7 +58,7 @@ export async function getRandomSong(artistId: number, excludeIds: number[]): Pro
   return data[randomIndex] as Song
 }
 
-export async function getSongWordVariations(songId: number): Promise<WordVariationWithStats[]> {
+export async function getSongWords(songId: number): Promise<WordWithStats[]> {
   const { data, error } = await supabase.rpc('get_song_lyrics', {
     p_song_id: songId,
   })

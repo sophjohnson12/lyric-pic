@@ -6,7 +6,7 @@ import {
   getArtistBySlug,
   getTotalPlayableSongCount,
   getRandomSong,
-  getSongWordVariations,
+  getSongWords,
   getArtistAlbums,
   getArtistSongs,
   getSongsByAlbum,
@@ -82,7 +82,7 @@ export function useGame(artistSlug: string) {
           return
         }
 
-        const wordVariations = await getSongWordVariations(song.id)
+        const wordVariations = await getSongWords(song.id)
         const selected = selectPuzzleWords(wordVariations, song.name)
 
         if (selected.length < 3) {
@@ -382,7 +382,7 @@ export function useGame(artistSlug: string) {
     const failed = !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount
     applyArtistTheme(state.artist)
     if (failed) {
-      loadNewSong(state.artist, [...playedSongIds, state.currentSong.id])
+      loadNewSong(state.artist, playedSongIds)
     } else {
       const newPlayed = [...playedSongIds, state.currentSong.id]
       setPlayedSongIds(newPlayed)
