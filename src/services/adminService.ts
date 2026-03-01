@@ -891,41 +891,53 @@ export async function getBlocklistReasons(): Promise<{ id: number; reason: strin
 // ─── Blocklist Seed ───────────────────────────────────────
 
 const SEED_COMMON_WORDS = [
-  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of',
-  'with', 'from', 'by', 'about', 'as', 'into', 'through', 'is', 'are', 'was',
-  'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
-  'will', 'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'not',
-  'no', 'so', 'if', 'then', 'than', 'that', 'this', 'what', 'when', 'where',
-  'who', 'how', 'all', 'just', 'like', 'up', 'out', 'down', 'now', 'got',
-  'get', 'go', 'come', 'make', 'know', 'take', 'see', 'think', 'let', 'back',
-  'too', 'say', 'said', 'tell', 'told', 'want', 'give', 'keep', 'way', 'still',
-  'even', 'here', 'there', 'over', "don't", "won't", "can't", "didn't", "it's",
-  "i'm", "i'll", "i'd", "i've", "you're", "you'll", "you've", "we're", "we'll",
-  "they're", "they'll", "that's", "there's", "what's", "who's", "let's", "ain't",
-  "wasn't", "weren't", "hasn't", "haven't", "couldn't", "wouldn't", "shouldn't",
-  "isn't", 'only', 'never', 'ever', 'always', 'every', 'more', 'some', 'any',
-  'much', 'own',
-  // pronouns (merged into common_word)
-  'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us',
-  'them', 'my', 'your', 'his', 'its', 'our', 'their', 'mine', 'yours',
-  'myself', 'yourself',
+  'a', 'about', 'all', 'almost', 'already', 'alright', 'am', 'amongst', 'amount',
+  'an', 'and', 'anybody', 'anymore', 'anywhere', 'are', 'around', 'as', 'ask', 'at',
+  'away', 'back', 'be', 'because', 'been', 'being', 'behind', 'beneath', 'bout', 'but',
+  'by', 'can', 'cannot', 'come', 'comes', 'could', 'did', 'do', 'does', 'down', 'each',
+  'echo', 'else', 'em', 'even', 'ever', 'every', 'everything', 'feels', 'for', 'fore',
+  'from', 'get', 'gets', 'give', 'given', 'go', 'goes', 'going', 'gon', 'gonna', 'got',
+  'gotta', 'had', 'has', 'have', 'he', 'her', 'here', 'him', 'his', 'how', 'i', 'if',
+  'in', 'instead', 'into', 'is', 'it', 'its', 'just', 'keep', 'kinda', 'know', 'let',
+  'lets', 'like', 'make', 'may', 'maybe', 'me', 'might', 'mine', 'more', 'much', 'my',
+  'myself', 'never', 'no', 'not', 'now', 'of', 'okay', 'on', 'only', 'or', 'our',
+  'out', 'over', 'own', 'probably', 'quite', 'round', 'say', 'said', 'see', 'seems',
+  'shall', 'she', 'should', 'since', 'so', 'some', 'somethings', 'sometimes', 'soon',
+  'stead', 'still', 'suddenly', 'take', 'tell', 'than', 'that', 'the', 'their', 'theirs',
+  'them', 'then', 'there', 'these', 'they', 'thing', 'things', 'think', 'this', 'those',
+  'though', 'through', 'til', 'tis', 'to', 'told', 'too', 'tryna', 'try', 'until', 'up',
+  'upon', 'us', 'very', 'wanna', 'want', 'wanted', 'wants', 'was', 'way', 'we', 'well',
+  'went', 'were', 'what', 'whatever', 'when', 'where', 'which', 'while', 'who', 'why',
+  'will', 'with', 'without', 'worst', 'would', 'you', 'your', 'yours', 'yourself',
+]
+
+const SEED_CONTRACTIONS = [
+  "ain't", "aren't", "can't", "could've", "couldn't", "didn't", "doesn't", "don't",
+  "hadn't", "hasn't", "haven't", "he'd", "he'll", "her'd'", "how'd", "i'd", "i'll",
+  "i'm", "i'ma", "i've", "isn't", "it'll", "it's", "let's", "she'd", "she'll",
+  "should've", "shouldn't", "that'll", "that's", "there's", "they'd", "they'll",
+  "they're", "they've", "wasn't", "we'd", "we'll", "we're", "we've", "weren't",
+  "what's", "who'd", "who'll", "who's", "won't", "would've", "wouldn't", "you'd",
+  "you'll", "you're", "you've",
 ]
 
 const SEED_VOCALIZATIONS = [
-  'oh', 'ah', 'ooh', 'yeah', 'whoa', 'hey', 'mmm', 'la', 'na', 'uh', 'da',
-  'ba', 'huh', 'ha', 'woah',
+  'ah', 'ba', 'da', 'ha', 'hey', 'hmm', 'huh', 'la', 'mmm', 'na', 'oh', 'ooh',
+  'ugh', 'uh', 'whoa', 'woah', 'yeah',
 ]
 
 export async function seedBlocklist(): Promise<{ created: number; updated: number }> {
   const reasons = await getBlocklistReasons()
   const commonWordReasonId = reasons.find((r) => r.reason === 'common_word')?.id
   const vocalizationReasonId = reasons.find((r) => r.reason === 'vocalization')?.id
-  if (!commonWordReasonId || !vocalizationReasonId) {
-    throw new Error('Required blocklist reasons (common_word, vocalization) not found in DB')
+  const contractionReasonId = reasons.find((r) => r.reason === 'contraction')?.id
+  if (!commonWordReasonId || !vocalizationReasonId || !contractionReasonId) {
+    throw new Error('Required blocklist reasons (common_word, vocalization, contraction) not found in DB')
   }
 
   const allWords = [
     ...SEED_COMMON_WORDS.map((w) => ({ word: w, reasonId: commonWordReasonId })),
+    ...SEED_CONTRACTIONS.map((w) => ({ word: w, reasonId: contractionReasonId })),
     ...SEED_VOCALIZATIONS.map((w) => ({ word: w, reasonId: vocalizationReasonId })),
   ]
 
