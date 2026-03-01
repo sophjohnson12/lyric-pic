@@ -54,6 +54,7 @@ export function useGame(artistSlug: string) {
   const [enableImages, setEnableImages] = useState(true)
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
+  const [maxGuessCount, setMaxGuessCount] = useState(3)
 
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songLyricIdsRef = useRef<number[]>([])
@@ -170,6 +171,7 @@ export function useGame(artistSlug: string) {
           setEnableLyricFlag(config.enable_lyric_flag)
           setEnableImageFlag(config.enable_image_flag)
           maxImageCountRef.current = config.max_image_count
+          setMaxGuessCount(config.max_guess_count)
         }
 
         applyArtistTheme(artist)
@@ -357,22 +359,36 @@ export function useGame(artistSlug: string) {
         return 'correct'
       }
 
+      const newIncorrect = [...state.incorrectSongGuesses, songName].sort()
+      const isLastGuess = newIncorrect.length >= maxGuessCount
+
+      if (isLastGuess && !state.albumGuessed) {
+        const correctAlbum = currentAlbumRef.current
+        if (correctAlbum) applyAlbumTheme(correctAlbum)
+      }
+
       setState((prev) => ({
         ...prev,
-        incorrectSongGuesses: [...prev.incorrectSongGuesses, songName].sort(),
+        incorrectSongGuesses: newIncorrect,
+        ...(isLastGuess ? { correctAlbum: prev.correctAlbum || currentAlbumRef.current } : {}),
       }))
       return 'incorrect'
     },
-    [state.currentSong, state.incorrectSongGuesses, showToast]
+    [state.currentSong, state.incorrectSongGuesses, state.albumGuessed, maxGuessCount, showToast, applyAlbumTheme]
   )
 
   const nextSong = useCallback(() => {
     if (!state.currentSong || !state.artist) return
-    const newPlayed = [...playedSongIds, state.currentSong.id]
-    setPlayedSongIds(newPlayed)
+    const failed = !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount
     applyArtistTheme(state.artist)
-    loadNewSong(state.artist, newPlayed)
-  }, [state.currentSong, state.artist, playedSongIds, setPlayedSongIds, applyArtistTheme, loadNewSong])
+    if (failed) {
+      loadNewSong(state.artist, [...playedSongIds, state.currentSong.id])
+    } else {
+      const newPlayed = [...playedSongIds, state.currentSong.id]
+      setPlayedSongIds(newPlayed)
+      loadNewSong(state.artist, newPlayed)
+    }
+  }, [state.currentSong, state.artist, state.songGuessed, state.incorrectSongGuesses, maxGuessCount, playedSongIds, setPlayedSongIds, applyArtistTheme, loadNewSong])
 
   const skipSong = useCallback(() => {
     if (!state.artist) return
@@ -398,6 +414,8 @@ export function useGame(artistSlug: string) {
     enableImages,
     enableLyricFlag,
     enableImageFlag,
+    maxGuessCount,
+    songFailed: !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount,
     guessWord,
     revealWord,
     refreshImage,

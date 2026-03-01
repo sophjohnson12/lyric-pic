@@ -252,10 +252,10 @@ export default function GamePage() {
               />
             </div>
             <div className="max-w-lg mx-auto">
-              <GuessCounter 
+              <GuessCounter
                 guessMessage={game.artist.guess_counter_message}
                 guessCount={game.incorrectSongGuesses.length}
-                allowedCount={3}
+                allowedCount={game.maxGuessCount}
               />
             </div>
           </div>
@@ -271,7 +271,7 @@ export default function GamePage() {
           onNext={game.nextSong}
         />
       )}
-      {game.incorrectSongGuesses.length >= 3 && (
+      {game.songFailed && (
         <ResultModal
           message={game.currentSong.failure_message || game.artist.failure_message || "Better luck next time."}
           song={game.currentSong}

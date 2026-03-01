@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [enableImages, setEnableImages] = useState(true)
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
+  const [maxGuessCount, setMaxGuessCount] = useState('')
   const [minImageCount, setMinImageCount] = useState('')
   const [maxImageCount, setMaxImageCount] = useState('')
   const [loading, setLoading] = useState(true)
@@ -42,6 +43,7 @@ export default function SettingsPage() {
         setEnableImages(config.enable_images)
         setEnableLyricFlag(config.enable_lyric_flag)
         setEnableImageFlag(config.enable_image_flag)
+        setMaxGuessCount(String(config.max_guess_count))
         setMinImageCount(String(config.min_image_count))
         setMaxImageCount(String(config.max_image_count))
         applyDefaultTheme(config.theme_primary_color, config.theme_secondary_color, config.theme_background_color)
@@ -92,9 +94,10 @@ export default function SettingsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const maxGuess = parseInt(maxGuessCount, 10)
     const min = parseInt(minImageCount, 10)
     const max = parseInt(maxImageCount, 10)
-    if (isNaN(min) || isNaN(max)) {
+    if (isNaN(maxGuess) || isNaN(min) || isNaN(max)) {
       showToast('Image counts must be valid numbers')
       return
     }
@@ -108,6 +111,7 @@ export default function SettingsPage() {
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
         theme_background_color: backgroundColor,
+        max_guess_count: maxGuess,
         min_image_count: min,
         max_image_count: max,
       })
@@ -148,6 +152,16 @@ export default function SettingsPage() {
           <div>
             <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
             <div className="space-y-4">
+                <FormField label="Max Guess Count" required>
+                  <input
+                    type="number"
+                    min={1}
+                    value={maxGuessCount}
+                    onChange={e => setMaxGuessCount(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                  />
+                </FormField>
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Min Image Count" required>
                   <input
