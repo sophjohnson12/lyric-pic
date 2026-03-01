@@ -14,6 +14,7 @@ import {
   unflagLyric,
   blocklistLyric,
   unblocklistLyric,
+  updateBlocklistReason,
   updateLyricImageSelectable,
   toggleSongLyricSelectable,
   getBlocklistReasons,
@@ -37,6 +38,7 @@ export default function LyricPage() {
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<number | null>(null)
   const [showBlocklistModal, setShowBlocklistModal] = useState(false)
+  const [blocklistModalMode, setBlocklistModalMode] = useState<'block' | 'change_reason'>('block')
   const [selectedReason, setSelectedReason] = useState('')
   const [blocklisting, setBlocklisting] = useState(false)
   const [flagging, setFlagging] = useState(false)
@@ -83,17 +85,23 @@ export default function LyricPage() {
   async function handleBlocklistConfirm() {
     if (!lyricId || !selectedReason) return
     setBlocklisting(true)
-    const isNoImages = reasons.find((r) => r.id === Number(selectedReason))?.reason === 'no_images'
     try {
-      await blocklistLyric(Number(lyricId), Number(selectedReason), isNoImages)
-      setLyric((prev) => prev ? { ...prev, is_blocklisted: true, blocklist_reason: Number(selectedReason) } : prev)
-      setSongs((prev) => prev.map((s) => ({ ...s, is_selectable: false })))
-      if (isNoImages) setImages((prev) => prev.map((img) => ({ ...img, is_selectable: false })))
+      if (blocklistModalMode === 'change_reason') {
+        await updateBlocklistReason(Number(lyricId), Number(selectedReason))
+        setLyric((prev) => prev ? { ...prev, blocklist_reason: Number(selectedReason) } : prev)
+        showToast('Blocklist reason updated')
+      } else {
+        const isNoImages = reasons.find((r) => r.id === Number(selectedReason))?.reason === 'no_images'
+        await blocklistLyric(Number(lyricId), Number(selectedReason), isNoImages)
+        setLyric((prev) => prev ? { ...prev, is_blocklisted: true, blocklist_reason: Number(selectedReason) } : prev)
+        setSongs((prev) => prev.map((s) => ({ ...s, is_selectable: false })))
+        if (isNoImages) setImages((prev) => prev.map((img) => ({ ...img, is_selectable: false })))
+        showToast('Lyric blocklisted')
+      }
       setShowBlocklistModal(false)
       setSelectedReason('')
-      showToast('Lyric blocklisted')
     } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to update blocklist'}`)
     } finally {
       setBlocklisting(false)
     }
@@ -113,24 +121,41 @@ export default function LyricPage() {
     }
   }
 
-  async function handleFlag() {
+  async function handleFlag(value: boolean) {
     if (!lyricId) return
     setFlagging(true)
     try {
-      if (lyric?.is_flagged) {
-        await unflagLyric(Number(lyricId))
-        setLyric((prev) => prev ? { ...prev, is_flagged: false } : prev)
-        showToast('Lyric unflagged')
-      } else {
+      if (value) {
         await flagLyric(Number(lyricId))
         setLyric((prev) => prev ? { ...prev, is_flagged: true } : prev)
         showToast('Lyric flagged')
+      } else {
+        await unflagLyric(Number(lyricId))
+        setLyric((prev) => prev ? { ...prev, is_flagged: false } : prev)
+        showToast('Lyric unflagged')
       }
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to update flag'}`)
     } finally {
       setFlagging(false)
     }
+  }
+
+  function handleBlocklistToggle(value: boolean) {
+    if (value) {
+      const noImagesReason = reasons.find((r) => r.reason === 'no_images')
+      setSelectedReason(noImagesReason ? String(noImagesReason.id) : '')
+      setBlocklistModalMode('block')
+      setShowBlocklistModal(true)
+    } else {
+      handleUnblocklist()
+    }
+  }
+
+  function handleOpenChangeReasonModal() {
+    setSelectedReason(lyric?.blocklist_reason ? String(lyric.blocklist_reason) : '')
+    setBlocklistModalMode('change_reason')
+    setShowBlocklistModal(true)
   }
 
   function navigateNext() {
@@ -211,28 +236,6 @@ export default function LyricPage() {
           <span className="sm:hidden w-full text-sm text-text/50">{reviewQueue.length} remaining</span>
         )}
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <div className="grid grid-cols-2 sm:contents gap-2">
-            <button
-              onClick={handleFlag}
-              disabled={flagging || loading}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-              {lyric?.is_flagged ? 'Unflag' : 'Flag'}
-            </button>
-            <button
-              onClick={lyric?.is_blocklisted ? handleUnblocklist : () => {
-                const noImagesReason = reasons.find((r) => r.reason === 'no_images')
-                setSelectedReason(noImagesReason ? String(noImagesReason.id) : '')
-                setShowBlocklistModal(true)
-              }}
-              disabled={blocklisting || loading}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-              {lyric?.is_blocklisted ? 'Unblock' : 'Block'}
-            </button>
-          </div>
           <button
             onClick={handleMarkReviewed}
             disabled={reviewing || loading}
@@ -244,40 +247,88 @@ export default function LyricPage() {
         </div>
       </div>
       <div className="items-center gap-4 mb-4 col-span-1">
-        <h2 className="text-4xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
+          <h2 className="text-4xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
+          <div className="mt-4">
+            <button
+              onClick={handleDisableAll}
+              disabled={disablingAll || loading || images.length === 0}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5 w-full sm:w-auto"
+            >
+              {disablingAll && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Disable All Images
+            </button>
+          </div>
+        </div>
         <div>
-          {lyric && <span className="text-sm font-medium text-text/60">ID: {lyric.id}</span>}
+          <div>{lyric && (
+            <div className="mt-2 mb-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm items-center">
+              <span className="font-semibold text-text/60">ID</span>
+              <span>{lyric.id}</span>
+              <span className="font-semibold text-text/60">Stem</span>
+              <span>{lyric.stem ?? '—'}</span>
+              <span className="font-semibold text-text/60">Lyric Group</span>
+              <span>
+                {lyric.lyric_group_id ? (
+                  <Link
+                    to={`/admin/lyrics/groups/${lyric.lyric_group_id}`}
+                    state={{ backUrl: `/admin/lyrics/${lyricId}` }}
+                    className="text-primary hover:underline"
+                  >
+                    {lyric.lyric_group_name}
+                  </Link>
+                ) : '—'}
+              </span>
+              <span className="font-semibold text-text/60">Flagged?</span>
+              <ToggleSwitch
+                checked={lyric.is_flagged}
+                onChange={handleFlag}
+                disabled={flagging || loading}
+              />
+              <span className="font-semibold text-text/60">Blocklisted?</span>
+              <ToggleSwitch
+                checked={lyric.is_blocklisted}
+                onChange={handleBlocklistToggle}
+                disabled={blocklisting || loading}
+              />
+              <span className="font-semibold text-text/60">Blocklist Reason</span>
+              <span>
+                {lyric.blocklist_reason ? (
+                  <button
+                    onClick={handleOpenChangeReasonModal}
+                    className="text-primary hover:underline text-left"
+                  >
+                    {reasons.find((r) => r.id === lyric.blocklist_reason)?.reason ?? '—'}
+                  </button>
+                ) : '—'}
+              </span>
+            </div>
+          )}
+          </div>
+          <div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+              {images.map((img) => (
+                <div key={img.image_id} className="flex flex-col items-center gap-2">
+                  <Link to={`/admin/images/${img.image_id}`} state={{ parentBreadcrumbs: currentBreadcrumbs, backUrl: `/admin/lyrics/${lyricId}`, backState: state }}>
+                    <img
+                      src={img.url}
+                      alt=""
+                      className="w-full aspect-square object-cover rounded hover:opacity-80"
+                      loading="lazy"
+                    />
+                  </Link>   
+                  <ToggleSwitch
+                    checked={img.is_selectable}
+                    onChange={(value) => handleToggleSelectable(img.image_id, value)}
+                    disabled={toggling === img.image_id}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
-        {images.map((img) => (
-          <div key={img.image_id} className="flex flex-col items-center gap-2">
-            <Link to={`/admin/images/${img.image_id}`} state={{ parentBreadcrumbs: currentBreadcrumbs, backUrl: `/admin/lyrics/${lyricId}`, backState: state }}>
-              <img
-                src={img.url}
-                alt=""
-                className="w-full aspect-square object-cover rounded hover:opacity-80"
-                loading="lazy"
-              />
-            </Link>   
-            <ToggleSwitch
-              checked={img.is_selectable}
-              onChange={(value) => handleToggleSelectable(img.image_id, value)}
-              disabled={toggling === img.image_id}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="mb-4">
-        <button
-          onClick={handleDisableAll}
-          disabled={disablingAll || loading || images.length === 0}
-          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5 w-full sm:w-auto"
-        >
-          {disablingAll && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          Disable All Images
-        </button>
-      </div>
+      <h2 className="text-lg font-semibold mb-2">Songs</h2>
       <div>
         <AdminTable
           data={songs}
@@ -313,10 +364,14 @@ export default function LyricPage() {
 
       {showBlocklistModal && (
         <Modal onClose={() => { setShowBlocklistModal(false); setSelectedReason('') }}>
-          <h2 className="text-lg font-bold mb-2">Blocklist Word</h2>
-          <p className="text-sm text-text/70 mb-4">
-            Are you sure? This lyric will be disabled for existing songs.
-          </p>
+          <h2 className="text-lg font-bold mb-2">
+            {blocklistModalMode === 'change_reason' ? 'Change Blocklist Reason' : 'Blocklist Word'}
+          </h2>
+          {blocklistModalMode === 'block' && (
+            <p className="text-sm text-text/70 mb-4">
+              Are you sure? This lyric will be disabled for existing songs.
+            </p>
+          )}
           {lyric && (
             <p className="text-sm font-semibold mb-3">
               Word: <span className="text-primary">{lyric.root_word}</span>
@@ -338,14 +393,14 @@ export default function LyricPage() {
               onClick={() => { setShowBlocklistModal(false); setSelectedReason('') }}
               className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
-              No
+              {blocklistModalMode === 'change_reason' ? 'Cancel' : 'No'}
             </button>
             <button
               onClick={handleBlocklistConfirm}
               disabled={!selectedReason || blocklisting}
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
-              Yes
+              {blocklistModalMode === 'change_reason' ? 'Save' : 'Yes'}
             </button>
           </div>
         </Modal>

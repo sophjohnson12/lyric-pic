@@ -1203,6 +1203,10 @@ export interface AdminLyricRow {
   is_blocklisted: boolean
   blocklist_reason: number | null
   is_flagged: boolean
+  stem: string | null
+  lyric_group_id: number | null
+  lyric_group_name: string | null
+  reviewed_at: string | null
 }
 
 export interface AdminLyricSongRow {
@@ -1237,11 +1241,27 @@ export async function getLyricSongs(lyricId: number): Promise<AdminLyricSongRow[
 export async function getLyricById(lyricId: number): Promise<AdminLyricRow | null> {
   const { data, error } = await supabase
     .from('lyric')
-    .select('id, root_word, is_blocklisted, blocklist_reason, is_flagged')
+    .select('id, root_word, is_blocklisted, blocklist_reason, is_flagged, stem, reviewed_at, lyric_group!lyric_group_id(id, name)')
     .eq('id', lyricId)
     .maybeSingle()
   if (error) throw error
-  return data
+  if (!data) return null
+  const raw = data as unknown as {
+    id: number; root_word: string; is_blocklisted: boolean; blocklist_reason: number | null
+    is_flagged: boolean; stem: string | null; reviewed_at: string | null
+    lyric_group: { id: number; name: string } | null
+  }
+  return {
+    id: raw.id,
+    root_word: raw.root_word,
+    is_blocklisted: raw.is_blocklisted,
+    blocklist_reason: raw.blocklist_reason,
+    is_flagged: raw.is_flagged,
+    stem: raw.stem,
+    lyric_group_id: raw.lyric_group?.id ?? null,
+    lyric_group_name: raw.lyric_group?.name ?? null,
+    reviewed_at: raw.reviewed_at,
+  }
 }
 
 export interface AdminLyricImageRow {
