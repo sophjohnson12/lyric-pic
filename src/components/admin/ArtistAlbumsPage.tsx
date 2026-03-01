@@ -70,7 +70,7 @@ export default function ArtistAlbumsPage() {
           <Link to="/admin" className="text-primary hover:opacity-70" title="Back to Artists">
             <ArrowLeft size={24} />
           </Link>
-          <h1 className="text-2xl font-bold">{artistName} — Albums</h1>
+          <h1 className="text-2xl font-bold">Albums</h1>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -128,7 +128,6 @@ export default function ArtistAlbumsPage() {
               <ToggleSwitch
                 checked={a.is_selectable}
                 onChange={(v) => handleToggle(a.id, v)}
-                disabled={a.song_count === 0}
               />
             ),
           },
@@ -145,7 +144,7 @@ export default function ArtistAlbumsPage() {
 
       {disableAlbumId !== null && (
         <ConfirmPopup
-          message="Are you sure? This will remove the album and its songs from the game."
+          message="Are you sure? This will hide the album and its songs from the game."
           onConfirm={handleDisableConfirm}
           onCancel={() => setDisableAlbumId(null)}
         />
