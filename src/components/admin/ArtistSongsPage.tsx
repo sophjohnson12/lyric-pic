@@ -44,7 +44,7 @@ export default function ArtistSongsPage() {
   const albumParam = searchParams.get('album')
   const albumFilter = albumParam === 'none' ? 'none' as const : albumParam ? Number(albumParam) : null
   const enabledParam = searchParams.get('enabled')
-  const enabledFilter = enabledParam === 'false' ? false : enabledParam === 'true' || enabledParam === null ? true : null
+  const enabledFilter = enabledParam === 'false' ? false : enabledParam === 'true' ? true : null
   const [fetching, setFetching] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
@@ -60,6 +60,17 @@ export default function ArtistSongsPage() {
   const [bulkDisableConfirm, setBulkDisableConfirm] = useState(false)
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
   const paramSuffix = searchParams.toString() ? `?${searchParams.toString()}` : ''
+
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const [artistName, setArtistName] = useState('')
 
@@ -89,13 +100,13 @@ export default function ArtistSongsPage() {
   const loadSongs = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await getAdminSongs(aid, page, pageSize, albumFilter, enabledFilter)
+      const result = await getAdminSongs(aid, page, pageSize, albumFilter, enabledFilter, debouncedSearch)
       setSongs(result.rows)
       setTotal(result.total)
     } finally {
       setLoading(false)
     }
-  }, [aid, page, pageSize, albumFilter, enabledFilter])
+  }, [aid, page, pageSize, albumFilter, enabledFilter, debouncedSearch])
 
   useEffect(() => {
     loadSongs()
@@ -351,6 +362,13 @@ export default function ArtistSongsPage() {
         </div>
       </div>
       <div className="mb-4 flex items-center">
+        <input
+          type="text"
+          placeholder="Search songs..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-64 px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mr-4"
+        />
         <label className="text-sm font-medium mr-2">Album:</label>
         <select
           value={albumParam ?? ''}
@@ -375,7 +393,7 @@ export default function ArtistSongsPage() {
         </select>
         <label className="text-sm font-medium mr-2 ml-4">Enabled:</label>
         <select
-          value={enabledParam ?? 'true'}
+          value={enabledParam ?? ''}
           onChange={(e) => {
             const val = e.target.value
             setPage(1)

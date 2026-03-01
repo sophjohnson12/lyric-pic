@@ -366,6 +366,7 @@ export async function getAdminSongs(
   pageSize: number,
   albumId?: number | 'none' | null,
   enabledFilter?: boolean | null,
+  search?: string,
 ): Promise<PaginatedResult<AdminSongRow>> {
   let query = supabase
     .from('song')
@@ -382,6 +383,10 @@ export async function getAdminSongs(
 
   if (enabledFilter !== undefined && enabledFilter !== null) {
     query = query.eq('is_selectable', enabledFilter)
+  }
+
+  if (search) {
+    query = query.ilike('name', `%${search}%`)
   }
 
   if (pageSize > 0) {
@@ -525,6 +530,8 @@ export interface AdminSongLyricRow {
   is_selectable: boolean
   is_blocklisted: boolean
   is_flagged: boolean
+  lyric_group_id: number | null
+  lyric_group_name: string | null
 }
 
 export async function getAdminSongLyrics(
@@ -552,9 +559,10 @@ export async function getAdminSongLyrics(
   for (const sl of data) {
     const { data: lyric } = await supabase
       .from('lyric')
-      .select('root_word, is_blocklisted, is_flagged')
+      .select('root_word, is_blocklisted, is_flagged, lyric_group_id, lyric_group!lyric_group_id(id, name)')
       .eq('id', sl.lyric_id)
       .single()
+    const lyricGroup = (lyric as unknown as { lyric_group: { id: number; name: string } | null } | null)?.lyric_group ?? null
 
     const [{ data: artistLyric }, { count: imageCount }] = await Promise.all([
       supabase
@@ -581,6 +589,8 @@ export async function getAdminSongLyrics(
       is_selectable: sl.is_selectable,
       is_blocklisted: lyric?.is_blocklisted ?? false,
       is_flagged: lyric?.is_flagged ?? false,
+      lyric_group_id: lyric?.lyric_group_id ?? null,
+      lyric_group_name: lyricGroup?.name ?? null,
     })
   }
 
@@ -876,6 +886,103 @@ export async function getBlocklistReasons(): Promise<{ id: number; reason: strin
     .order('reason')
   if (error) throw error
   return data
+}
+
+// ─── Blocklist Seed ───────────────────────────────────────
+
+const SEED_COMMON_WORDS = [
+  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of',
+  'with', 'from', 'by', 'about', 'as', 'into', 'through', 'is', 'are', 'was',
+  'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+  'will', 'would', 'could', 'should', 'may', 'might', 'shall', 'can', 'not',
+  'no', 'so', 'if', 'then', 'than', 'that', 'this', 'what', 'when', 'where',
+  'who', 'how', 'all', 'just', 'like', 'up', 'out', 'down', 'now', 'got',
+  'get', 'go', 'come', 'make', 'know', 'take', 'see', 'think', 'let', 'back',
+  'too', 'say', 'said', 'tell', 'told', 'want', 'give', 'keep', 'way', 'still',
+  'even', 'here', 'there', 'over', "don't", "won't", "can't", "didn't", "it's",
+  "i'm", "i'll", "i'd", "i've", "you're", "you'll", "you've", "we're", "we'll",
+  "they're", "they'll", "that's", "there's", "what's", "who's", "let's", "ain't",
+  "wasn't", "weren't", "hasn't", "haven't", "couldn't", "wouldn't", "shouldn't",
+  "isn't", 'only', 'never', 'ever', 'always', 'every', 'more', 'some', 'any',
+  'much', 'own',
+  // pronouns (merged into common_word)
+  'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us',
+  'them', 'my', 'your', 'his', 'its', 'our', 'their', 'mine', 'yours',
+  'myself', 'yourself',
+]
+
+const SEED_VOCALIZATIONS = [
+  'oh', 'ah', 'ooh', 'yeah', 'whoa', 'hey', 'mmm', 'la', 'na', 'uh', 'da',
+  'ba', 'huh', 'ha', 'woah',
+]
+
+export async function seedBlocklist(): Promise<{ created: number; updated: number }> {
+  const reasons = await getBlocklistReasons()
+  const commonWordReasonId = reasons.find((r) => r.reason === 'common_word')?.id
+  const vocalizationReasonId = reasons.find((r) => r.reason === 'vocalization')?.id
+  if (!commonWordReasonId || !vocalizationReasonId) {
+    throw new Error('Required blocklist reasons (common_word, vocalization) not found in DB')
+  }
+
+  const allWords = [
+    ...SEED_COMMON_WORDS.map((w) => ({ word: w, reasonId: commonWordReasonId })),
+    ...SEED_VOCALIZATIONS.map((w) => ({ word: w, reasonId: vocalizationReasonId })),
+  ]
+
+  // Batch fetch any already-existing lyric records
+  const words = allWords.map((w) => w.word)
+  const { data: existing, error: fetchErr } = await supabase
+    .from('lyric')
+    .select('id, root_word')
+    .in('root_word', words)
+  if (fetchErr) throw fetchErr
+
+  const existingMap = new Map((existing ?? []).map((l) => [l.root_word, l.id]))
+
+  const toInsert = allWords.filter((w) => !existingMap.has(w.word))
+  const toUpdate = allWords.filter((w) => existingMap.has(w.word))
+
+  // Insert brand-new lyric records
+  if (toInsert.length > 0) {
+    const { error: insertErr } = await supabase
+      .from('lyric')
+      .insert(toInsert.map((w) => ({
+        root_word: w.word,
+        is_blocklisted: true,
+        blocklist_reason: w.reasonId,
+        created_at: new Date().toISOString(),
+      })))
+    if (insertErr) throw insertErr
+  }
+
+  // Update existing records — group by reasonId for efficient batch updates
+  if (toUpdate.length > 0) {
+    const byReason = new Map<number, number[]>()
+    for (const w of toUpdate) {
+      const lyricId = existingMap.get(w.word)!
+      const list = byReason.get(w.reasonId) ?? []
+      list.push(lyricId)
+      byReason.set(w.reasonId, list)
+    }
+
+    for (const [reasonId, lyricIds] of byReason) {
+      const { error: updateErr } = await supabase
+        .from('lyric')
+        .update({ is_blocklisted: true, blocklist_reason: reasonId, updated_at: new Date().toISOString() })
+        .in('id', lyricIds)
+      if (updateErr) throw updateErr
+    }
+
+    // Disable all song_lyric rows for these lyrics
+    const allExistingIds = toUpdate.map((w) => existingMap.get(w.word)!)
+    const { error: slError } = await supabase
+      .from('song_lyric')
+      .update({ is_selectable: false })
+      .in('lyric_id', allExistingIds)
+    if (slError) throw slError
+  }
+
+  return { created: toInsert.length, updated: toUpdate.length }
 }
 
 // ─── Image Admin ─────────────────────────────────────────
@@ -1699,13 +1806,14 @@ export async function deleteUnusedLyrics(): Promise<number> {
     offset += batchSize
   }
 
-  // Get all lyric IDs not referenced in song_lyric
+  // Get all non-blocklisted lyric IDs not referenced in song_lyric
   const unusedIds: number[] = []
   offset = 0
   while (true) {
     const { data, error } = await supabase
       .from('lyric')
       .select('id')
+      .or('is_blocklisted.eq.false,is_blocklisted.is.null')
       .range(offset, offset + batchSize - 1)
     if (error) throw error
     for (const row of data) {
@@ -1900,6 +2008,7 @@ export async function processSongLyrics(songId: number) {
     const rawWords = text.split(/\s+/)
 
     const wordCounts = new Map<string, number>()
+    const filteredWords = new Set<string>() // blocked words that appear in this song
 
     for (const raw of rawWords) {
       // Clean: keep only letters, apostrophes, hyphens
@@ -1913,7 +2022,10 @@ export async function processSongLyrics(songId: number) {
         if (!word) continue
 
         // Stage 1: skip contractions before quote processing
-        if (contractionBlocklist.has(word)) continue
+        if (contractionBlocklist.has(word)) {
+          filteredWords.add(word)
+          continue
+        }
 
         // Strip wrapping single quotes
         if (word.startsWith("'") && word.endsWith("'")) {
@@ -1934,7 +2046,10 @@ export async function processSongLyrics(songId: number) {
         }
 
         // Stage 2: skip common_word, pronoun, vocalization after quote processing
-        if (postProcessBlocklist.has(word)) continue
+        if (postProcessBlocklist.has(word)) {
+          filteredWords.add(word)
+          continue
+        }
 
         // Skip single characters
         if (word.length <= 1) continue
@@ -1949,22 +2064,162 @@ export async function processSongLyrics(songId: number) {
     // Blocklist reasons that should disable is_selectable
     const disableReasons = new Set(['unknown_word', 'explicit', 'no_images'])
 
-    // Group words by stem to find duplicates
-    const stemGroups = new Map<string, { word: string; count: number }[]>()
-    for (const [word, count] of wordCounts) {
-      const stem = porterStem(word)
-      const group = stemGroups.get(stem)
-      if (group) {
-        group.push({ word, count })
-      } else {
-        stemGroups.set(stem, [{ word, count }])
+    // Phase 1: Batch pre-fetch all lyric records for words in this song
+    type LyricRow = {
+      id: number
+      root_word: string
+      is_blocklisted: boolean | null
+      blocklist_reason: number | null
+      stem: string | null
+      lyric_group_id: number | null
+    }
+    const words = [...wordCounts.keys()]
+    const { data: existingLyricsData } = await supabase
+      .from('lyric')
+      .select('id, root_word, is_blocklisted, blocklist_reason, stem, lyric_group_id')
+      .in('root_word', words)
+    const lyricCache = new Map<string, LyricRow>(
+      (existingLyricsData as LyricRow[] ?? []).map(l => [l.root_word, l])
+    )
+
+    // After Phase 1: also fetch + update stems for filtered (blocked) words in this song
+    if (filteredWords.size > 0) {
+      const filteredWordList = [...filteredWords]
+      const { data: filteredLyricsData } = await supabase
+        .from('lyric')
+        .select('id, root_word, stem')
+        .in('root_word', filteredWordList)
+      const filteredLyrics = (filteredLyricsData as { id: number; root_word: string; stem: string | null }[] ?? [])
+      const stemlessFiltered = filteredLyrics.filter(l => l.stem === null || l.stem === undefined)
+      if (stemlessFiltered.length > 0) {
+        await Promise.all(
+          stemlessFiltered.map(l =>
+            supabase.from('lyric')
+              .update({ stem: porterStem(l.root_word), updated_at: new Date().toISOString() })
+              .eq('id', l.id)
+          )
+        )
       }
     }
 
-    // For each stem group, determine which word gets is_selectable=true
-    // (highest count wins, alphabetical tiebreak)
+    // Phase 2: Per-word loop — find/create lyric, save stem, assign lyric_group_id
+    const wordToGroup = new Map<string, number | null>()
+    const createdGroupsByStem = new Map<string, number>()
+
+    for (const [word] of wordCounts) {
+      const wordStem = porterStem(word)
+
+      // Find or create lyric
+      let lyric: LyricRow | null = lyricCache.get(word) ?? null
+      if (!lyric) {
+        const { data: inserted, error: insertErr } = await supabase
+          .from('lyric')
+          .insert({ root_word: word, stem: wordStem, created_at: new Date().toISOString() })
+          .select('id, root_word, is_blocklisted, blocklist_reason, stem, lyric_group_id')
+          .single()
+        if (insertErr) throw insertErr
+        lyric = inserted as LyricRow
+        lyricCache.set(word, lyric)
+      }
+
+      // Combine stem-update + flag-update into one call if both needed
+      const needsStemUpdate = lyric.stem === null || lyric.stem === undefined
+      const needsFlag = word.length > 20 || word.includes("'")
+      if (needsStemUpdate || needsFlag) {
+        const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+        if (needsStemUpdate) updates.stem = wordStem
+        if (needsFlag) { updates.is_flagged = true; updates.flagged_by = 'PROCESS' }
+        await supabase.from('lyric').update(updates).eq('id', lyric.id)
+        if (needsStemUpdate) lyric = { ...lyric, stem: wordStem }
+      }
+
+      // Assign lyric_group_id
+      let groupId: number | null = lyric.lyric_group_id ?? null
+
+      if (groupId === null) {
+        if (createdGroupsByStem.has(wordStem)) {
+          // A group for this stem was already created during this run
+          groupId = createdGroupsByStem.get(wordStem)!
+          await supabase
+            .from('lyric')
+            .update({ lyric_group_id: groupId, updated_at: new Date().toISOString() })
+            .eq('id', lyric.id)
+        } else {
+          // Check DB for an existing lyric_group named by this stem
+          const { data: existingGroup } = await supabase
+            .from('lyric_group')
+            .select('id')
+            .eq('name', wordStem)
+            .maybeSingle()
+
+          if (existingGroup) {
+            groupId = (existingGroup as { id: number }).id
+            await supabase
+              .from('lyric')
+              .update({ lyric_group_id: groupId, updated_at: new Date().toISOString() })
+              .eq('id', lyric.id)
+          } else {
+            // Check for other lyrics (including blocklisted) with the same stem and no group yet
+            const { data: sameStemLyrics } = await supabase
+              .from('lyric')
+              .select('id, root_word')
+              .eq('stem', wordStem)
+              .is('lyric_group_id', null)
+              .neq('id', lyric.id)
+
+            if (sameStemLyrics && sameStemLyrics.length > 0) {
+              // Create a new group named by the stem
+              const { data: newGroup, error: groupErr } = await supabase
+                .from('lyric_group')
+                .insert({ name: wordStem })
+                .select('id')
+                .single()
+              if (groupErr) throw groupErr
+              groupId = (newGroup as { id: number }).id
+              createdGroupsByStem.set(wordStem, groupId)
+
+              // Assign the group to this lyric and all same-stem lyrics
+              const typedSameStem = sameStemLyrics as { id: number; root_word: string }[]
+              const allIds = [lyric.id, ...typedSameStem.map(l => l.id)]
+              await supabase
+                .from('lyric')
+                .update({ lyric_group_id: groupId, updated_at: new Date().toISOString() })
+                .in('id', allIds)
+
+              // Pre-assign wordToGroup for same-stem words that also appear in this song
+              for (const sl of typedSameStem) {
+                if (wordCounts.has(sl.root_word)) {
+                  wordToGroup.set(sl.root_word, groupId)
+                }
+              }
+            }
+            // else: no other lyrics share this stem — groupId stays null
+          }
+        }
+      }
+
+      wordToGroup.set(word, groupId)
+    }
+
+    // Phase 3: Build duplicateDisabled from lyric_groups, then insert song_lyric records
+
+    // Group words in this song by lyric_group_id (skip blocklisted — they don't compete)
+    const groupCompetitors = new Map<number, { word: string; count: number }[]>()
+    for (const [word, groupId] of wordToGroup) {
+      if (groupId === null) continue
+      if (lyricCache.get(word)?.is_blocklisted) continue
+      const entry = { word, count: wordCounts.get(word)! }
+      const existing = groupCompetitors.get(groupId)
+      if (existing) {
+        existing.push(entry)
+      } else {
+        groupCompetitors.set(groupId, [entry])
+      }
+    }
+
+    // Determine losers (highest count wins, alphabetical tiebreak)
     const duplicateDisabled = new Set<string>()
-    for (const [, group] of stemGroups) {
+    for (const [, group] of groupCompetitors) {
       if (group.length <= 1) continue
       group.sort((a, b) => b.count - a.count || a.word.localeCompare(b.word))
       for (let i = 1; i < group.length; i++) {
@@ -1973,43 +2228,16 @@ export async function processSongLyrics(songId: number) {
     }
 
     for (const [word, count] of wordCounts) {
-      // Find or create lyric record
-      let { data: lyric } = await supabase
-        .from('lyric')
-        .select('id, is_blocklisted, blocklist_reason')
-        .eq('root_word', word)
-        .maybeSingle()
-
-      if (!lyric) {
-        const { data: inserted, error: insertErr } = await supabase
-          .from('lyric')
-          .insert({ root_word: word, created_at: new Date().toISOString() })
-          .select('id, is_blocklisted, blocklist_reason')
-          .single()
-        if (insertErr) throw insertErr
-        lyric = inserted
-      }
-
-      // Flag long words or words with apostrophes
-      if (word.length > 20 || word.includes("'")) {
-        await supabase
-          .from('lyric')
-          .update({ is_flagged: true, flagged_by: 'PROCESS' })
-          .eq('id', lyric.id)
-      }
-
+      const lyric = lyricCache.get(word)!
       const isInTitle = songNameLower.includes(word)
 
-      // Determine is_selectable
       let selectable = true
-      // Check if lyric is blocklisted with a disabling reason
       if (lyric.is_blocklisted && lyric.blocklist_reason) {
         const lyricReason = reasonMap.get(lyric.blocklist_reason)
         if (lyricReason && disableReasons.has(lyricReason)) {
           selectable = false
         }
       }
-      // Check if this is a duplicate stem (not the highest count)
       if (duplicateDisabled.has(word)) {
         selectable = false
       }
@@ -2024,14 +2252,7 @@ export async function processSongLyrics(songId: number) {
       if (slError) throw slError
     }
 
-    // Count selectable song_lyric rows
-    const { count: selectableCount } = await supabase
-      .from('song_lyric')
-      .select('*', { count: 'exact', head: true })
-      .eq('song_id', songId)
-      .eq('is_selectable', true)
-
-    // Update song status to completed + auto-disable if fewer than 3 selectable lyrics
+    // Update song status to completed
     const now = new Date().toISOString()
     await supabase
       .from('song')
@@ -2039,7 +2260,6 @@ export async function processSongLyrics(songId: number) {
         ...(completedStatus ? { load_status_id: completedStatus.id } : {}),
         refreshed_at: now,
         updated_at: now,
-        ...((selectableCount ?? 0) < 3 ? { is_selectable: false } : {}),
       })
       .eq('id', songId)
   } catch (err) {
@@ -2081,7 +2301,7 @@ export async function getAppConfig(): Promise<AppConfig> {
 }
 
 export async function updateAppConfig(
-  updates: Partial<Pick<AppConfig, 'theme_primary_color' | 'theme_secondary_color' | 'theme_background_color' | 'enable_images' | 'enable_lyric_flag' | 'enable_image_flag' | 'min_image_count' | 'max_image_count'>>
+  updates: Partial<Pick<AppConfig, 'theme_primary_color' | 'theme_secondary_color' | 'theme_background_color' | 'enable_images' | 'enable_lyric_flag' | 'enable_image_flag' | 'min_image_count' | 'max_image_count' | 'max_guess_count'>>
 ): Promise<void> {
   const { error } = await supabase
     .from('app_config')

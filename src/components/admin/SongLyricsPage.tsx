@@ -128,7 +128,19 @@ export default function SongLyricsPage() {
           },
         }}
         columns={[
-          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search }} className="text-primary hover:underline">{l.root_word}</Link> },
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search }} className="text-primary hover:underline">{l.root_word}</Link> }, 
+          {
+            header: 'Group',
+            accessor: (l) => l.lyric_group_id ? (
+              <Link
+                to={`/admin/lyrics/groups/${l.lyric_group_id}`}
+                state={{ backUrl: location.pathname + location.search }}
+                className="text-primary hover:underline"
+              >
+                {l.lyric_group_name}-
+              </Link>
+            ) : '',
+          },
           { header: 'Lyric Count', accessor: (l) => l.count },
           { header: 'Image Count', accessor: (l) => l.image_count },
           { header: 'In Title?', accessor: (l) => (l.is_in_title ? <Check size={20} className="drop-shadow-md" /> : '') },

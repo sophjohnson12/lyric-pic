@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Trash2, Check } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -19,6 +19,8 @@ import type { AdminLyricGroupMemberRow } from '../../services/adminService'
 export default function LyricGroupPage() {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backUrl = (location.state as { backUrl?: string } | null)?.backUrl ?? '/admin/lyrics/groups'
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [group, setGroup] = useState<{ id: number; name: string } | null>(null)
   const [members, setMembers] = useState<AdminLyricGroupMemberRow[]>([])
@@ -139,7 +141,7 @@ export default function LyricGroupPage() {
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-6">
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            to="/admin/lyrics/groups"
+            to={backUrl}
             className="flex items-center gap-1.5 text-sm text-primary hover:opacity-70"
           >
             <ArrowLeft size={16} />

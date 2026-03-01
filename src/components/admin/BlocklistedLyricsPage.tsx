@@ -13,6 +13,7 @@ import {
   bulkUpdateBlocklistReason,
   bulkUnblocklistLyrics,
   getBlocklistReasons,
+  seedBlocklist,
 } from '../../services/adminService'
 import type { AdminBlocklistedLyricRow } from '../../services/adminService'
 
@@ -31,6 +32,8 @@ export default function BlocklistedLyricsPage() {
   const [bulkUnblockConfirm, setBulkUnblockConfirm] = useState(false)
   const [unblocklistId, setUnblocklistId] = useState<number | null>(null)
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
+  const [seedConfirm, setSeedConfirm] = useState(false)
+  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Blocklisted Lyrics' }])
@@ -136,6 +139,20 @@ export default function BlocklistedLyricsPage() {
     }
   }
 
+  async function handleSeedBlocklist() {
+    setSeedConfirm(false)
+    setSeeding(true)
+    try {
+      const { created, updated } = await seedBlocklist()
+      showToast(`Seed complete: ${created} created, ${updated} updated`)
+      loadBlocklistedLyrics()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Seed failed'}`)
+    } finally {
+      setSeeding(false)
+    }
+  }
+
   async function handleUnblocklist(lyricId: number) {
     try {
       await unblocklistLyric(lyricId)
@@ -153,6 +170,14 @@ export default function BlocklistedLyricsPage() {
       <div className="mb-2">
         <div className="flex flex-wrap items-center gap-y-2 mb-2">
           <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+            <button
+              onClick={() => setSeedConfirm(true)}
+              disabled={seeding || !!bulkLoading}
+              className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {seeding && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Seed Blocklist
+            </button>
             <button
               onClick={() => { setBulkEditModal(true); setBulkEditReason('') }}
               disabled={selectedIds.size === 0 || !!bulkLoading}
@@ -319,6 +344,13 @@ export default function BlocklistedLyricsPage() {
         />
       )}
 
+      {seedConfirm && (
+        <ConfirmPopup
+          message="This will create or re-blocklist all seeded common words and vocalizations and disable any related song lyrics. Continue?"
+          onConfirm={handleSeedBlocklist}
+          onCancel={() => setSeedConfirm(false)}
+        />
+      )}
       <Toast message={toast} />
     </div>
   )
