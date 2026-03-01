@@ -33,6 +33,7 @@ export default function SongFormPage() {
   const [featuredArtists, setFeaturedArtists] = useState('')
   const [fullLyrics, setFullLyrics] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [failureMessage, setFailureMessage] = useState('')
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -75,6 +76,7 @@ export default function SongFormPage() {
         setFeaturedArtists(s.featured_artists?.join(', ') ?? '')
         setFullLyrics(s.lyrics_full_text ?? '')
         setSuccessMessage(s.success_message ?? '')
+        setFailureMessage(s.failure_message ?? '')
         setIsSelectable(s.is_selectable ?? false)
       })
     }
@@ -92,6 +94,7 @@ export default function SongFormPage() {
         : null,
       lyrics_full_text: fullLyrics || null,
       success_message: successMessage || null,
+      failure_message: failureMessage || null,
     }
   }
 
@@ -190,6 +193,14 @@ export default function SongFormPage() {
               type="text"
               value={successMessage}
               onChange={(e) => setSuccessMessage(e.target.value)}
+              className={inputClass}
+            />
+          </FormField>
+          <FormField label="Failure Message">
+            <input
+              type="text"
+              value={failureMessage}
+              onChange={(e) => setFailureMessage(e.target.value)}
               className={inputClass}
             />
           </FormField>

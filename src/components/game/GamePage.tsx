@@ -273,7 +273,7 @@ export default function GamePage() {
       )}
       {game.incorrectSongGuesses.length >= 3 && (
         <ResultModal
-          message={game.artist.failure_message || "Better luck next time."}
+          message={game.currentSong.failure_message || game.artist.failure_message || "Better luck next time."}
           song={game.currentSong}
           album={correctAlbumForModal}
           onNext={game.nextSong}
