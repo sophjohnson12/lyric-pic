@@ -26,6 +26,10 @@ export default function AllLyricsPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
+  const [minImagesInput, setMinImagesInput] = useState('')
+  const [maxImagesInput, setMaxImagesInput] = useState('')
+  const [debouncedMinImages, setDebouncedMinImages] = useState<number | null>(null)
+  const [debouncedMaxImages, setDebouncedMaxImages] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
@@ -59,10 +63,19 @@ export default function AllLyricsPage() {
     return () => clearTimeout(timer)
   }, [search])
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMinImages(minImagesInput === '' ? null : Number(minImagesInput))
+      setDebouncedMaxImages(maxImagesInput === '' ? null : Number(maxImagesInput))
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [minImagesInput, maxImagesInput])
+
   async function loadData() {
     setLoading(true)
     try {
-      const result = await getAllLyrics(page, pageSize, debouncedSearch, blocklistedFilter)
+      const result = await getAllLyrics(page, pageSize, debouncedSearch, blocklistedFilter, debouncedMinImages, debouncedMaxImages)
       setData(result.data)
       setTotal(result.total)
     } finally {
@@ -73,7 +86,7 @@ export default function AllLyricsPage() {
   useEffect(() => {
     loadData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, debouncedSearch, blocklistedFilter])
+  }, [page, pageSize, debouncedSearch, blocklistedFilter, debouncedMinImages, debouncedMaxImages])
 
   function showToast(message: string) {
     setToast(message)
@@ -228,6 +241,26 @@ export default function AllLyricsPage() {
             <option value="no">No</option>
           </select>
         </label>
+        <div className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+          Images:
+          <input
+            type="number"
+            min={0}
+            placeholder="Min"
+            value={minImagesInput}
+            onChange={(e) => setMinImagesInput(e.target.value)}
+            className="w-16 px-2 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          />
+          <span className="text-text/50">–</span>
+          <input
+            type="number"
+            min={0}
+            placeholder="Max"
+            value={maxImagesInput}
+            onChange={(e) => setMaxImagesInput(e.target.value)}
+            className="w-16 px-2 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          />
+        </div>
       </div>
 
       <AdminTable

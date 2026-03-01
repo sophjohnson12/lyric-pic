@@ -69,6 +69,7 @@ Each level requires `is_selectable = true` plus a content requirement. The **`pl
 - `.neq('column', true)` excludes NULL values in PostgREST — use `.or('column.eq.false,column.is.null')` instead
 - Edge functions need `/// <reference types="..." />` directives, not `import` statements for type hints (import causes boot errors)
 - CREATE POLICY must be run in the SQL Editor for new tables to allow UPDATE/INSERT/DELETE from the admin app. Otherwise, actions fail silently.
+- **PostgREST default row limit is 1000.** Any query that fetches all rows from a table (no `.in()` scoping, no `.single()`) is silently truncated at 1000. This causes subtle bugs — e.g. aggregate counts computed client-side from truncated results will be wrong. Fix by using a DB-level aggregate function (RPC) instead of fetching raw rows and counting in TypeScript.
 
 ## Admin UI Conventions
 

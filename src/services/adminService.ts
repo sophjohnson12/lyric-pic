@@ -688,7 +688,25 @@ export async function getAllLyrics(
   pageSize: number,
   search: string,
   blocklistedFilter: 'all' | 'yes' | 'no' = 'no',
+  minImages: number | null = null,
+  maxImages: number | null = null,
 ): Promise<{ data: AdminAllLyricRow[]; total: number }> {
+  // Determine if image count filtering is needed.
+  // min=null,max=null or min=0,max=null → no filter (every lyric qualifies).
+  const needsImageFilter = (minImages !== null && minImages > 0) || maxImages !== null
+
+  // Pre-fetch selectable image counts per lyric when filtering is required.
+  // Uses a DB aggregate to avoid the default PostgREST row limit (1000).
+  // Lyrics absent from the result have an implicit count of 0.
+  let countsMap: Map<number, number> | null = null
+  if (needsImageFilter) {
+    const { data: imgData } = await supabase.rpc('get_selectable_image_counts')
+    countsMap = new Map()
+    for (const row of (imgData ?? []) as { lyric_id: number; image_count: number }[]) {
+      countsMap.set(row.lyric_id, row.image_count)
+    }
+  }
+
   const buildQuery = (from: number, to: number) => {
     let q = supabase
       .from('lyric')
@@ -698,6 +716,25 @@ export async function getAllLyrics(
     if (search) q = q.ilike('root_word', `%${search}%`)
     if (blocklistedFilter === 'yes') q = q.eq('is_blocklisted', true)
     if (blocklistedFilter === 'no') q = q.or('is_blocklisted.eq.false,is_blocklisted.is.null')
+    if (needsImageFilter && countsMap) {
+      const min = minImages ?? 0
+      const max = maxImages
+      if (min === 0) {
+        // Exclude lyrics whose count exceeds max. Lyrics with 0 images (absent from
+        // countsMap) pass through automatically since they're not in the exclude list.
+        const excluded = [...countsMap.entries()]
+          .filter(([, c]) => max !== null && c > max)
+          .map(([id]) => id)
+        if (excluded.length > 0) q = q.not('id', 'in', `(${excluded.join(',')})`)
+      } else {
+        // Include only lyrics whose count is within [min, max].
+        // Lyrics with 0 images are naturally excluded (not in countsMap).
+        const included = [...countsMap.entries()]
+          .filter(([, c]) => c >= min && (max === null || c <= max))
+          .map(([id]) => id)
+        q = included.length > 0 ? q.in('id', included) : q.in('id', [-1])
+      }
+    }
     return q
   }
 
