@@ -275,7 +275,7 @@ export default function LyricPage() {
                     state={{ backUrl: `/admin/lyrics/${lyricId}` }}
                     className="text-primary hover:underline"
                   >
-                    {lyric.lyric_group_name}
+                    {lyric.lyric_group_name}-
                   </Link>
                 ) : '—'}
               </span>
