@@ -5,6 +5,7 @@ import Header from '../layout/Header'
 import WordInput from './WordInput'
 import AlbumButtons from './AlbumDropdown'
 import SongDropdown from './SongDropdown'
+import GuessCounter from './GuessCounter'
 import SuccessModal from './SuccessModal'
 import InfoModal from './InfoModal'
 import HistoryModal from './HistoryModal'
@@ -248,6 +249,13 @@ export default function GamePage() {
                 songGuessed={game.songGuessed}
                 onGuess={game.guessSong}
                 isMd={isMd}
+              />
+            </div>
+            <div className="max-w-lg mx-auto">
+              <GuessCounter 
+                guessMessage={game.artist.guess_counter_message}
+                guessCount={game.incorrectSongGuesses.length}
+                allowedCount={3}
               />
             </div>
           </div>

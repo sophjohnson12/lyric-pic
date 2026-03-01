@@ -17,6 +17,7 @@ export default function ArtistFormPage() {
   const [slug, setSlug] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [loadMessage, setLoadMessage] = useState('')
+  const [guessCounterMessage, setGuessCounterMessage] = useState('')
   const [geniusArtistId, setGeniusArtistId] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#722F37')
   const [secondaryColor, setSecondaryColor] = useState('#5C2028')
@@ -42,6 +43,7 @@ export default function ArtistFormPage() {
         setSlug(a.slug)
         setSuccessMessage(a.success_message ?? '')
         setLoadMessage(a.load_message ?? '')
+        setGuessCounterMessage(a.guess_counter_message ?? '')
         setGeniusArtistId(a.genius_artist_id?.toString() ?? '')
         setPrimaryColor(a.theme_primary_color)
         setSecondaryColor(a.theme_secondary_color)
@@ -77,6 +79,7 @@ export default function ArtistFormPage() {
         slug,
         success_message: successMessage,
         load_message: loadMessage,
+        guess_counter_message: guessCounterMessage,
         genius_artist_id: geniusArtistId ? Number(geniusArtistId) : null,
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
@@ -137,6 +140,9 @@ export default function ArtistFormPage() {
           </FormField>
           <FormField label="Load Message" required>
             <input type="text" value={loadMessage} onChange={(e) => setLoadMessage(e.target.value)} required className={inputClass} />
+          </FormField>
+          <FormField label="Guess Counter Message" required>
+            <input type="text" value={guessCounterMessage} onChange={(e) => setGuessCounterMessage(e.target.value)} required className={inputClass} />
           </FormField>
         </div>
       </div>

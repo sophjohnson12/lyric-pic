@@ -44,21 +44,11 @@ export default function SongDropdown({
             className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm text-text text-base cursor-pointer border border-secondary"
           />
         </div>
-        {incorrectGuesses.length > 0 && (
-          <p className="text-xs text-text/60 mt-1 ml-1 font-medium">
-            But honestly, baby, who's counting? (
-            {incorrectGuesses.length <= 5
-              ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
-              : `1, 2, 3, ..., ${incorrectGuesses.length}`}
-            )
-          </p>
-        )}
         {showModal && (
           <Modal showClose={false} onClose={() => setShowModal(false)}>
             <SongWheelPicker
               songs={songs}
               incorrectGuesses={incorrectGuesses}
-              showSubmit={false}
               visibleCount={5}
               onSelectionChange={(id, name) =>
                 setModalSelection(id !== null ? { id, name } : null)
@@ -120,15 +110,6 @@ export default function SongDropdown({
           Submit
         </button>
       </div>
-      {incorrectGuesses.length > 0 && (
-        <p className="text-xs text-text/60 mt-1 ml-1 font-medium">
-          But honestly, baby, who's counting? (
-          {incorrectGuesses.length <= 5
-            ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
-            : `1, 2, 3, ..., ${incorrectGuesses.length}`}
-          )
-        </p>
-      )}
     </div>
   )
 }

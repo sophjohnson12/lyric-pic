@@ -4,9 +4,7 @@ import type { Song } from '../../types/database'
 interface SongWheelPickerProps {
   songs: Song[]
   incorrectGuesses: string[]
-  onGuess?: (songId: number, songName: string) => string
   onSelectionChange?: (songId: number | null, songName: string) => void
-  showSubmit?: boolean
   itemHeight?: number
   visibleCount?: number
 }
@@ -14,9 +12,7 @@ interface SongWheelPickerProps {
 export default function SongWheelPicker({
   songs,
   incorrectGuesses,
-  onGuess,
   onSelectionChange,
-  showSubmit = true,
   itemHeight = 48,
   visibleCount = 3,
 }: SongWheelPickerProps) {
@@ -65,19 +61,6 @@ export default function SongWheelPicker({
     }, 100)
   }, [itemHeight, items.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSubmit = () => {
-    const item = items[effectiveIndex]
-    if (!item || item.id === null || !onGuess) return
-    const result = onGuess(item.id, item.name)
-    if (result !== 'correct') {
-      setSelectedIndex(0)
-      if (containerRef.current) {
-        containerRef.current.scrollTop = 0
-      }
-      onSelectionChange?.(items[0]?.id ?? null, items[0]?.name ?? '')
-    }
-  }
-
   const getItemClass = (index: number) => {
     const diff = Math.abs(index - effectiveIndex)
     if (diff === 0) return 'opacity-100 font-medium text-primary'
@@ -123,28 +106,6 @@ export default function SongWheelPicker({
           </div>
         </div>
       </div>
-
-      {showSubmit && (
-        <>
-          <button
-            onClick={handleSubmit}
-            disabled={items.length === 0}
-            className="w-3/4 max-w-xs h-12 md:px-4 md:py-2 md:h-auto bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default"
-          >
-            Submit
-          </button>
-
-          {incorrectGuesses.length > 0 && (
-            <p className="text-xs text-primary -mt-1">
-              Who's counting? (
-              {incorrectGuesses.length <= 5
-                ? Array.from({ length: incorrectGuesses.length }, (_, i) => i + 1).join(', ') + '...'
-                : `1, 2, 3, ..., ${incorrectGuesses.length}`}
-              )
-            </p>
-          )}
-        </>
-      )}
     </div>
   )
 }
