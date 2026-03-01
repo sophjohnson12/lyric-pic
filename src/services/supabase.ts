@@ -26,14 +26,14 @@ export async function getAllArtists(): Promise<Artist[]> {
   return data
 }
 
-export async function getTotalPlayableSongCount(artistId: number): Promise<number> {
-  const { count, error } = await supabase
+export async function getPlayableSongIds(artistId: number): Promise<number[]> {
+  const { data, error } = await supabase
     .from('playable_song')
-    .select('*, album!inner(is_selectable)', { count: 'exact', head: true })
+    .select('id, album!inner(is_selectable)')
     .eq('artist_id', artistId)
     .eq('album.is_selectable', true)
   if (error) throw error
-  return count ?? 0
+  return (data as { id: number }[]).map((d) => d.id)
 }
 
 export async function getRandomSong(artistId: number, excludeIds: number[]): Promise<Song | null> {

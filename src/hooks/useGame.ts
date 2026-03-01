@@ -4,7 +4,7 @@ import type { Artist, Album, Song } from '../types/database'
 import type { PuzzleWord, GameState, WordWithStats } from '../types/game'
 import {
   getArtistBySlug,
-  getTotalPlayableSongCount,
+  getPlayableSongIds,
   getRandomSong,
   getSongWords,
   getArtistAlbums,
@@ -190,10 +190,18 @@ export function useGame(artistSlug: string) {
         }
 
         applyArtistTheme(artist)
-        const total = await getTotalPlayableSongCount(artist.id)
+        const playableSongIds = await getPlayableSongIds(artist.id)
         if (cancelled) return
-        setState((prev) => ({ ...prev, artist, totalPlayableSongs: total }))
-        await loadNewSong(artist, playedSongIds)
+
+        // Reconcile play history: drop any IDs that are no longer in the playable set
+        const playableSet = new Set(playableSongIds)
+        const validPlayedIds = playedSongIds.filter((id) => playableSet.has(id))
+        if (validPlayedIds.length !== playedSongIds.length) {
+          setPlayedSongIds(validPlayedIds)
+        }
+
+        setState((prev) => ({ ...prev, artist, totalPlayableSongs: playableSongIds.length }))
+        await loadNewSong(artist, validPlayedIds)
       } catch (err) {
         console.error('Failed to initialize game:', err)
         if (!cancelled) setState((prev) => ({ ...prev, loading: false }))
