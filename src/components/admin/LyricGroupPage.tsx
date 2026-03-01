@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Trash2, Check } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
@@ -6,6 +6,7 @@ import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
 import ConfirmPopup from '../common/ConfirmPopup'
 import Toast from '../common/Toast'
+import ToggleSwitch from './ToggleSwitch'
 import {
   getLyricGroupById,
   getLyricGroupMembers,
@@ -13,8 +14,10 @@ import {
   addLyricToGroup,
   removeLyricFromGroup,
   getAllLyricsForDropdown,
+  getLyricGroupImages,
+  updateLyricImageSelectable,
 } from '../../services/adminService'
-import type { AdminLyricGroupMemberRow } from '../../services/adminService'
+import type { AdminLyricGroupMemberRow, AdminLyricGroupImageRow } from '../../services/adminService'
 
 export default function LyricGroupPage() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -35,6 +38,10 @@ export default function LyricGroupPage() {
   const [selectedLyricIds, setSelectedLyricIds] = useState<Set<number>>(new Set())
   const [addingLyric, setAddingLyric] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [groupImages, setGroupImages] = useState<AdminLyricGroupImageRow[]>([])
+  const [imagesLoading, setImagesLoading] = useState(false)
+  const [togglingCell, setTogglingCell] = useState<string | null>(null)
+  const [togglingAll, setTogglingAll] = useState<number | null>(null)
 
   useEffect(() => {
     setBreadcrumbs([
@@ -47,13 +54,20 @@ export default function LyricGroupPage() {
   useEffect(() => {
     if (!groupId) return
     setLoading(true)
+    setImagesLoading(true)
     Promise.all([
       getLyricGroupById(Number(groupId)),
       getLyricGroupMembers(Number(groupId)),
     ]).then(([g, m]) => {
       setGroup(g)
       setMembers(m)
-    }).finally(() => setLoading(false))
+      setLoading(false)
+      const ids = m.map((mem) => mem.id)
+      if (ids.length === 0) { setImagesLoading(false); return }
+      return getLyricGroupImages(ids)
+        .then((imgs) => setGroupImages(imgs))
+        .finally(() => setImagesLoading(false))
+    }).catch(() => { setLoading(false); setImagesLoading(false) })
   }, [groupId])
 
   function showToast(message: string) {
@@ -67,6 +81,7 @@ export default function LyricGroupPage() {
     try {
       await removeLyricFromGroup(removeConfirm.id)
       setMembers((prev) => prev.filter((m) => m.id !== removeConfirm.id))
+      setGroupImages((prev) => prev.filter((r) => r.lyric_id !== removeConfirm.id))
       showToast(`Removed "${removeConfirm.word}" from group`)
       setRemoveConfirm(null)
     } catch (err) {
@@ -97,12 +112,16 @@ export default function LyricGroupPage() {
     try {
       await Promise.all([...selectedLyricIds].map((lyricId) => addLyricToGroup(lyricId, Number(groupId))))
       const added = allLyrics.filter((l) => selectedLyricIds.has(l.id))
-      setMembers((prev) =>
-        [...prev, ...added.map((l) => ({ id: l.id, root_word: l.root_word, is_blocklisted: l.is_blocklisted, stem: null }))]
-          .sort((a, b) => a.root_word.localeCompare(b.root_word))
-      )
+      const newMembers = [...members, ...added.map((l) => ({ id: l.id, root_word: l.root_word, is_blocklisted: l.is_blocklisted, stem: null }))]
+        .sort((a, b) => a.root_word.localeCompare(b.root_word))
+      setMembers(newMembers)
       setShowAddModal(false)
       showToast(`Added ${added.length} lyric${added.length !== 1 ? 's' : ''}`)
+      setImagesLoading(true)
+      getLyricGroupImages(newMembers.map((m) => m.id))
+        .then((imgs) => setGroupImages(imgs))
+        .catch(() => showToast('Warning: Could not refresh image matrix'))
+        .finally(() => setImagesLoading(false))
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to add'}`)
     } finally {
@@ -122,6 +141,29 @@ export default function LyricGroupPage() {
     }
   }
 
+  const memberIds = new Set(members.map((m) => m.id))
+
+  const uniqueImages = useMemo(() => {
+    const seen = new Map<number, string>()
+    for (const r of groupImages) { if (!seen.has(r.image_id)) seen.set(r.image_id, r.url) }
+    return Array.from(seen.entries()).sort((a, b) => a[0] - b[0]).map(([image_id, url]) => ({ image_id, url }))
+  }, [groupImages])
+
+  const cellMap = useMemo(() => {
+    const map = new Map<string, boolean>()
+    for (const r of groupImages) map.set(`${r.lyric_id}-${r.image_id}`, r.is_selectable)
+    return map
+  }, [groupImages])
+
+  const isAllOnByImage = useMemo(() => {
+    const result = new Map<number, boolean>()
+    for (const img of uniqueImages) {
+      const cols = groupImages.filter((r) => r.image_id === img.image_id)
+      result.set(img.image_id, cols.length > 0 && cols.every((r) => r.is_selectable))
+    }
+    return result
+  }, [groupImages, uniqueImages])
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -134,7 +176,33 @@ export default function LyricGroupPage() {
     return <div className="text-center py-12 text-text/50">Group not found</div>
   }
 
-  const memberIds = new Set(members.map((m) => m.id))
+  async function handleToggleCell(lyricId: number, imageId: number, value: boolean) {
+    const key = `${lyricId}-${imageId}`
+    setTogglingCell(key)
+    try {
+      await updateLyricImageSelectable(imageId, lyricId, value)
+      setGroupImages((prev) => prev.map((r) =>
+        r.lyric_id === lyricId && r.image_id === imageId ? { ...r, is_selectable: value } : r
+      ))
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Toggle failed'}`)
+    } finally {
+      setTogglingCell(null)
+    }
+  }
+
+  async function handleToggleAll(imageId: number, value: boolean) {
+    setTogglingAll(imageId)
+    const rows = groupImages.filter((r) => r.image_id === imageId)
+    try {
+      await Promise.all(rows.map((r) => updateLyricImageSelectable(imageId, r.lyric_id, value)))
+      setGroupImages((prev) => prev.map((r) => r.image_id === imageId ? { ...r, is_selectable: value } : r))
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Toggle all failed'}`)
+    } finally {
+      setTogglingAll(null)
+    }
+  }
 
   return (
     <div>
@@ -192,7 +260,7 @@ export default function LyricGroupPage() {
           },
           {
             header: 'Blocklisted?',
-            accessor: (m) => (m.is_blocklisted ? 'Yes' : 'No'),
+            accessor: (m) => (m.is_blocklisted ? <Check size={16} className="text-primary" /> : null),
           },
           {
             header: 'Actions',
@@ -209,6 +277,94 @@ export default function LyricGroupPage() {
           },
         ]}
       />
+
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold mb-3">Group Images</h2>
+        {imagesLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : uniqueImages.length === 0 ? (
+          <p className="text-sm text-text/50 py-4">No images yet</p>
+        ) : (
+          <div className="space-y-6">
+            {Array.from({ length: Math.ceil(uniqueImages.length / 3) }, (_, i) => {
+              const slice = uniqueImages.slice(i * 3, i * 3 + 3)
+              return [...slice, ...Array(3 - slice.length).fill(null)] as (typeof uniqueImages[number] | null)[]
+            }).map((chunk, chunkIdx) => (
+              <table key={chunkIdx} className="text-sm border-collapse w-full table-fixed">
+                <thead>
+                  <tr>
+                    <th className="w-[140px] px-3 py-2 border-b border-primary/20" />
+                    {chunk.map((img, colIdx) => (
+                      <th key={img ? img.image_id : `empty-${colIdx}`} className="px-3 py-2 border-b border-primary/20 text-center">
+                        {img && (
+                          <Link to={`/admin/images/${img.image_id}`} state={{ backUrl: `/admin/lyrics/groups/${groupId}` }}>
+                            <img src={img.url} alt="" className="w-full aspect-square object-cover rounded hover:opacity-80" loading="lazy" />
+                          </Link>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-primary/10 bg-primary/5">
+                    <td className="px-3 py-2.5 font-semibold text-text/70 whitespace-nowrap">
+                      All Lyrics
+                    </td>
+                    {chunk.map((img, colIdx) => (
+                      <td key={img ? img.image_id : `empty-${colIdx}`} className="px-3 py-2.5 text-center">
+                        {img && (
+                          <div className="flex justify-center">
+                            <ToggleSwitch
+                              checked={isAllOnByImage.get(img.image_id) ?? false}
+                              onChange={(value) => handleToggleAll(img.image_id, value)}
+                              disabled={togglingAll === img.image_id || imagesLoading}
+                            />
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {members.map((member) => (
+                    <tr key={member.id} className="border-b border-primary/10 hover:bg-primary/5">
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        <Link
+                          to={`/admin/lyrics/${member.id}`}
+                          state={{ backUrl: `/admin/lyrics/groups/${groupId}` }}
+                          className="text-primary hover:underline"
+                        >
+                          {member.root_word}
+                        </Link>
+                      </td>
+                      {chunk.map((img, colIdx) => {
+                        if (!img) return <td key={`empty-${colIdx}`} />
+                        const key = `${member.id}-${img.image_id}`
+                        const isSelectable = cellMap.get(key)
+                        return (
+                          <td key={img.image_id} className="px-3 py-2.5 text-center">
+                            {isSelectable === undefined ? (
+                              <span className="text-text/20">—</span>
+                            ) : (
+                              <div className="flex justify-center">
+                                <ToggleSwitch
+                                  checked={isSelectable}
+                                  onChange={(value) => handleToggleCell(member.id, img.image_id, value)}
+                                  disabled={togglingCell === key || togglingAll === img.image_id}
+                                />
+                              </div>
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ))}
+          </div>
+        )}
+      </div>
 
       {showAddModal && (
         <Modal onClose={() => setShowAddModal(false)}>

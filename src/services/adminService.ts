@@ -1284,6 +1284,30 @@ export async function getLyricImages(lyricId: number): Promise<AdminLyricImageRo
   }))
 }
 
+export interface AdminLyricGroupImageRow {
+  lyric_id: number
+  image_id: number
+  url: string
+  is_selectable: boolean
+}
+
+export async function getLyricGroupImages(lyricIds: number[]): Promise<AdminLyricGroupImageRow[]> {
+  if (lyricIds.length === 0) return []
+  const results: AdminLyricGroupImageRow[] = []
+  for (let i = 0; i < lyricIds.length; i += 100) {
+    const batch = lyricIds.slice(i, i + 100)
+    const { data, error } = await supabase
+      .from('lyric_image')
+      .select('lyric_id, image_id, is_selectable, image(url)')
+      .in('lyric_id', batch)
+      .order('image_id')
+    if (error) throw error
+    const rows = data as unknown as { lyric_id: number; image_id: number; is_selectable: boolean; image: { url: string } }[]
+    for (const r of rows) results.push({ lyric_id: r.lyric_id, image_id: r.image_id, url: r.image.url, is_selectable: r.is_selectable })
+  }
+  return results
+}
+
 export async function getDuplicateImages(): Promise<AdminDuplicateImageRow[]> {
   const { data, error } = await supabase.rpc('get_duplicate_images')
   if (error) throw error
