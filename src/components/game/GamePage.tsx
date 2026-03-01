@@ -195,7 +195,7 @@ export default function GamePage() {
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:grid md:grid-cols-3 gap-0 md:gap-6 mb-3 md:mb-9 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:grid md:grid-cols-3 gap-0 md:gap-6 mb-3 md:mb-12 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
           >
           {game.puzzleWords.map((word: any, index: number) => (
             <div
@@ -220,7 +220,7 @@ export default function GamePage() {
           ))}
         </div>
         {/* Carousel Dots (Mobile Only) */}
-        <div className="flex justify-center gap-2 mb-9 md:hidden">
+        <div className="flex justify-center gap-2 mb-3 md:mb-12 md:hidden">
           {game.puzzleWords.map((_: any, index: number) => (
             <button
               key={index}
@@ -233,7 +233,7 @@ export default function GamePage() {
         {/* Album and Song dropdowns */}
         {(
           <div>
-            <div className="max-w-xxl mb-9">
+            <div className="max-w-xxl mb-6 md:mb-12">
               <AlbumButtons
                 albums={game.albums}
                 incorrectAlbumIds={game.incorrectAlbumIds}
