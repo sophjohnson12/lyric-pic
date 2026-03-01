@@ -8,12 +8,14 @@ interface GuessCounterProps {
 
 export default function GuessCounter({ guessMessage, guessCount, allowedCount }: GuessCounterProps) {  
     return (
-    <div className="flex flex-col gap-1 w-full text-xs text-gray-500">
+    <div className="flex flex-col gap-1 w-full">
         <div className="flex flex-row gap-2 items-center justify-center py-4">
-            {guessMessage || "Guesses:"}
+            <div className="text-xs text-text/60 text-center font-medium">
+                {guessMessage || "Guesses:"}
+            </div>
             {Array.from({ length: allowedCount }, (_, index) => {
                 const isFlipped = index < guessCount;
-                
+
                 return (
                 <div key={index} className="relative w-6 h-6 [perspective:1000px]">
                     <motion.div

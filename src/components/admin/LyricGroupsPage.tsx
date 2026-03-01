@@ -122,7 +122,7 @@ export default function LyricGroupsPage() {
             onClick={() => { setNewGroupName(''); setShowCreateModal(true) }}
             className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
           >
-            Add Lyric Group
+            Add Group
           </button>
           <button
             onClick={handleBackfill}
