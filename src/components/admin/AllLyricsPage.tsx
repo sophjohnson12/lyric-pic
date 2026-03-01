@@ -13,8 +13,6 @@ import {
   blocklistLyric,
   bulkBlocklistLyrics,
   getBlocklistReasons,
-  getArtistsForDropdown,
-  resetArtistLyricCounts,
   deleteUnusedLyrics,
 } from '../../services/adminService'
 import type { AdminAllLyricRow } from '../../services/adminService'
@@ -38,17 +36,12 @@ export default function AllLyricsPage() {
   const [bulkBlockModal, setBulkBlockModal] = useState(false)
   const [bulkBlockReason, setBulkBlockReason] = useState('')
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [artists, setArtists] = useState<{ id: number; name: string }[]>([])
-  const [resetCountsModal, setResetCountsModal] = useState(false)
-  const [resetArtistId, setResetArtistId] = useState('')
-  const [resetting, setResetting] = useState(false)
   const [deleteUnusedConfirm, setDeleteUnusedConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'All Lyrics' }])
     getBlocklistReasons().then(setReasons)
-    getArtistsForDropdown().then(setArtists)
   }, [setBreadcrumbs])
 
   useEffect(() => {
@@ -149,21 +142,6 @@ export default function AllLyricsPage() {
     }
   }
 
-  async function handleResetCounts() {
-    if (!resetArtistId) return
-    setResetting(true)
-    try {
-      await resetArtistLyricCounts(Number(resetArtistId))
-      showToast('Lyric counts reset successfully')
-      setResetCountsModal(false)
-      setResetArtistId('')
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to reset counts'}`)
-    } finally {
-      setResetting(false)
-    }
-  }
-
   async function handleDeleteUnused() {
     setDeleteUnusedConfirm(false)
     setDeleting(true)
@@ -208,12 +186,6 @@ export default function AllLyricsPage() {
           >
             {deleting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             Delete Unused Lyrics
-          </button>
-          <button
-            onClick={() => { setResetCountsModal(true); setResetArtistId('') }}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center"
-          >
-            Reset Lyric Counts
           </button>
         </div>
       </div>
@@ -398,41 +370,6 @@ export default function AllLyricsPage() {
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               Blocklist
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {resetCountsModal && (
-        <Modal onClose={() => { setResetCountsModal(false); setResetArtistId('') }}>
-          <h2 className="text-lg font-bold mb-2">Reset Lyric Counts</h2>
-          <p className="text-sm text-text/70 mb-4">
-            This action will reset all total lyric counts for the selected artist based on the songs that are currently enabled.
-          </p>
-          <label className="block text-sm font-semibold mb-1">Artist *</label>
-          <select
-            value={resetArtistId}
-            onChange={(e) => setResetArtistId(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
-          >
-            <option value="" disabled>Select an artist...</option>
-            {artists.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setResetCountsModal(false); setResetArtistId('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleResetCounts}
-              disabled={!resetArtistId || resetting}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              {resetting ? 'Resetting...' : 'Reset'}
             </button>
           </div>
         </Modal>

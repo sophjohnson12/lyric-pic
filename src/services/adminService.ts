@@ -130,12 +130,13 @@ export interface AdminArtistRow {
   is_selectable: boolean
   album_count: number
   song_count: number
+  needs_reset: boolean
 }
 
 export async function getAdminArtists(): Promise<AdminArtistRow[]> {
   const { data, error } = await supabase
     .from('artist')
-    .select('id, name, slug, is_selectable')
+    .select('id, name, slug, is_selectable, refreshed_at')
     .order('name')
   if (error) throw error
 
@@ -153,10 +154,23 @@ export async function getAdminArtists(): Promise<AdminArtistRow[]> {
       .eq('artist_id', a.id)
       .eq('is_selectable', true)
 
+    let needsResetQuery = supabase
+      .from('song')
+      .select('*', { count: 'exact', head: true })
+      .eq('artist_id', a.id)
+      .eq('is_selectable', true)
+    if (a.refreshed_at) {
+      needsResetQuery = needsResetQuery.gt('refreshed_at', a.refreshed_at)
+    } else {
+      needsResetQuery = needsResetQuery.not('refreshed_at', 'is', null)
+    }
+    const { count: needsResetCount } = await needsResetQuery
+
     rows.push({
       ...a,
       album_count: albumCount ?? 0,
       song_count: songCount ?? 0,
+      needs_reset: (needsResetCount ?? 0) > 0,
     })
   }
   return rows
@@ -1580,7 +1594,14 @@ export async function resetArtistLyricCounts(artistId: number) {
     .eq('artist_id', artistId)
   if (deleteError) throw deleteError
 
-  if (songIds.length === 0) return
+  if (songIds.length === 0) {
+    const { error: refreshError } = await supabase
+      .from('artist')
+      .update({ refreshed_at: new Date().toISOString() })
+      .eq('id', artistId)
+    if (refreshError) throw refreshError
+    return
+  }
 
   // Get all song_lyric rows for the selectable songs (paginate to avoid 1000-row limit)
   const allSongLyrics: { song_id: number; lyric_id: number; count: number }[] = []
@@ -1649,6 +1670,12 @@ export async function resetArtistLyricCounts(artistId: number) {
     const { error } = await supabase.from('artist_lyric').upsert(batch, { onConflict: 'artist_id,lyric_id' })
     if (error) throw error
   }
+
+  const { error: refreshError } = await supabase
+    .from('artist')
+    .update({ refreshed_at: new Date().toISOString() })
+    .eq('id', artistId)
+  if (refreshError) throw refreshError
 }
 
 export async function backfillLyricStems(): Promise<number> {
