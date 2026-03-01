@@ -15,8 +15,9 @@ export default function ArtistFormPage() {
 
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
   const [loadMessage, setLoadMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [failureMessage, setFailureMessage] = useState('')
   const [guessCounterMessage, setGuessCounterMessage] = useState('')
   const [geniusArtistId, setGeniusArtistId] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#722F37')
@@ -41,8 +42,9 @@ export default function ArtistFormPage() {
       getAdminArtistById(Number(id)).then((a) => {
         setName(a.name)
         setSlug(a.slug)
-        setSuccessMessage(a.success_message ?? '')
         setLoadMessage(a.load_message ?? '')
+        setSuccessMessage(a.success_message ?? '')
+        setFailureMessage(a.failure_message ?? '')
         setGuessCounterMessage(a.guess_counter_message ?? '')
         setGeniusArtistId(a.genius_artist_id?.toString() ?? '')
         setPrimaryColor(a.theme_primary_color)
@@ -77,8 +79,9 @@ export default function ArtistFormPage() {
       const data = {
         name,
         slug,
-        success_message: successMessage,
         load_message: loadMessage,
+        success_message: successMessage,
+        failure_message: failureMessage,
         guess_counter_message: guessCounterMessage,
         genius_artist_id: geniusArtistId ? Number(geniusArtistId) : null,
         theme_primary_color: primaryColor,
@@ -101,7 +104,7 @@ export default function ArtistFormPage() {
     }
   }
 
-  const canSubmit = !!(name.trim() && slug.trim() && successMessage.trim() && geniusArtistId)
+  const canSubmit = !!(name.trim() && slug.trim() && successMessage.trim() && failureMessage.trim() && geniusArtistId)
 
   const inputClass = 'w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm'
 
@@ -135,11 +138,14 @@ export default function ArtistFormPage() {
             </FormField>
           </div>
           <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
+           <FormField label="Load Message" required>
+            <input type="text" value={loadMessage} onChange={(e) => setLoadMessage(e.target.value)} required className={inputClass} />
+          </FormField>
           <FormField label="Success Message" required>
             <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} required className={inputClass} />
           </FormField>
-          <FormField label="Load Message" required>
-            <input type="text" value={loadMessage} onChange={(e) => setLoadMessage(e.target.value)} required className={inputClass} />
+          <FormField label="Failure Message" required>
+            <input type="text" value={failureMessage} onChange={(e) => setFailureMessage(e.target.value)} required className={inputClass} />
           </FormField>
           <FormField label="Guess Counter Message" required>
             <input type="text" value={guessCounterMessage} onChange={(e) => setGuessCounterMessage(e.target.value)} required className={inputClass} />

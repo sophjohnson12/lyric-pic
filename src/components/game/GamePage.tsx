@@ -6,7 +6,7 @@ import WordInput from './WordInput'
 import AlbumButtons from './AlbumDropdown'
 import SongDropdown from './SongDropdown'
 import GuessCounter from './GuessCounter'
-import SuccessModal from './SuccessModal'
+import ResultModal from './ResultModal'
 import InfoModal from './InfoModal'
 import HistoryModal from './HistoryModal'
 import Toast from '../common/Toast'
@@ -264,10 +264,18 @@ export default function GamePage() {
 
       {/* Modals */}
       {game.songGuessed && (
-        <SuccessModal
+        <ResultModal
+          message={game.currentSong.success_message || game.artist.success_message || "You got it!"}
           song={game.currentSong}
           album={correctAlbumForModal}
-          artist={game.artist}
+          onNext={game.nextSong}
+        />
+      )}
+      {game.incorrectSongGuesses.length >= 3 && (
+        <ResultModal
+          message={game.artist.failure_message || "Better luck next time."}
+          song={game.currentSong}
+          album={correctAlbumForModal}
           onNext={game.nextSong}
         />
       )}

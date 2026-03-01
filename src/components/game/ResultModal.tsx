@@ -1,15 +1,14 @@
 import Modal from '../common/Modal'
 import type { Song, Album, Artist } from '../../types/database'
 
-interface SuccessModalProps {
+interface ResultModalProps {
+  message: string
   song: Song
   album: Album | null
-  artist: Artist
   onNext: () => void
 }
 
-export default function SuccessModal({ song, album, artist, onNext }: SuccessModalProps) {
-  const message = song.success_message || artist.success_message || 'You got it!'
+export default function ResultModal({ message, song, album, onNext }: ResultModalProps) {
   const songDisplay = song.featured_artists?.length
     ? `${song.name} ft. ${song.featured_artists.join(', ')}`
     : song.name
