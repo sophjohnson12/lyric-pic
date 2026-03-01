@@ -19,6 +19,8 @@ import {
   toggleSongLyricSelectable,
   getBlocklistReasons,
   markLyricReviewed,
+  getLyricGroupsForDropdown,
+  addLyricToGroup,
 } from '../../services/adminService'
 import type { AdminLyricRow, AdminLyricImageRow, AdminLyricSongRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
@@ -45,6 +47,11 @@ export default function LyricPage() {
   const [reviewing, setReviewing] = useState(false)
   const [disablingAll, setDisablingAll] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [showGroupModal, setShowGroupModal] = useState(false)
+  const [allGroups, setAllGroups] = useState<{ id: number; name: string }[]>([])
+  const [groupSearch, setGroupSearch] = useState('')
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
+  const [addingToGroup, setAddingToGroup] = useState(false)
 
   const lyricLabel = lyric?.root_word ?? 'Lyric'
   const currentBreadcrumbs: Breadcrumb[] = state?.parentBreadcrumbs
@@ -206,6 +213,37 @@ export default function LyricPage() {
     }
   }
 
+  async function openGroupModal() {
+    setGroupSearch('')
+    setSelectedGroupId(lyric?.lyric_group_id ?? null)
+    setShowGroupModal(true)
+    if (allGroups.length === 0) {
+      try {
+        const data = await getLyricGroupsForDropdown()
+        setAllGroups(data)
+      } catch (err) {
+        showToast(`Error: ${err instanceof Error ? err.message : 'Failed to load groups'}`)
+        setShowGroupModal(false)
+      }
+    }
+  }
+
+  async function handleAddToGroup() {
+    if (!lyricId || selectedGroupId === null) return
+    setAddingToGroup(true)
+    try {
+      await addLyricToGroup(Number(lyricId), selectedGroupId)
+      const group = allGroups.find((g) => g.id === selectedGroupId)!
+      setLyric((prev) => prev ? { ...prev, lyric_group_id: selectedGroupId, lyric_group_name: group.name } : prev)
+      setShowGroupModal(false)
+      showToast(`Added to group "${group.name}-"`)
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to add to group'}`)
+    } finally {
+      setAddingToGroup(false)
+    }
+  }
+
   async function handleToggleSongLyricSelectable(songId: number, value: boolean) {
     if (!lyricId) return
     try {
@@ -249,14 +287,21 @@ export default function LyricPage() {
       <div className="items-center gap-4 mb-4 col-span-1">
         <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
           <h2 className="text-4xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={handleDisableAll}
               disabled={disablingAll || loading || images.length === 0}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5 w-full sm:w-auto"
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {disablingAll && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
               Disable All Images
+            </button>
+            <button
+              onClick={openGroupModal}
+              disabled={loading}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              Add to Group
             </button>
           </div>
         </div>
@@ -401,6 +446,57 @@ export default function LyricPage() {
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               {blocklistModalMode === 'change_reason' ? 'Save' : 'Yes'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {showGroupModal && (
+        <Modal onClose={() => setShowGroupModal(false)}>
+          <h2 className="text-lg font-bold mb-4">Add to Group</h2>
+          <input
+            type="text"
+            placeholder="Search groups..."
+            value={groupSearch}
+            onChange={(e) => setGroupSearch(e.target.value)}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
+            autoFocus
+          />
+          <ul className="max-h-64 overflow-y-auto border border-primary/20 rounded-lg mb-4 text-base sm:text-sm">
+            {(() => {
+              const filtered = allGroups.filter((g) =>
+                g.name.toLowerCase().includes(groupSearch.trim().toLowerCase())
+              ).slice(0, 50)
+              if (filtered.length === 0) return <li className="px-3 py-2 text-text/50">No results</li>
+              return filtered.map((g) => {
+                const selected = selectedGroupId === g.id
+                return (
+                  <li
+                    key={g.id}
+                    onClick={() => setSelectedGroupId(g.id)}
+                    className={`px-3 py-2 cursor-pointer hover:bg-primary/10 flex items-center justify-between ${selected ? 'bg-primary/10' : ''}`}
+                  >
+                    <span className={selected ? 'font-semibold' : ''}>{g.name}-</span>
+                    {selected && <Check size={14} className="text-primary" />}
+                  </li>
+                )
+              })
+            })()}
+          </ul>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowGroupModal(false)}
+              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddToGroup}
+              disabled={selectedGroupId === null || addingToGroup}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            >
+              {addingToGroup && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent inline-block mr-1.5" />}
+              Save
             </button>
           </div>
         </Modal>

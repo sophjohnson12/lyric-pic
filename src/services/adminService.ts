@@ -1818,6 +1818,15 @@ export async function getLyricGroups(): Promise<AdminLyricGroupRow[]> {
   }))
 }
 
+export async function getLyricGroupsForDropdown(): Promise<{ id: number; name: string }[]> {
+  const { data, error } = await supabase
+    .from('lyric_group')
+    .select('id, name')
+    .order('name')
+  if (error) throw error
+  return data as { id: number; name: string }[]
+}
+
 export async function getLyricGroupById(id: number): Promise<{ id: number; name: string; created_at: string } | null> {
   const { data, error } = await supabase
     .from('lyric_group')
