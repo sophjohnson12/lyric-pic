@@ -1,5 +1,5 @@
 import Modal from '../common/Modal'
-import type { Song, Album, Artist } from '../../types/database'
+import type { Song, Album } from '../../types/database'
 
 interface ResultModalProps {
   message: string
