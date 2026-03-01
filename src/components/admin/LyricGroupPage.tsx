@@ -98,7 +98,7 @@ export default function LyricGroupPage() {
       await Promise.all([...selectedLyricIds].map((lyricId) => addLyricToGroup(lyricId, Number(groupId))))
       const added = allLyrics.filter((l) => selectedLyricIds.has(l.id))
       setMembers((prev) =>
-        [...prev, ...added.map((l) => ({ id: l.id, root_word: l.root_word, is_blocklisted: l.is_blocklisted }))]
+        [...prev, ...added.map((l) => ({ id: l.id, root_word: l.root_word, is_blocklisted: l.is_blocklisted, stem: null }))]
           .sort((a, b) => a.root_word.localeCompare(b.root_word))
       )
       setShowAddModal(false)
@@ -147,7 +147,7 @@ export default function LyricGroupPage() {
             <ArrowLeft size={16} />
             Back
           </Link>
-          <h1 className="text-2xl font-bold">{group.name}-</h1>
+          <h1 className="text-2xl font-bold">Lyric Group</h1>
         </div>
         <button
           onClick={() => setDeleteConfirm(true)}
@@ -159,8 +159,10 @@ export default function LyricGroupPage() {
         </button>
       </div>
 
+      <h2 className="text-4xl font-bold mb-4">{group.name}-</h2>
+
       <div className="mb-2">
-        <h2 className="text-lg font-semibold mb-2">Members ({members.length})</h2>
+        <h2 className="text-lg font-semibold mb-2">Members</h2>
         <button
           onClick={openAddModal}
           className="bg-primary text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 w-full sm:w-auto flex items-center justify-center"
@@ -183,6 +185,10 @@ export default function LyricGroupPage() {
                 {m.root_word}
               </Link>
             ),
+          },
+          {
+            header: 'Stem',
+            accessor: (m) => m.stem ?? '—',
           },
           {
             header: 'Blocklisted?',

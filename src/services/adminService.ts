@@ -1760,6 +1760,7 @@ export interface AdminLyricGroupMemberRow {
   id: number
   root_word: string
   is_blocklisted: boolean
+  stem: string | null
 }
 
 export async function getLyricGroups(): Promise<AdminLyricGroupRow[]> {
@@ -1806,7 +1807,7 @@ export async function getLyricGroupById(id: number): Promise<{ id: number; name:
 export async function getLyricGroupMembers(groupId: number): Promise<AdminLyricGroupMemberRow[]> {
   const { data, error } = await supabase
     .from('lyric')
-    .select('id, root_word, is_blocklisted')
+    .select('id, root_word, is_blocklisted, stem')
     .eq('lyric_group_id', groupId)
     .order('root_word')
   if (error) throw error
