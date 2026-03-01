@@ -1024,7 +1024,27 @@ export async function getAllImages(
   page: number,
   pageSize: number,
   blocklistedFilter: 'all' | 'yes' | 'no' = 'no',
+  search = '',
 ): Promise<{ data: AdminAllImageRow[]; total: number }> {
+  let searchImageIds: number[] | null = null
+  if (search.trim()) {
+    const { data: lyrics, error: lyricError } = await supabase
+      .from('lyric')
+      .select('id')
+      .ilike('root_word', `%${search.trim()}%`)
+    if (lyricError) throw lyricError
+    const lyricIds = (lyrics ?? []).map((l) => l.id)
+    if (lyricIds.length === 0) return { data: [], total: 0 }
+
+    const { data: lyricImages, error: liError } = await supabase
+      .from('lyric_image')
+      .select('image_id')
+      .in('lyric_id', lyricIds)
+    if (liError) throw liError
+    searchImageIds = [...new Set((lyricImages ?? []).map((li) => li.image_id as number))]
+    if (searchImageIds.length === 0) return { data: [], total: 0 }
+  }
+
   const buildQuery = () => {
     let q = supabase
       .from('image')
@@ -1032,6 +1052,7 @@ export async function getAllImages(
       .order('id')
     if (blocklistedFilter === 'yes') q = q.eq('is_blocklisted', true)
     if (blocklistedFilter === 'no') q = q.or('is_blocklisted.eq.false,is_blocklisted.is.null')
+    if (searchImageIds !== null) q = q.in('id', searchImageIds)
     return q
   }
 

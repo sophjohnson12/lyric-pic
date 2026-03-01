@@ -10,6 +10,8 @@ export default function AllImagesPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
   const [loading, setLoading] = useState(true)
 
@@ -18,14 +20,22 @@ export default function AllImagesPage() {
   }, [setBreadcrumbs])
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  useEffect(() => {
     loadData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, blocklistedFilter])
+  }, [page, pageSize, blocklistedFilter, debouncedSearch])
 
   async function loadData() {
     setLoading(true)
     try {
-      const result = await getAllImages(page, pageSize, blocklistedFilter)
+      const result = await getAllImages(page, pageSize, blocklistedFilter, debouncedSearch)
       setData(result.data)
       setTotal(result.total)
     } finally {
@@ -52,6 +62,13 @@ export default function AllImagesPage() {
     <div>
       <h1 className="text-2xl font-bold mb-4">All Images</h1>
       <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Search images..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        />
         <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
           Blocklisted:
           <select
