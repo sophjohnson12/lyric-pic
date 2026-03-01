@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Trash2, Check } from 'lucide-react'
+import { ArrowLeft, Trash2, Check, Plus } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -16,6 +16,7 @@ import {
   getAllLyricsForDropdown,
   getLyricGroupImages,
   updateLyricImageSelectable,
+  addLyricImage,
 } from '../../services/adminService'
 import type { AdminLyricGroupMemberRow, AdminLyricGroupImageRow } from '../../services/adminService'
 
@@ -42,6 +43,7 @@ export default function LyricGroupPage() {
   const [imagesLoading, setImagesLoading] = useState(false)
   const [togglingCell, setTogglingCell] = useState<string | null>(null)
   const [togglingAll, setTogglingAll] = useState<number | null>(null)
+  const [creatingCell, setCreatingCell] = useState<string | null>(null)
 
   useEffect(() => {
     setBreadcrumbs([
@@ -163,6 +165,19 @@ export default function LyricGroupPage() {
     }
     return result
   }, [groupImages, uniqueImages])
+
+  async function handleCreateCell(lyricId: number, imageId: number) {
+    const key = `${lyricId}-${imageId}`
+    setCreatingCell(key)
+    try {
+      await addLyricImage(imageId, lyricId)
+      setGroupImages((prev) => [...prev, { lyric_id: lyricId, image_id: imageId, url: uniqueImages.find((i) => i.image_id === imageId)!.url, is_selectable: true }])
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to create'}`)
+    } finally {
+      setCreatingCell(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -344,7 +359,14 @@ export default function LyricGroupPage() {
                         return (
                           <td key={img.image_id} className="px-3 py-2.5 text-center">
                             {isSelectable === undefined ? (
-                              <span className="text-text/20">—</span>
+                              <button
+                                onClick={() => handleCreateCell(member.id, img.image_id)}
+                                disabled={creatingCell === key}
+                                className="text-text/30 hover:text-primary disabled:opacity-30 cursor-pointer"
+                                title="Add lyric_image record"
+                              >
+                                <Plus size={16} />
+                              </button>
                             ) : (
                               <div className="flex justify-center">
                                 <ToggleSwitch
