@@ -123,7 +123,21 @@ export default function GamePage() {
     )
   }
 
+  if (game.artist && !game.artist.is_selectable) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center p-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-primary mb-2 font-[Quicksand]">
+            Coming Soon
+          </h2>
+          <p className="text-text/60">{game.artist.name} isn't available yet. Check back later!</p>
+        </div>
+      </div>
+    )
+  }
+
   if (game.allSongsPlayed) {
+    const noSongs = game.totalPlayableSongs === 0
     return (
       <div className="min-h-screen bg-bg">
         <Header
@@ -137,15 +151,21 @@ export default function GamePage() {
         <div className="flex items-center justify-center p-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-primary mb-2 font-[Quicksand]">
-              You've played all the songs!
+              {noSongs ? 'No songs available yet.' : "You've played all the songs!"}
             </h2>
-            <p className="text-text/60 mb-4">Clear your history to play again.</p>
-            <button
-              onClick={() => setShowHistory(true)}
-              className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
-            >
-              View History
-            </button>
+            {noSongs ? (
+              <p className="text-text/60">Check back later for new songs.</p>
+            ) : (
+              <>
+                <p className="text-text/60 mb-4">Clear your history to play again.</p>
+                <button
+                  onClick={() => setShowHistory(true)}
+                  className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
+                >
+                  View History
+                </button>
+              </>
+            )}
           </div>
         </div>
         {showHistory && (
