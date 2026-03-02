@@ -309,7 +309,15 @@ export default function GamePage() {
           onCancel={() => setShowSkipConfirm(false)}
         />
       )}
-      {showInfo && <InfoModal albums={game.albums} onClose={() => setShowInfo(false)} />}
+      {showInfo && (
+        <InfoModal 
+        wordCount={game.puzzleWords.length}
+        guessCount={game.maxGuessCount}
+        songCount={game.totalPlayableSongs}
+        albums={game.albums} 
+        onClose={() => setShowInfo(false)} 
+        />
+      )}
       {showHistory && (
         <HistoryModal
           playedSongIds={game.playedSongIds}
