@@ -19,6 +19,7 @@ import {
   clearSongLyrics,
   hideSong,
   bulkUpdateSongAlbum,
+  getAdminPlayableSongIds,
 } from '../../services/adminService'
 import type { AdminSongRow } from '../../services/adminService'
 
@@ -43,8 +44,10 @@ export default function ArtistSongsPage() {
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
   const albumParam = searchParams.get('album')
   const albumFilter = albumParam === 'none' ? 'none' as const : albumParam ? Number(albumParam) : null
-  const enabledParam = searchParams.get('enabled')
-  const enabledFilter = enabledParam === 'false' ? false : enabledParam === 'true' ? true : null
+  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('yes')
+  const [playableSongIds, setPlayableSongIds] = useState<Set<number>>(new Set())
+  const [allSongs, setAllSongs] = useState<AdminSongRow[]>([])
+  const [allSongsLoading, setAllSongsLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
@@ -98,15 +101,26 @@ export default function ArtistSongsPage() {
   }, [aid])
 
   const loadSongs = useCallback(async () => {
-    setLoading(true)
-    try {
-      const result = await getAdminSongs(aid, page, pageSize, albumFilter, enabledFilter, debouncedSearch)
-      setSongs(result.rows)
-      setTotal(result.total)
-    } finally {
-      setLoading(false)
+    getAdminPlayableSongIds(aid).then(setPlayableSongIds)
+    if (playableFilter !== 'all') {
+      setAllSongsLoading(true)
+      try {
+        const result = await getAdminSongs(aid, 1, 0, albumFilter, null, debouncedSearch)
+        setAllSongs(result.rows)
+      } finally {
+        setAllSongsLoading(false)
+      }
+    } else {
+      setLoading(true)
+      try {
+        const result = await getAdminSongs(aid, page, pageSize, albumFilter, null, debouncedSearch)
+        setSongs(result.rows)
+        setTotal(result.total)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [aid, page, pageSize, albumFilter, enabledFilter, debouncedSearch])
+  }, [aid, page, pageSize, albumFilter, debouncedSearch, playableFilter])
 
   useEffect(() => {
     loadSongs()
@@ -135,9 +149,17 @@ export default function ArtistSongsPage() {
     }
   }
 
+  function handleFilterChange(newFilter: 'all' | 'yes' | 'no') {
+    setPlayableFilter(newFilter)
+    setPage(1)
+  }
+
   async function handleToggle(id: number, value: boolean) {
     await toggleSongSelectable(id, value)
-    setSongs((prev) => prev.map((s) => (s.id === id ? { ...s, is_selectable: value } : s)))
+    const updateRow = (s: AdminSongRow) => s.id === id ? { ...s, is_selectable: value } : s
+    setSongs((prev) => prev.map(updateRow))
+    if (allSongs.length > 0) setAllSongs((prev) => prev.map(updateRow))
+    getAdminPlayableSongIds(aid).then(setPlayableSongIds)
   }
 
   function showToast(message: string) {
@@ -336,6 +358,13 @@ export default function ArtistSongsPage() {
     }
   }
 
+  const isFiltered = playableFilter !== 'all'
+  const displayedSongs: AdminSongRow[] = isFiltered
+    ? allSongs.filter((s) =>
+        playableFilter === 'yes' ? playableSongIds.has(s.id) : !playableSongIds.has(s.id),
+      )
+    : songs
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -360,6 +389,40 @@ export default function ArtistSongsPage() {
             Add Song
           </Link>
         </div>
+      </div>
+      <div className="mb-3 flex justify-end gap-2">
+        <button
+          onClick={() => { setBulkEditAlbumModal(true); setBulkAlbumValue('') }}
+          disabled={selectedIds.size === 0 || !!bulkLoading}
+          className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {bulkLoading?.type === 'edit' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          Edit All
+        </button>
+        <button
+          onClick={() => setBulkProcessConfirm(true)}
+          disabled={selectedIds.size === 0 || !!bulkLoading}
+          className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {bulkLoading?.type === 'process' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          {bulkLoading?.type === 'process' ? `Process All (${bulkLoading.done}/${bulkLoading.total})` : 'Process All'}
+        </button>
+        <button
+          onClick={() => setBulkClearConfirm(true)}
+          disabled={selectedIds.size === 0 || !!bulkLoading}
+          className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {bulkLoading?.type === 'clear' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          {bulkLoading?.type === 'clear' ? `Clear All (${bulkLoading.done}/${bulkLoading.total})` : 'Clear All'}
+        </button>
+        <button
+          onClick={() => setBulkHideConfirm(true)}
+          disabled={selectedIds.size === 0 || !!bulkLoading}
+          className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+        >
+          {bulkLoading?.type === 'hide' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          {bulkLoading?.type === 'hide' ? `Hide All (${bulkLoading.done}/${bulkLoading.total})` : 'Hide All'}
+        </button>
       </div>
       <div className="mb-4 flex items-center">
         <input
@@ -391,80 +454,39 @@ export default function ArtistSongsPage() {
             <option key={a.id} value={a.id}>{a.name}</option>
           ))}
         </select>
-        <label className="text-sm font-medium mr-2 ml-4">Enabled:</label>
+        <label className="text-sm font-medium mr-2 ml-4">Is Playable?</label>
         <select
-          value={enabledParam ?? ''}
-          onChange={(e) => {
-            const val = e.target.value
-            setPage(1)
-            const params = new URLSearchParams(searchParams)
-            if (val) {
-              params.set('enabled', val)
-            } else {
-              params.delete('enabled')
-            }
-            setSearchParams(params)
-          }}
+          value={playableFilter}
+          onChange={(e) => handleFilterChange(e.target.value as 'all' | 'yes' | 'no')}
           className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
         >
-          <option value="">All</option>
-          <option value="true">Yes</option>
-          <option value="false">No</option>
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
         </select>
-        <div className="flex items-center gap-2 ml-auto">
-          <button
-            onClick={() => { setBulkEditAlbumModal(true); setBulkAlbumValue('') }}
-            disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {bulkLoading?.type === 'edit' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Edit All
-          </button>
-          <button
-            onClick={() => setBulkProcessConfirm(true)}
-            disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {bulkLoading?.type === 'process' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            {bulkLoading?.type === 'process' ? `Process All (${bulkLoading.done}/${bulkLoading.total})` : 'Process All'}
-          </button>
-          <button
-            onClick={() => setBulkClearConfirm(true)}
-            disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {bulkLoading?.type === 'clear' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            {bulkLoading?.type === 'clear' ? `Clear All (${bulkLoading.done}/${bulkLoading.total})` : 'Clear All'}
-          </button>
-          <button
-            onClick={() => setBulkHideConfirm(true)}
-            disabled={selectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-          >
-            {bulkLoading?.type === 'hide' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            {bulkLoading?.type === 'hide' ? `Hide All (${bulkLoading.done}/${bulkLoading.total})` : 'Hide All'}
-          </button>
-        </div>
       </div>
       <AdminTable
-        data={songs}
+        data={displayedSongs}
         keyFn={(s) => s.id}
-        loading={loading}
+        loading={loading || allSongsLoading}
+        rowClassName={(s) => playableSongIds.size > 0 && !playableSongIds.has(s.id) ? 'bg-gray-100' : undefined}
         selection={{
           selected: selectedIds,
           onToggle: handleToggleSelect,
           onToggleAll: handleToggleAllSelect,
         }}
-        serverPagination={{
-          total,
-          page,
-          pageSize,
-          onPageChange: setPage,
-          onPageSizeChange: (size) => {
-            setPageSize(size)
-            setPage(1)
+        {...(!isFiltered && {
+          serverPagination: {
+            total,
+            page,
+            pageSize,
+            onPageChange: setPage,
+            onPageSizeChange: (size) => {
+              setPageSize(size)
+              setPage(1)
+            },
           },
-        }}
+        })}
         columns={[
           { header: 'Name', accessor: (s) => (
               <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} className="text-primary hover:underline">

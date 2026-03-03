@@ -533,6 +533,15 @@ export async function getLoadStatuses(): Promise<{ id: number; status: string }[
 
 // ─── Song Lyrics (read-only) ─────────────────────────────
 
+export async function getAdminPlayableSongIds(artistId: number): Promise<Set<number>> {
+  const { data, error } = await supabase
+    .from('playable_song')
+    .select('id')
+    .eq('artist_id', artistId)
+  if (error) throw error
+  return new Set((data as { id: number }[]).map((r) => r.id))
+}
+
 export async function getPlayableSongLyricIds(songId: number): Promise<Set<number>> {
   const { data, error } = await supabase.rpc('get_song_lyrics', { p_song_id: songId })
   if (error) throw error
