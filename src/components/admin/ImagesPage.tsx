@@ -67,7 +67,7 @@ export default function ImagesPage() {
           placeholder="Search images..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm"
         />
         <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
           Blocklisted:
