@@ -6,7 +6,7 @@ import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
 import ConfirmPopup from '../common/ConfirmPopup'
 import Toast from '../common/Toast'
-import { getAdminArtists, toggleArtistSelectable, resetArtistLyricCounts } from '../../services/adminService'
+import { getAdminArtists, toggleArtistSelectable, resetArtistLyricCounts, getAdminPlayableArtistIds } from '../../services/adminService'
 import type { AdminArtistRow } from '../../services/adminService'
 
 export default function ArtistsPage() {
@@ -15,6 +15,8 @@ export default function ArtistsPage() {
   const [loading, setLoading] = useState(true)
   const [resetConfirm, setResetConfirm] = useState<{ id: number; name: string } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [playableArtistIds, setPlayableArtistIds] = useState<Set<number>>(new Set())
+  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('all')
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Artists' }])
@@ -22,6 +24,7 @@ export default function ArtistsPage() {
 
   useEffect(() => {
     loadArtists()
+    getAdminPlayableArtistIds().then(setPlayableArtistIds)
   }, [])
 
   async function loadArtists() {
@@ -35,7 +38,8 @@ export default function ArtistsPage() {
 
   async function handleToggle(id: number, value: boolean) {
     await toggleArtistSelectable(id, value)
-    setArtists((prev) => prev.map((a) => (a.id === id ? { ...a, is_selectable: value } : a)))
+    loadArtists()
+    getAdminPlayableArtistIds().then(setPlayableArtistIds)
   }
 
   function showToast(message: string) {
@@ -67,10 +71,27 @@ export default function ArtistsPage() {
           Add Artist
         </Link>
       </div>
+      <div className="flex items-center gap-2 mb-4">
+        <label className="text-sm font-medium">Is Playable?</label>
+        <select
+          value={playableFilter}
+          onChange={(e) => setPlayableFilter(e.target.value as 'all' | 'yes' | 'no')}
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        >
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
       <AdminTable
-        data={artists}
+        data={
+          playableFilter === 'all' ? artists :
+          playableFilter === 'yes' ? artists.filter((a) => playableArtistIds.has(a.id)) :
+          artists.filter((a) => !playableArtistIds.has(a.id))
+        }
         keyFn={(a) => a.id}
         loading={loading}
+        rowClassName={(a) => playableArtistIds.size > 0 && !playableArtistIds.has(a.id) ? 'bg-gray-100' : undefined}
         columns={[
           { header: 'Name', accessor: (a) => (
               <Link to={`/admin/artists/${a.id}`} className="text-primary hover:underline">

@@ -140,40 +140,40 @@ export async function getAdminArtists(): Promise<AdminArtistRow[]> {
     .order('name')
   if (error) throw error
 
-  const rows: AdminArtistRow[] = []
-  for (const a of data) {
-    const { count: albumCount } = await supabase
-      .from('album')
-      .select('*', { count: 'exact', head: true })
-      .eq('artist_id', a.id)
-      .eq('is_selectable', true)
+  const rows = await Promise.all(
+    data.map(async (a) => {
+      let needsResetQuery = supabase
+        .from('song')
+        .select('*', { count: 'exact', head: true })
+        .eq('artist_id', a.id)
+        .eq('is_selectable', true)
+      if (a.refreshed_at) {
+        needsResetQuery = needsResetQuery.gt('refreshed_at', a.refreshed_at)
+      } else {
+        needsResetQuery = needsResetQuery.not('refreshed_at', 'is', null)
+      }
 
-    const { count: songCount } = await supabase
-      .from('song')
-      .select('*', { count: 'exact', head: true })
-      .eq('artist_id', a.id)
-      .eq('is_selectable', true)
+      const [{ count: albumCount }, { count: songCount }, { count: needsResetCount }] = await Promise.all([
+        supabase.from('playable_album').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
+        supabase.from('playable_song').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
+        needsResetQuery,
+      ])
 
-    let needsResetQuery = supabase
-      .from('song')
-      .select('*', { count: 'exact', head: true })
-      .eq('artist_id', a.id)
-      .eq('is_selectable', true)
-    if (a.refreshed_at) {
-      needsResetQuery = needsResetQuery.gt('refreshed_at', a.refreshed_at)
-    } else {
-      needsResetQuery = needsResetQuery.not('refreshed_at', 'is', null)
-    }
-    const { count: needsResetCount } = await needsResetQuery
-
-    rows.push({
-      ...a,
-      album_count: albumCount ?? 0,
-      song_count: songCount ?? 0,
-      needs_reset: (needsResetCount ?? 0) > 0,
-    })
-  }
+      return {
+        ...a,
+        album_count: albumCount ?? 0,
+        song_count: songCount ?? 0,
+        needs_reset: (needsResetCount ?? 0) > 0,
+      }
+    }),
+  )
   return rows
+}
+
+export async function getAdminPlayableArtistIds(): Promise<Set<number>> {
+  const { data, error } = await supabase.from('playable_artist').select('id')
+  if (error) throw error
+  return new Set((data as { id: number }[]).map((r) => r.id))
 }
 
 export async function getAdminArtistById(id: number) {
