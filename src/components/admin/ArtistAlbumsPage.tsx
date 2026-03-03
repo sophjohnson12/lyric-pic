@@ -54,7 +54,8 @@ export default function ArtistAlbumsPage() {
       return
     }
     await toggleAlbumSelectable(id, true)
-    setAlbums((prev) => prev.map((a) => (a.id === id ? { ...a, is_selectable: true } : a)))
+    loadData()
+    getAdminPlayableAlbumIds(aid).then(setPlayableAlbumIds)
   }
 
   async function handleDisableConfirm() {
@@ -62,7 +63,7 @@ export default function ArtistAlbumsPage() {
     const id = disableAlbumId
     setDisableAlbumId(null)
     await toggleAlbumSelectable(id, false)
-    setAlbums((prev) => prev.map((a) => (a.id === id ? { ...a, is_selectable: false } : a)))
+    loadData()
     getAdminPlayableAlbumIds(aid).then(setPlayableAlbumIds)
   }
 
