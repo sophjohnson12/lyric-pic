@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { Pencil, Download, Cog, Trash2, EyeOff, ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
@@ -37,7 +37,7 @@ export default function ArtistSongsPage() {
   const aid = Number(artistId)
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [songs, setSongs] = useState<AdminSongRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [total, setTotal] = useState(0)
@@ -46,8 +46,8 @@ export default function ArtistSongsPage() {
   const albumFilter = albumParam === 'none' ? 'none' as const : albumParam ? Number(albumParam) : null
   const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('yes')
   const [playableSongIds, setPlayableSongIds] = useState<Set<number>>(new Set())
-  const [allSongs, setAllSongs] = useState<AdminSongRow[]>([])
-  const [allSongsLoading, setAllSongsLoading] = useState(false)
+  const playableIdsRef = useRef<number[]>([])
+  const [playableIdsReady, setPlayableIdsReady] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
@@ -79,6 +79,12 @@ export default function ArtistSongsPage() {
 
   useEffect(() => {
     getAdminArtistById(aid).then((a) => setArtistName(a.name))
+    setPlayableIdsReady(false)
+    getAdminPlayableSongIds(aid).then((ids) => {
+      playableIdsRef.current = [...ids]
+      setPlayableSongIds(ids)
+      setPlayableIdsReady(true)
+    })
   }, [aid])
 
   useEffect(() => {
@@ -101,26 +107,21 @@ export default function ArtistSongsPage() {
   }, [aid])
 
   const loadSongs = useCallback(async () => {
-    getAdminPlayableSongIds(aid).then(setPlayableSongIds)
-    if (playableFilter !== 'all') {
-      setAllSongsLoading(true)
-      try {
-        const result = await getAdminSongs(aid, 1, 0, albumFilter, null, debouncedSearch)
-        setAllSongs(result.rows)
-      } finally {
-        setAllSongsLoading(false)
-      }
-    } else {
-      setLoading(true)
-      try {
-        const result = await getAdminSongs(aid, page, pageSize, albumFilter, null, debouncedSearch)
-        setSongs(result.rows)
-        setTotal(result.total)
-      } finally {
-        setLoading(false)
-      }
+    if (!playableIdsReady && playableFilter !== 'all') return
+    setLoading(true)
+    try {
+      const ids = playableIdsRef.current
+      const result = await getAdminSongs(
+        aid, page, pageSize, albumFilter, null, debouncedSearch,
+        playableFilter === 'yes' ? ids : null,
+        playableFilter === 'no' ? ids : null,
+      )
+      setSongs(result.rows)
+      setTotal(result.total)
+    } finally {
+      setLoading(false)
     }
-  }, [aid, page, pageSize, albumFilter, debouncedSearch, playableFilter])
+  }, [aid, page, pageSize, albumFilter, debouncedSearch, playableFilter, playableIdsReady])
 
   useEffect(() => {
     loadSongs()
@@ -156,10 +157,12 @@ export default function ArtistSongsPage() {
 
   async function handleToggle(id: number, value: boolean) {
     await toggleSongSelectable(id, value)
-    const updateRow = (s: AdminSongRow) => s.id === id ? { ...s, is_selectable: value } : s
-    setSongs((prev) => prev.map(updateRow))
-    if (allSongs.length > 0) setAllSongs((prev) => prev.map(updateRow))
-    getAdminPlayableSongIds(aid).then(setPlayableSongIds)
+    setSongs((prev) => prev.map((s) => s.id === id ? { ...s, is_selectable: value } : s))
+    getAdminPlayableSongIds(aid).then((ids) => {
+      playableIdsRef.current = [...ids]
+      setPlayableSongIds(ids)
+      loadSongs()
+    })
   }
 
   function showToast(message: string) {
@@ -358,12 +361,6 @@ export default function ArtistSongsPage() {
     }
   }
 
-  const isFiltered = playableFilter !== 'all'
-  const displayedSongs: AdminSongRow[] = isFiltered
-    ? allSongs.filter((s) =>
-        playableFilter === 'yes' ? playableSongIds.has(s.id) : !playableSongIds.has(s.id),
-      )
-    : songs
 
   return (
     <div>
@@ -466,27 +463,25 @@ export default function ArtistSongsPage() {
         </select>
       </div>
       <AdminTable
-        data={displayedSongs}
+        data={songs}
         keyFn={(s) => s.id}
-        loading={loading || allSongsLoading}
+        loading={loading || (!playableIdsReady && playableFilter !== 'all')}
         rowClassName={(s) => playableSongIds.size > 0 && !playableSongIds.has(s.id) ? 'bg-gray-100' : undefined}
         selection={{
           selected: selectedIds,
           onToggle: handleToggleSelect,
           onToggleAll: handleToggleAllSelect,
         }}
-        {...(!isFiltered && {
-          serverPagination: {
-            total,
-            page,
-            pageSize,
-            onPageChange: setPage,
-            onPageSizeChange: (size) => {
-              setPageSize(size)
-              setPage(1)
-            },
+        serverPagination={{
+          total,
+          page,
+          pageSize,
+          onPageChange: setPage,
+          onPageSizeChange: (size) => {
+            setPageSize(size)
+            setPage(1)
           },
-        })}
+        }}
         columns={[
           { header: 'Name', accessor: (s) => (
               <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} className="text-primary hover:underline">

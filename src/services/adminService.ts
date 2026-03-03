@@ -381,7 +381,12 @@ export async function getAdminSongs(
   albumId?: number | 'none' | null,
   enabledFilter?: boolean | null,
   search?: string,
+  includeIds?: number[] | null,
+  excludeIds?: number[] | null,
 ): Promise<PaginatedResult<AdminSongRow>> {
+  // includeIds with empty array means "no playable songs" — return early
+  if (includeIds && includeIds.length === 0) return { rows: [], total: 0 }
+
   let query = supabase
     .from('song')
     .select('id, name, album_id, is_selectable, load_status_id, genius_song_id, lyrics_full_text', { count: 'exact' })
@@ -401,6 +406,12 @@ export async function getAdminSongs(
 
   if (search) {
     query = query.ilike('name', `%${search}%`)
+  }
+
+  if (includeIds && includeIds.length > 0) {
+    query = query.in('id', includeIds)
+  } else if (excludeIds && excludeIds.length > 0) {
+    query = query.not('id', 'in', `(${excludeIds.join(',')})`)
   }
 
   if (pageSize > 0) {
