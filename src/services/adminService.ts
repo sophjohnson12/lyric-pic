@@ -603,44 +603,54 @@ export async function getAdminSongLyrics(
   const { data, error, count } = await query
   if (error) throw error
 
-  const rows: AdminSongLyricRow[] = []
-  for (const sl of data) {
-    const { data: lyric } = await supabase
-      .from('lyric')
-      .select('root_word, is_blocklisted, is_flagged, lyric_group_id, lyric_group!lyric_group_id(id, name)')
-      .eq('id', sl.lyric_id)
-      .single()
-    const lyricGroup = (lyric as unknown as { lyric_group: { id: number; name: string } | null } | null)?.lyric_group ?? null
+  const lyricIds = data.map((sl) => sl.lyric_id)
+  if (lyricIds.length === 0) return { rows: [], total: count ?? 0 }
 
-    const [{ data: artistLyric }, { count: imageCount }] = await Promise.all([
-      supabase
-        .from('artist_lyric')
-        .select('total_count, song_count')
-        .eq('artist_id', artistId)
-        .eq('lyric_id', sl.lyric_id)
-        .maybeSingle(),
+  // Batch all related data in one round-trip: lyric info, artist counts, and per-lyric image counts
+  const [lyricsResult, artistLyricsResult, ...imageCountResults] = await Promise.all([
+    supabase
+      .from('lyric')
+      .select('id, root_word, is_blocklisted, is_flagged, lyric_group_id, lyric_group!lyric_group_id(id, name)')
+      .in('id', lyricIds),
+    supabase
+      .from('artist_lyric')
+      .select('lyric_id, total_count, song_count')
+      .eq('artist_id', artistId)
+      .in('lyric_id', lyricIds),
+    ...lyricIds.map((id) =>
       supabase
         .from('lyric_image')
         .select('*', { count: 'exact', head: true })
-        .eq('lyric_id', sl.lyric_id)
+        .eq('lyric_id', id)
         .eq('is_selectable', true),
-    ])
+    ),
+  ])
 
-    rows.push({
+  const lyricMap = new Map(
+    (lyricsResult.data ?? []).map((l) => [l.id, l as typeof l & { lyric_group: { id: number; name: string } | null }]),
+  )
+  const artistLyricMap = new Map(
+    (artistLyricsResult.data ?? []).map((al) => [al.lyric_id, al]),
+  )
+
+  const rows: AdminSongLyricRow[] = data.map((sl, i) => {
+    const lyric = lyricMap.get(sl.lyric_id)
+    const artistLyric = artistLyricMap.get(sl.lyric_id)
+    return {
       lyric_id: sl.lyric_id,
       root_word: lyric?.root_word ?? '',
       count: sl.count,
       is_in_title: sl.is_in_title,
       total_count: artistLyric?.total_count ?? 0,
       song_count: artistLyric?.song_count ?? 0,
-      image_count: imageCount ?? 0,
+      image_count: imageCountResults[i]?.count ?? 0,
       is_selectable: sl.is_selectable,
       is_blocklisted: lyric?.is_blocklisted ?? false,
       is_flagged: lyric?.is_flagged ?? false,
       lyric_group_id: lyric?.lyric_group_id ?? null,
-      lyric_group_name: lyricGroup?.name ?? null,
-    })
-  }
+      lyric_group_name: lyric?.lyric_group?.name ?? null,
+    }
+  })
 
   return { rows, total: count ?? 0 }
 }
