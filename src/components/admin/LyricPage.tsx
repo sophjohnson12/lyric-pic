@@ -25,6 +25,9 @@ import {
 } from '../../services/adminService'
 import type { AdminLyricRow, AdminLyricImageRow, AdminLyricSongRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
+import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
+import { saveLyricImages } from '../../services/supabase'
+import FetchImagesModal from './FetchImagesModal'
 
 export default function LyricPage() {
   const { lyricId } = useParams<{ lyricId: string }>()
@@ -54,6 +57,8 @@ export default function LyricPage() {
   const [groupSearch, setGroupSearch] = useState('')
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
   const [addingToGroup, setAddingToGroup] = useState(false)
+  const [showFetchModal, setShowFetchModal] = useState(false)
+  const [fetchingImages, setFetchingImages] = useState(false)
 
   const lyricLabel = lyric?.root_word ?? 'Lyric'
   const currentBreadcrumbs: Breadcrumb[] = state?.parentBreadcrumbs
@@ -248,6 +253,30 @@ export default function LyricPage() {
     }
   }
 
+  async function handleFetchImages(_api: string, count: number) {
+    if (!lyric || !lyricId) return
+    setShowFetchModal(false)
+    setFetchingImages(true)
+    try {
+      const images = await searchImagesOrThrow(lyric.root_word, count)
+      if (images.length > 0) {
+        await saveLyricImages(lyric.id, images)
+        setImages(await getLyricImages(Number(lyricId)))
+        showToast(`Fetched ${images.length} images`)
+      } else {
+        showToast('No images found')
+      }
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        showToast('Rate limit hit — try again later')
+      } else {
+        showToast(`Error: ${err instanceof Error ? err.message : 'Failed to fetch images'}`)
+      }
+    } finally {
+      setFetchingImages(false)
+    }
+  }
+
   async function handleToggleSongLyricSelectable(songId: number, value: boolean) {
     if (!lyricId) return
     try {
@@ -306,6 +335,14 @@ export default function LyricPage() {
               className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               Add to Group
+            </button>
+            <button
+              onClick={() => setShowFetchModal(true)}
+              disabled={fetchingImages || loading}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {fetchingImages && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Fetch Images
             </button>
           </div>
         </div>
@@ -510,6 +547,13 @@ export default function LyricPage() {
             </button>
           </div>
         </Modal>
+      )}
+
+      {showFetchModal && (
+        <FetchImagesModal
+          onConfirm={handleFetchImages}
+          onCancel={() => setShowFetchModal(false)}
+        />
       )}
 
       <Toast message={toast} />

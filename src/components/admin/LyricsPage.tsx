@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FlagOff, Ban, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
@@ -16,6 +16,9 @@ import {
   getBlocklistReasons,
 } from '../../services/adminService'
 import type { AdminFlaggedLyricRow, AdminUnreviewedLyricRow } from '../../services/adminService'
+import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
+import { saveLyricImages } from '../../services/supabase'
+import FetchImagesModal from './FetchImagesModal'
 
 export default function LyricsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
@@ -36,6 +39,9 @@ export default function LyricsPage() {
   const [bulkBlockModal, setBulkBlockModal] = useState(false)
   const [bulkBlockReason, setBulkBlockReason] = useState('')
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
+  const [showFetchImagesModal, setShowFetchImagesModal] = useState(false)
+  const [fetchImagesJob, setFetchImagesJob] = useState<{ done: number; total: number } | null>(null)
+  const fetchCancelRef = useRef(false)
 
   useEffect(() => {
     setBreadcrumbs([
@@ -48,11 +54,15 @@ export default function LyricsPage() {
   }, [])
 
   useEffect(() => {
-    if (!bulkLoading) return
+    if (!bulkLoading && !fetchImagesJob) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading])
+  }, [bulkLoading, fetchImagesJob])
+
+  useEffect(() => {
+    return () => { fetchCancelRef.current = true }
+  }, [])
 
   async function loadData() {
     setLoading(true)
@@ -180,6 +190,34 @@ export default function LyricsPage() {
     })
   }
 
+  async function handleBulkFetchImages(_api: string, count: number) {
+    setShowFetchImagesModal(false)
+    const selectedLyrics = flagged.filter((l) => flaggedSelectedIds.has(l.id))
+    if (selectedLyrics.length === 0) return
+    fetchCancelRef.current = false
+    setFetchImagesJob({ done: 0, total: selectedLyrics.length })
+    try {
+      for (let i = 0; i < selectedLyrics.length; i++) {
+        if (fetchCancelRef.current) break
+        try {
+          const images = await searchImagesOrThrow(selectedLyrics[i].root_word, count)
+          if (images.length > 0) await saveLyricImages(selectedLyrics[i].id, images)
+        } catch (err) {
+          if (err instanceof RateLimitError) {
+            showToast('Rate limit hit — try again later')
+            setFetchImagesJob(null)
+            return
+          }
+          console.error(`Failed for "${selectedLyrics[i].root_word}":`, err)
+        }
+        setFetchImagesJob({ done: i + 1, total: selectedLyrics.length })
+      }
+      showToast(`Fetched images for ${selectedLyrics.length} lyrics`)
+    } finally {
+      setFetchImagesJob(null)
+    }
+  }
+
   async function handleBulkBlockUnreviewedConfirm() {
     if (!bulkBlockUnreviewedReason || unreviewedSelectedIds.size === 0) return
     setBulkLoading({ type: 'block-unreviewed', done: 0, total: 1 })
@@ -203,10 +241,10 @@ return (
 
       <div className="flex flex-wrap items-center gap-y-2 mb-2">
         <h2 className="text-lg font-semibold">Flagged Lyrics</h2>
-        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+        <div className="grid grid-cols-3 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
           <button
             onClick={handleBulkUnflag}
-            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
+            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading || !!fetchImagesJob}
             className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {bulkLoading?.type === 'unflag' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
@@ -214,11 +252,19 @@ return (
           </button>
           <button
             onClick={() => { setBulkBlockModal(true); setBulkBlockReason('') }}
-            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
+            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading || !!fetchImagesJob}
             className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             {bulkLoading?.type === 'block' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
             Block All
+          </button>
+          <button
+            onClick={() => setShowFetchImagesModal(true)}
+            disabled={flaggedSelectedIds.size === 0 || !!fetchImagesJob || !!bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {fetchImagesJob && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            {fetchImagesJob ? `Fetch Images (${fetchImagesJob.done}/${fetchImagesJob.total})` : 'Fetch Images'}
           </button>
         </div>
       </div>
@@ -433,6 +479,13 @@ return (
             </button>
           </div>
         </Modal>
+      )}
+
+      {showFetchImagesModal && (
+        <FetchImagesModal
+          onConfirm={handleBulkFetchImages}
+          onCancel={() => setShowFetchImagesModal(false)}
+        />
       )}
 
       <Toast message={toast} />

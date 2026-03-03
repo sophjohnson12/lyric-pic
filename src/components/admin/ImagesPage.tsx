@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FlagOff, Ban, Pencil, ExternalLink } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
@@ -12,17 +12,12 @@ import {
   blocklistImage,
   bulkBlocklistImages,
   getBlocklistReasons,
-  getLyricsWithoutImages,
-  markLyricFetched,
   getDuplicateImages,
   clearLyricsForBlocklistedImages,
   saveSharedImages,
 } from '../../services/adminService'
 import type { AdminFlaggedImageRow, AdminDuplicateImageRow } from '../../services/adminService'
 import ToggleSwitch from './ToggleSwitch'
-import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
-import { saveLyricImages } from '../../services/supabase'
-import { IMAGES_TO_CACHE } from '../../utils/constants'
 
 function ImageThumb({ url, imageId }: { url: string; imageId: number }) {
   return (
@@ -55,9 +50,6 @@ export default function ImagesPage() {
   const [bulkBlockDuplicatesModal, setBulkBlockDuplicatesModal] = useState(false)
   const [bulkBlockDuplicatesReason, setBulkBlockDuplicatesReason] = useState('')
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
-  const [fetchJob, setFetchJob] = useState<{ done: number; total: number | null } | null>(null)
-  const [fetchResult, setFetchResult] = useState<{ done: number; total: number; rateLimited: boolean } | null>(null)
-  const fetchCancelRef = useRef(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [showReviewed, setShowReviewed] = useState(false)
@@ -78,15 +70,11 @@ export default function ImagesPage() {
   }, [])
 
   useEffect(() => {
-    if (!bulkLoading && !fetchJob && !savingShared) return
+    if (!bulkLoading && !savingShared) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading, fetchJob, savingShared])
-
-  useEffect(() => {
-    return () => { fetchCancelRef.current = true }
-  }, [])
+  }, [bulkLoading, savingShared])
 
   async function loadData() {
     setLoading(true)
@@ -107,44 +95,6 @@ export default function ImagesPage() {
   function showToast(message: string) {
     setToast(message)
     setTimeout(() => setToast(null), 5000)
-  }
-
-  async function handleFetchNewImages() {
-    fetchCancelRef.current = false
-    setFetchJob({ done: 0, total: null })
-    setFetchResult(null)
-    try {
-      const [lyrics, blocklistReasons] = await Promise.all([getLyricsWithoutImages(), getBlocklistReasons()])
-      if (fetchCancelRef.current) return
-      if (lyrics.length === 0) {
-        showToast('All lyrics already have images')
-        setFetchJob(null)
-        return
-      }
-      const noImagesReasonId = blocklistReasons.find((r) => r.reason === 'no_images')?.id ?? null
-      setFetchJob({ done: 0, total: lyrics.length })
-      for (let i = 0; i < lyrics.length; i++) {
-        if (fetchCancelRef.current) break
-        try {
-          const images = await searchImagesOrThrow(lyrics[i].root_word, IMAGES_TO_CACHE)
-          if (images.length > 0) await saveLyricImages(lyrics[i].id, images)
-          await markLyricFetched(lyrics[i].id, noImagesReasonId)
-        } catch (err) {
-          if (err instanceof RateLimitError) {
-            setFetchResult({ done: i, total: lyrics.length, rateLimited: true })
-            setFetchJob(null)
-            return
-          }
-          console.error(`Failed for "${lyrics[i].root_word}":`, err)
-        }
-        setFetchJob({ done: i + 1, total: lyrics.length })
-      }
-      setFetchResult({ done: lyrics.length, total: lyrics.length, rateLimited: false })
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to load lyrics'}`)
-    } finally {
-      setFetchJob(null)
-    }
   }
 
   async function handleSaveSharedImages() {
@@ -299,29 +249,15 @@ export default function ImagesPage() {
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowClearConfirm(true)}
-              disabled={clearing || !!fetchJob}
+              disabled={clearing}
               className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {clearing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
               Clear Lyrics For Blocklist
             </button>
             <button
-              onClick={handleFetchNewImages}
-              disabled={!!fetchJob || clearing}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {fetchJob && (
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              )}
-              {fetchJob
-                ? fetchJob.total === null
-                  ? 'Loading...'
-                  : `Fetching... ${fetchJob.done.toLocaleString()} / ${fetchJob.total.toLocaleString()}`
-                : 'Fetch New Images'}
-            </button>
-            <button
               onClick={handleSaveSharedImages}
-              disabled={savingShared || !!fetchJob || clearing}
+              disabled={savingShared || clearing}
               className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {savingShared && (
@@ -330,13 +266,6 @@ export default function ImagesPage() {
               Save Shared Images
             </button>
           </div>
-          {fetchResult && (
-            <p className={`text-xs ${fetchResult.rateLimited ? 'text-amber-600' : 'text-text/60'}`}>
-              {fetchResult.rateLimited
-                ? `Rate limit hit — ${fetchResult.done.toLocaleString()} / ${fetchResult.total.toLocaleString()} complete. Run again when the limit refreshes.`
-                : `Done — ${fetchResult.total.toLocaleString()} lyrics fetched.`}
-            </p>
-          )}
         </div>
       </div>
 
