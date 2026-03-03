@@ -709,47 +709,34 @@ export interface AdminAllLyricRow {
   is_flagged: boolean
   is_blocklisted: boolean
   image_count: number
+  is_playable: boolean
   lyric_group: { id: number; name: string } | null
 }
 
-async function getSelectableImageCountsForLyrics(lyricIds: number[]): Promise<Map<number, number>> {
-  const counts = new Map<number, number>()
-  if (lyricIds.length === 0) return counts
-  const { data, error } = await supabase
-    .from('lyric_image')
-    .select('lyric_id')
-    .in('lyric_id', lyricIds)
-    .eq('is_selectable', true)
-  if (error) throw error
-  for (const row of data ?? []) {
-    counts.set(row.lyric_id, (counts.get(row.lyric_id) ?? 0) + 1)
-  }
-  return counts
-}
 
 export async function getAllLyrics(
   page: number,
   pageSize: number,
   search: string,
   blocklistedFilter: 'all' | 'yes' | 'no' = 'no',
-  minImages: number | null = null,
-  maxImages: number | null = null,
+  playableFilter: 'all' | 'yes' | 'no' = 'all',
 ): Promise<{ data: AdminAllLyricRow[]; total: number }> {
-  // Determine if image count filtering is needed.
-  // min=null,max=null or min=0,max=null → no filter (every lyric qualifies).
-  const needsImageFilter = (minImages !== null && minImages > 0) || maxImages !== null
+  // Fetch min_image_count threshold for playability computation.
+  const { data: configData } = await supabase.from('app_config').select('min_image_count').maybeSingle()
+  const minImageCount = (configData?.min_image_count ?? 2) as number
 
-  // Pre-fetch selectable image counts per lyric when filtering is required.
-  // Uses a DB aggregate to avoid the default PostgREST row limit (1000).
-  // Lyrics absent from the result have an implicit count of 0.
-  let countsMap: Map<number, number> | null = null
-  if (needsImageFilter) {
-    const { data: imgData } = await supabase.rpc('get_selectable_image_counts')
-    countsMap = new Map()
-    for (const row of (imgData ?? []) as { lyric_id: number; image_count: number }[]) {
-      countsMap.set(row.lyric_id, row.image_count)
-    }
+  // Always fetch selectable image counts via DB aggregate (SECURITY DEFINER, no PostgREST row
+  // limit). This single source is used for both the playability filter and per-row image_count /
+  // is_playable values, guaranteeing they are always consistent with each other.
+  const { data: imgData } = await supabase.rpc('get_selectable_image_counts')
+  const globalCountsMap = new Map<number, number>()
+  for (const row of (imgData ?? []) as { lyric_id: number; image_count: number }[]) {
+    globalCountsMap.set(row.lyric_id, row.image_count)
   }
+
+  const playableIds = [...globalCountsMap.entries()]
+    .filter(([, c]) => c >= minImageCount)
+    .map(([id]) => id)
 
   const buildQuery = (from: number, to: number) => {
     let q = supabase
@@ -760,27 +747,21 @@ export async function getAllLyrics(
     if (search) q = q.ilike('root_word', `%${search}%`)
     if (blocklistedFilter === 'yes') q = q.eq('is_blocklisted', true)
     if (blocklistedFilter === 'no') q = q.or('is_blocklisted.eq.false,is_blocklisted.is.null')
-    if (needsImageFilter && countsMap) {
-      const min = minImages ?? 0
-      const max = maxImages
-      if (min === 0) {
-        // Exclude lyrics whose count exceeds max. Lyrics with 0 images (absent from
-        // countsMap) pass through automatically since they're not in the exclude list.
-        const excluded = [...countsMap.entries()]
-          .filter(([, c]) => max !== null && c > max)
-          .map(([id]) => id)
-        if (excluded.length > 0) q = q.not('id', 'in', `(${excluded.join(',')})`)
-      } else {
-        // Include only lyrics whose count is within [min, max].
-        // Lyrics with 0 images are naturally excluded (not in countsMap).
-        const included = [...countsMap.entries()]
-          .filter(([, c]) => c >= min && (max === null || c <= max))
-          .map(([id]) => id)
-        q = included.length > 0 ? q.in('id', included) : q.in('id', [-1])
-      }
+    if (playableFilter === 'yes') {
+      q = playableIds.length > 0 ? q.in('id', playableIds) : q.in('id', [-1])
+    } else if (playableFilter === 'no') {
+      // Non-playable lyrics are those NOT in playableIds.
+      // Lyrics with 0 images (absent from globalCountsMap) are naturally included.
+      if (playableIds.length > 0) q = q.not('id', 'in', `(${playableIds.join(',')})`)
     }
     return q
   }
+
+  const rowToResult = (l: any) => ({
+    ...l,
+    image_count: globalCountsMap.get(l.id) ?? 0,
+    is_playable: (globalCountsMap.get(l.id) ?? 0) >= minImageCount,
+  })
 
   if (pageSize === 0) {
     const all: any[] = []
@@ -795,18 +776,15 @@ export async function getAllLyrics(
       if ((data ?? []).length < batchSize) break
       from += batchSize
     }
-    const imageCounts = await getSelectableImageCountsForLyrics(all.map((l) => l.id))
-    return { data: all.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })) as AdminAllLyricRow[], total }
+    return { data: all.map(rowToResult) as AdminAllLyricRow[], total }
   }
 
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
   const { data, error, count } = await buildQuery(from, to)
   if (error) throw error
-  const rows = (data ?? []) as any[]
-  const imageCounts = await getSelectableImageCountsForLyrics(rows.map((l) => l.id))
   return {
-    data: rows.map((l) => ({ ...l, image_count: imageCounts.get(l.id) ?? 0 })) as AdminAllLyricRow[],
+    data: ((data ?? []) as any[]).map(rowToResult) as AdminAllLyricRow[],
     total: count ?? 0,
   }
 }
