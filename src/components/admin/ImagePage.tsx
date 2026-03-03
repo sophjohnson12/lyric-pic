@@ -5,7 +5,7 @@ import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
 import Toast from '../common/Toast'
-import { getImageById, getImageLyrics, updateLyricImageSelectable, blocklistImage, unblocklistImage, flagImage, unflagImage, markImageReviewed, getBlocklistReasons, getAllLyricsForDropdown, addLyricImage } from '../../services/adminService'
+import { getImageById, getImageLyrics, updateLyricImageSelectable, blocklistImage, unblocklistImage, flagImage, unflagImage, getBlocklistReasons, getAllLyricsForDropdown, addLyricImage } from '../../services/adminService'
 import type { AdminImageLyricRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
 import ToggleSwitch from './ToggleSwitch'
@@ -26,7 +26,6 @@ export default function ImagePage() {
   const [selectedReason, setSelectedReason] = useState('')
   const [blocklisting, setBlocklisting] = useState(false)
   const [flagging, setFlagging] = useState(false)
-  const [reviewing, setReviewing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [showAddLyricModal, setShowAddLyricModal] = useState(false)
   const [allLyrics, setAllLyrics] = useState<{ id: number; root_word: string; is_blocklisted: boolean }[]>([])
@@ -64,7 +63,6 @@ export default function ImagePage() {
   useEffect(() => {
     if (!imageId) return
     setLoading(true)
-    setReviewing(false)
     setBlocklisting(false)
     Promise.all([
       getImageById(Number(imageId)),
@@ -76,18 +74,6 @@ export default function ImagePage() {
       setReasons(rsnList)
     }).finally(() => setLoading(false))
   }, [imageId])
-
-  async function handleMarkReviewed() {
-    if (!imageId) return
-    setReviewing(true)
-    try {
-      await markImageReviewed(Number(imageId))
-      navigateNext()
-    } catch (err) {
-      console.error('Failed to mark as reviewed:', err)
-      setReviewing(false)
-    }
-  }
 
   function openBlockModal() {
     const unknownReason = reasons.find((r) => r.reason === 'unknown_image')
@@ -212,7 +198,7 @@ export default function ImagePage() {
           <div className="grid grid-cols-2 sm:contents gap-2">
             <button
               onClick={handleFlag}
-              disabled={flagging || blocklisting || reviewing || loading}
+              disabled={flagging || blocklisting || loading}
               className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
@@ -220,21 +206,22 @@ export default function ImagePage() {
             </button>
             <button
               onClick={image?.is_blocklisted ? handleUnblock : openBlockModal}
-              disabled={blocklisting || reviewing || flagging || loading}
+              disabled={blocklisting || flagging || loading}
               className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {blocklisting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
               {image?.is_blocklisted ? 'Unblock' : 'Block'}
             </button>
           </div>
-          <button
-            onClick={handleMarkReviewed}
-            disabled={reviewing || blocklisting || flagging || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {reviewing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Mark as Reviewed
-          </button>
+          {state?.reviewQueue !== undefined && (
+            <button
+              onClick={navigateNext}
+              disabled={loading}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              Next Image
+            </button>
+          )}
         </div>
       </div>
 

@@ -12,12 +12,10 @@ import {
   blocklistImage,
   bulkBlocklistImages,
   getBlocklistReasons,
-  getDuplicateImages,
   clearLyricsForBlocklistedImages,
   saveSharedImages,
 } from '../../services/adminService'
-import type { AdminFlaggedImageRow, AdminDuplicateImageRow } from '../../services/adminService'
-import ToggleSwitch from './ToggleSwitch'
+import type { AdminFlaggedImageRow } from '../../services/adminService'
 
 function ImageThumb({ url, imageId }: { url: string; imageId: number }) {
   return (
@@ -37,7 +35,6 @@ export default function ImagesPage() {
   const navigate = useNavigate()
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [flagged, setFlagged] = useState<AdminFlaggedImageRow[]>([])
-  const [duplicates, setDuplicates] = useState<AdminDuplicateImageRow[]>([])
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
@@ -46,20 +43,12 @@ export default function ImagesPage() {
   const [flaggedSelectedIds, setFlaggedSelectedIds] = useState<Set<string | number>>(new Set())
   const [bulkBlockModal, setBulkBlockModal] = useState(false)
   const [bulkBlockReason, setBulkBlockReason] = useState('')
-  const [duplicatesSelectedIds, setDuplicatesSelectedIds] = useState<Set<string | number>>(new Set())
-  const [bulkBlockDuplicatesModal, setBulkBlockDuplicatesModal] = useState(false)
-  const [bulkBlockDuplicatesReason, setBulkBlockDuplicatesReason] = useState('')
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
-  const [showReviewed, setShowReviewed] = useState(false)
   const [savingShared, setSavingShared] = useState(false)
 
   const unknownImageId = String(reasons.find((r) => r.reason.toLowerCase() === 'unknown_image')?.id ?? '')
-
-  const unreviewedDuplicates = duplicates.filter((img) =>
-    !(img.reviewed_at && (!img.updated_at || img.reviewed_at > img.updated_at))
-  )
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Images' }])
@@ -79,13 +68,11 @@ export default function ImagesPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const [f, d, r] = await Promise.all([
+      const [f, r] = await Promise.all([
         getFlaggedImages(),
-        getDuplicateImages(),
         getBlocklistReasons(),
       ])
       setFlagged(f)
-      setDuplicates(d)
       setReasons(r)
     } finally {
       setLoading(false)
@@ -205,46 +192,10 @@ export default function ImagesPage() {
     }
   }
 
-  function handleToggleDuplicatesSelect(key: string | number) {
-    setDuplicatesSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
-
-  function handleToggleAllDuplicatesSelect(keys: (string | number)[]) {
-    setDuplicatesSelectedIds((prev) => {
-      const allSelected = keys.every((k) => prev.has(k))
-      const next = new Set(prev)
-      if (allSelected) keys.forEach((k) => next.delete(k))
-      else keys.forEach((k) => next.add(k))
-      return next
-    })
-  }
-
-  async function handleBulkBlockDuplicatesConfirm() {
-    if (!bulkBlockDuplicatesReason || duplicatesSelectedIds.size === 0) return
-    setBulkLoading({ type: 'block-dupes', done: 0, total: 1 })
-    try {
-      await bulkBlocklistImages([...duplicatesSelectedIds] as number[], Number(bulkBlockDuplicatesReason))
-      showToast(`Blocklisted ${duplicatesSelectedIds.size} images`)
-      setBulkBlockDuplicatesModal(false)
-      setBulkBlockDuplicatesReason('')
-      setDuplicatesSelectedIds(new Set())
-      loadData()
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
-    } finally {
-      setBulkLoading(null)
-    }
-  }
-
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-y-3 mb-4">
-        <h1 className="text-2xl font-bold">Unreviewed Images</h1>
+        <h1 className="text-2xl font-bold">Flagged Images</h1>
         <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <button
@@ -271,7 +222,18 @@ export default function ImagesPage() {
 
       <div className="flex flex-wrap items-center gap-y-2 mb-2">
         <h2 className="text-lg font-semibold">Flagged Images</h2>
-        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+        <div className="grid grid-cols-3 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+          <button
+            onClick={() => {
+              if (flagged.length === 0) return
+              const [first, ...rest] = flagged
+              navigate(`/admin/images/${first.id}`, { state: { reviewQueue: rest.map((img) => img.id) } })
+            }}
+            disabled={flagged.length === 0 || !!bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center"
+          >
+            Review All
+          </button>
           <button
             onClick={handleBulkUnflag}
             disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
@@ -346,83 +308,6 @@ export default function ImagesPage() {
         ]}
       />
 
-      <div className="mt-8 mb-2">
-        <div className="flex flex-wrap items-center gap-y-2 mb-2">
-          <h2 className="text-lg font-semibold">Duplicate Images</h2>
-          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
-            <button
-              onClick={() => {
-                if (unreviewedDuplicates.length === 0) return
-                const [first, ...rest] = unreviewedDuplicates
-                navigate(`/admin/images/${first.id}`, { state: { reviewQueue: rest.map((r) => r.id) } })
-              }}
-              disabled={unreviewedDuplicates.length === 0 || loading}
-              className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center"
-            >
-              Review All
-            </button>
-            <button
-              onClick={() => { setBulkBlockDuplicatesModal(true); setBulkBlockDuplicatesReason(unknownImageId) }}
-              disabled={duplicatesSelectedIds.size === 0 || !!bulkLoading}
-              className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {bulkLoading?.type === 'block-dupes' && (
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              )}
-              Block All
-            </button>
-          </div>
-        </div>
-        <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-          Is Reviewed?
-          <ToggleSwitch checked={showReviewed} onChange={setShowReviewed} />
-        </label>
-      </div>
-      <AdminTable
-        data={duplicates.filter((img) => {
-          const isReviewed = !!img.reviewed_at && (!img.updated_at || img.reviewed_at > img.updated_at)
-          return showReviewed ? isReviewed : !isReviewed
-        })}
-        keyFn={(img) => img.id}
-        loading={loading}
-        selection={{
-          selected: duplicatesSelectedIds,
-          onToggle: handleToggleDuplicatesSelect,
-          onToggleAll: handleToggleAllDuplicatesSelect,
-        }}
-        columns={[
-          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} /> },
-          { header: 'Image ID', accessor: (img) => img.image_id },
-          { header: 'Lyrics', accessor: (img) => img.lyric_count },
-          {
-            header: 'Actions',
-            accessor: (img) => (
-              <div className="flex items-center gap-2">
-                <Link to={`/admin/images/${img.id}`} className="hover:opacity-70" title="View image">
-                  <Pencil size={20} className="drop-shadow-md" />
-                </Link>
-                <button
-                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownImageId) }}
-                  className="hover:opacity-70 cursor-pointer"
-                  title="Blocklist"
-                >
-                  <Ban size={20} className="drop-shadow-md" />
-                </button>
-                <a
-                  href={img.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-70"
-                  title="Open image"
-                >
-                  <ExternalLink size={20} className="drop-shadow-md" />
-                </a>
-              </div>
-            ),
-          },
-        ]}
-      />
-
       {blocklistModal && (
         <Modal onClose={() => { setBlocklistModal(null); setSelectedReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Image</h2>
@@ -456,41 +341,6 @@ export default function ImagesPage() {
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               Yes
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {bulkBlockDuplicatesModal && (
-        <Modal onClose={() => { setBulkBlockDuplicatesModal(false); setBulkBlockDuplicatesReason('') }}>
-          <h2 className="text-lg font-bold mb-2">Blocklist Images</h2>
-          <p className="text-sm text-text/70 mb-4">
-            Blocklist all selected duplicate images ({duplicatesSelectedIds.size}). They will be hidden from the game.
-          </p>
-          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
-          <select
-            value={bulkBlockDuplicatesReason}
-            onChange={(e) => setBulkBlockDuplicatesReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
-          >
-            <option value="" disabled>Select a reason...</option>
-            {reasons.map((r) => (
-              <option key={r.id} value={r.id}>{r.reason}</option>
-            ))}
-          </select>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setBulkBlockDuplicatesModal(false); setBulkBlockDuplicatesReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleBulkBlockDuplicatesConfirm}
-              disabled={!bulkBlockDuplicatesReason}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              Blocklist
             </button>
           </div>
         </Modal>
