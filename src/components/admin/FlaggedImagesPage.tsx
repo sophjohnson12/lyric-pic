@@ -4,7 +4,6 @@ import { FlagOff, Ban, Pencil, ExternalLink } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
-import ConfirmPopup from '../common/ConfirmPopup'
 import Toast from '../common/Toast'
 import {
   getFlaggedImages,

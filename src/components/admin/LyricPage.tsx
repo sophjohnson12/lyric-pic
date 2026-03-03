@@ -48,7 +48,6 @@ export default function LyricPage() {
   const [selectedReason, setSelectedReason] = useState('')
   const [blocklisting, setBlocklisting] = useState(false)
   const [flagging, setFlagging] = useState(false)
-  const [disablingAll, setDisablingAll] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [minImageCount, setMinImageCount] = useState<number | null>(null)
   const [showGroupModal, setShowGroupModal] = useState(false)
