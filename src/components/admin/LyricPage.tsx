@@ -18,7 +18,6 @@ import {
   updateLyricImageSelectable,
   toggleSongLyricSelectable,
   getBlocklistReasons,
-  markLyricReviewed,
   getLyricGroupsForDropdown,
   addLyricToGroup,
   getAppConfig,
@@ -49,7 +48,6 @@ export default function LyricPage() {
   const [selectedReason, setSelectedReason] = useState('')
   const [blocklisting, setBlocklisting] = useState(false)
   const [flagging, setFlagging] = useState(false)
-  const [reviewing, setReviewing] = useState(false)
   const [disablingAll, setDisablingAll] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [minImageCount, setMinImageCount] = useState<number | null>(null)
@@ -77,7 +75,6 @@ export default function LyricPage() {
 
   useEffect(() => {
     if (!lyricId) return
-    setReviewing(false)
     setLoading(true)
     Promise.all([
       getLyricById(Number(lyricId)),
@@ -181,18 +178,6 @@ export default function LyricPage() {
       navigate(`/admin/lyrics/${next}`, { state: { reviewQueue: rest } })
     } else {
       navigate(backUrl)
-    }
-  }
-
-  async function handleMarkReviewed() {
-    if (!lyricId) return
-    setReviewing(true)
-    try {
-      await markLyricReviewed(Number(lyricId))
-      navigateNext()
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to mark as reviewed'}`)
-      setReviewing(false)
     }
   }
 
@@ -308,16 +293,17 @@ export default function LyricPage() {
         {reviewQueue.length > 0 && (
           <span className="sm:hidden w-full text-sm text-text/50">{reviewQueue.length} remaining</span>
         )}
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <button
-            onClick={handleMarkReviewed}
-            disabled={reviewing || loading}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {reviewing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Mark as Reviewed
-          </button>
-        </div>
+        {state?.reviewQueue !== undefined && (
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button
+              onClick={navigateNext}
+              disabled={loading}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              Next Lyric
+            </button>
+          </div>
+        )}
       </div>
       <div className="items-center gap-4 mb-4 col-span-1">
         <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
