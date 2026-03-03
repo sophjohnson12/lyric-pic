@@ -34,7 +34,7 @@ export interface GameState {
 }
 
 export interface PexelsImage {
-  id: number
+  id: number | string
   url: string
   photographer: string
 }

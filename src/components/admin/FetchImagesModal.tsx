@@ -15,16 +15,28 @@ export default function FetchImagesModal({ onConfirm, onCancel }: FetchImagesMod
       <h2 className="text-lg font-bold mb-4">Fetch Images</h2>
       <div className="mb-4">
         <label className="block text-sm font-semibold mb-2">API</label>
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="radio"
-            name="fetch-api"
-            value="pexels"
-            checked={api === 'pexels'}
-            onChange={() => setApi('pexels')}
-          />
-          Pexels
-        </label>
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="fetch-api"
+              value="pexels"
+              checked={api === 'pexels'}
+              onChange={() => setApi('pexels')}
+            />
+            Pexels
+          </label>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="fetch-api"
+              value="unsplash"
+              checked={api === 'unsplash'}
+              onChange={() => setApi('unsplash')}
+            />
+            Unsplash
+          </label>
+        </div>
       </div>
       <div className="mb-6">
         <label className="block text-sm font-semibold mb-1">Count</label>

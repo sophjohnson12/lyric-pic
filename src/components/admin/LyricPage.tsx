@@ -25,7 +25,8 @@ import {
 } from '../../services/adminService'
 import type { AdminLyricRow, AdminLyricImageRow, AdminLyricSongRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
-import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
+import { searchImagesOrThrow as pexelsSearch, RateLimitError } from '../../services/pexels'
+import { searchImagesOrThrow as unsplashSearch } from '../../services/unsplash'
 import { saveLyricImages } from '../../services/supabase'
 import FetchImagesModal from './FetchImagesModal'
 
@@ -253,12 +254,13 @@ export default function LyricPage() {
     }
   }
 
-  async function handleFetchImages(_api: string, count: number) {
+  async function handleFetchImages(api: string, count: number) {
     if (!lyric || !lyricId) return
     setShowFetchModal(false)
     setFetchingImages(true)
     try {
-      const images = await searchImagesOrThrow(lyric.root_word, count)
+      const search = api === 'unsplash' ? unsplashSearch : pexelsSearch
+      const images = await search(lyric.root_word, count)
       if (images.length > 0) {
         await saveLyricImages(lyric.id, images)
         setImages(await getLyricImages(Number(lyricId)))

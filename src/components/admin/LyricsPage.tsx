@@ -16,7 +16,8 @@ import {
   getBlocklistReasons,
 } from '../../services/adminService'
 import type { AdminFlaggedLyricRow, AdminUnreviewedLyricRow } from '../../services/adminService'
-import { searchImagesOrThrow, RateLimitError } from '../../services/pexels'
+import { searchImagesOrThrow as pexelsSearch, RateLimitError } from '../../services/pexels'
+import { searchImagesOrThrow as unsplashSearch } from '../../services/unsplash'
 import { saveLyricImages } from '../../services/supabase'
 import FetchImagesModal from './FetchImagesModal'
 
@@ -190,17 +191,18 @@ export default function LyricsPage() {
     })
   }
 
-  async function handleBulkFetchImages(_api: string, count: number) {
+  async function handleBulkFetchImages(api: string, count: number) {
     setShowFetchImagesModal(false)
     const selectedLyrics = flagged.filter((l) => flaggedSelectedIds.has(l.id))
     if (selectedLyrics.length === 0) return
     fetchCancelRef.current = false
     setFetchImagesJob({ done: 0, total: selectedLyrics.length })
+    const search = api === 'unsplash' ? unsplashSearch : pexelsSearch
     try {
       for (let i = 0; i < selectedLyrics.length; i++) {
         if (fetchCancelRef.current) break
         try {
-          const images = await searchImagesOrThrow(selectedLyrics[i].root_word, count)
+          const images = await search(selectedLyrics[i].root_word, count)
           if (images.length > 0) await saveLyricImages(selectedLyrics[i].id, images)
         } catch (err) {
           if (err instanceof RateLimitError) {
