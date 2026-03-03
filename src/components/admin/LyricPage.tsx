@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, CircleCheck, CircleX } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -21,6 +21,7 @@ import {
   markLyricReviewed,
   getLyricGroupsForDropdown,
   addLyricToGroup,
+  getAppConfig,
 } from '../../services/adminService'
 import type { AdminLyricRow, AdminLyricImageRow, AdminLyricSongRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
@@ -47,6 +48,7 @@ export default function LyricPage() {
   const [reviewing, setReviewing] = useState(false)
   const [disablingAll, setDisablingAll] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [minImageCount, setMinImageCount] = useState<number | null>(null)
   const [showGroupModal, setShowGroupModal] = useState(false)
   const [allGroups, setAllGroups] = useState<{ id: number; name: string }[]>([])
   const [groupSearch, setGroupSearch] = useState('')
@@ -76,11 +78,13 @@ export default function LyricPage() {
       getLyricImages(Number(lyricId)),
       getLyricSongs(Number(lyricId)),
       getBlocklistReasons(),
-    ]).then(([lyr, imgs, sngs, rsnList]) => {
+      getAppConfig(),
+    ]).then(([lyr, imgs, sngs, rsnList, config]) => {
       setLyric(lyr)
       setImages(imgs)
       setSongs(sngs)
       setReasons(rsnList)
+      setMinImageCount(config.min_image_count)
     }).finally(() => setLoading(false))
   }, [lyricId])
 
@@ -324,6 +328,12 @@ export default function LyricPage() {
                   </Link>
                 ) : '—'}
               </span>
+              <span className="font-semibold text-text/60">Playable?</span>
+              {minImageCount !== null ? (
+                images.filter((img) => img.is_selectable).length >= minImageCount
+                  ? <CircleCheck size={20} className="text-green-500" />
+                  : <CircleX size={20} className="text-red-500" />
+              ) : null}
               <span className="font-semibold text-text/60">Flagged?</span>
               <ToggleSwitch
                 checked={lyric.is_flagged}
