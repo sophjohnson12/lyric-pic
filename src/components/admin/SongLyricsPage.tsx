@@ -5,7 +5,7 @@ import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
 import Toast from '../common/Toast'
-import { getAdminSongLyrics, getAdminSongById, getAdminArtistById, getAlbumsForDropdown, flagLyric, toggleSongLyricSelectable } from '../../services/adminService'
+import { getAdminSongLyrics, getAdminSongById, getAdminArtistById, getAlbumsForDropdown, flagLyric, toggleSongLyricSelectable, getPlayableSongLyricIds } from '../../services/adminService'
 import type { AdminSongLyricRow } from '../../services/adminService'
 import type { Breadcrumb } from './AdminBreadcrumbContext'
 
@@ -31,6 +31,10 @@ export default function SongLyricsPage() {
   const [artistName, setArtistName] = useState('')
   const [songName, setSongName] = useState('')
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
+  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('yes')
+  const [playableLyricIds, setPlayableLyricIds] = useState<Set<number>>(new Set())
+  const [allLyrics, setAllLyrics] = useState<AdminSongLyricRow[]>([])
+  const [allLyricsLoading, setAllLyricsLoading] = useState(false)
 
   useEffect(() => {
     Promise.all([getAdminArtistById(aid), getAdminSongById(sid), getAlbumsForDropdown(aid)]).then(([artist, song, albumList]) => {
@@ -38,6 +42,11 @@ export default function SongLyricsPage() {
       setSongName(song.name)
       setAlbums(albumList)
     })
+    getPlayableSongLyricIds(sid).then(setPlayableLyricIds)
+    setAllLyricsLoading(true)
+    getAdminSongLyrics(sid, aid, 1, 0)
+      .then((result) => setAllLyrics(result.rows))
+      .finally(() => setAllLyricsLoading(false))
   }, [aid, sid])
 
   useEffect(() => {
@@ -86,10 +95,27 @@ export default function SongLyricsPage() {
     setTimeout(() => setToast(null), 5000)
   }
 
+  async function handleFilterChange(newFilter: 'all' | 'yes' | 'no') {
+    setPlayableFilter(newFilter)
+    setPage(1)
+    if (newFilter !== 'all' && allLyrics.length === 0) {
+      setAllLyricsLoading(true)
+      try {
+        const result = await getAdminSongLyrics(sid, aid, 1, 0)
+        setAllLyrics(result.rows)
+      } finally {
+        setAllLyricsLoading(false)
+      }
+    }
+  }
+
   async function handleToggleSelectable(lyricId: number, value: boolean) {
     try {
       await toggleSongLyricSelectable(sid, lyricId, value)
-      setLyrics((prev) => prev.map((l) => (l.lyric_id === lyricId ? { ...l, is_selectable: value } : l)))
+      const updateRow = (l: AdminSongLyricRow) => l.lyric_id === lyricId ? { ...l, is_selectable: value } : l
+      setLyrics((prev) => prev.map(updateRow))
+      if (allLyrics.length > 0) setAllLyrics((prev) => prev.map(updateRow))
+      getPlayableSongLyricIds(sid).then(setPlayableLyricIds)
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Toggle failed'}`)
     }
@@ -105,6 +131,14 @@ export default function SongLyricsPage() {
     }
   }
 
+  const isFiltered = playableFilter !== 'all'
+  const baseList: AdminSongLyricRow[] = isFiltered
+    ? allLyrics.filter((l) =>
+        playableFilter === 'yes' ? playableLyricIds.has(l.lyric_id) : !playableLyricIds.has(l.lyric_id),
+      )
+    : lyrics
+  const filteredLyrics = [...baseList].sort((a, b) => a.song_count - b.song_count)
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
@@ -113,20 +147,35 @@ export default function SongLyricsPage() {
         </Link>
         <h1 className="text-2xl font-bold">Song Lyrics</h1>
       </div>
+      <div className="flex items-center gap-2 mb-4">
+        <label className="text-sm font-medium">Is Playable?</label>
+        <select
+          value={playableFilter}
+          onChange={(e) => handleFilterChange(e.target.value as 'all' | 'yes' | 'no')}
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        >
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
       <AdminTable
-        data={lyrics}
+        data={filteredLyrics}
         keyFn={(l) => l.lyric_id}
-        loading={loading}
-        serverPagination={{
-          total,
-          page,
-          pageSize,
-          onPageChange: setPage,
-          onPageSizeChange: (size) => {
-            setPageSize(size)
-            setPage(1)
+        loading={loading || allLyricsLoading}
+        rowClassName={(l) => playableLyricIds.size > 0 && !playableLyricIds.has(l.lyric_id) ? 'bg-gray-100' : undefined}
+        {...(!isFiltered && {
+          serverPagination: {
+            total,
+            page,
+            pageSize,
+            onPageChange: setPage,
+            onPageSizeChange: (size) => {
+              setPageSize(size)
+              setPage(1)
+            },
           },
-        }}
+        })}
         columns={[
           { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search }} className="text-primary hover:underline">{l.root_word}</Link> }, 
           {

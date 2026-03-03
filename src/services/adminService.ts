@@ -533,6 +533,12 @@ export async function getLoadStatuses(): Promise<{ id: number; status: string }[
 
 // ─── Song Lyrics (read-only) ─────────────────────────────
 
+export async function getPlayableSongLyricIds(songId: number): Promise<Set<number>> {
+  const { data, error } = await supabase.rpc('get_song_lyrics', { p_song_id: songId })
+  if (error) throw error
+  return new Set((data as { lyric_id: number }[]).map((r) => r.lyric_id))
+}
+
 export interface AdminSongLyricRow {
   lyric_id: number
   root_word: string

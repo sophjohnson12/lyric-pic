@@ -24,6 +24,7 @@ interface AdminTableProps<T> {
     onToggle: (key: string | number) => void
     onToggleAll: (keys: (string | number)[]) => void
   }
+  rowClassName?: (row: T) => string | undefined
 }
 
 export default function AdminTable<T>({
@@ -33,6 +34,7 @@ export default function AdminTable<T>({
   loading = false,
   serverPagination,
   selection,
+  rowClassName,
 }: AdminTableProps<T>) {
   const [clientPage, setClientPage] = useState(1)
   const [clientPageSize, setClientPageSize] = useState(10)
@@ -84,7 +86,7 @@ export default function AdminTable<T>({
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-primary/10">
+          <tr className="bg-secondary">
             {selection && (
               <th className="w-10 px-4 py-2.5 border-b border-primary/20">
                 <input
@@ -114,7 +116,7 @@ export default function AdminTable<T>({
             </tr>
           ) : (
             displayData.map((row) => (
-              <tr key={keyFn(row)} className="border-b border-primary/10 hover:bg-primary/5">
+              <tr key={keyFn(row)} className={`border-b border-primary/10 hover:bg-primary/5 ${rowClassName?.(row) ?? ''}`}>
                 {selection && (
                   <td className="w-10 px-4 py-2.5">
                     <input
