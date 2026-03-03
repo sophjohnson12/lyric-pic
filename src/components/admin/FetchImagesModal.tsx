@@ -7,7 +7,7 @@ interface FetchImagesModalProps {
 }
 
 export default function FetchImagesModal({ onConfirm, onCancel }: FetchImagesModalProps) {
-  const [api, setApi] = useState('pexels')
+  const [api, setApi] = useState('unsplash')
   const [count, setCount] = useState(5)
 
   return (
