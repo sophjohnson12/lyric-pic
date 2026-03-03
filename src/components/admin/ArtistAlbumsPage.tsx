@@ -9,6 +9,7 @@ import {
   getAdminAlbums,
   toggleAlbumSelectable,
   getAdminArtistById,
+  getAdminPlayableAlbumIds,
 } from '../../services/adminService'
 import type { AdminAlbumRow } from '../../services/adminService'
 
@@ -19,6 +20,8 @@ export default function ArtistAlbumsPage() {
   const [albums, setAlbums] = useState<AdminAlbumRow[]>([])
   const [loading, setLoading] = useState(true)
   const [disableAlbumId, setDisableAlbumId] = useState<number | null>(null)
+  const [playableAlbumIds, setPlayableAlbumIds] = useState<Set<number>>(new Set())
+  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('all')
 
   useEffect(() => {
     getAdminArtistById(aid).then((a) => {
@@ -32,6 +35,7 @@ export default function ArtistAlbumsPage() {
 
   useEffect(() => {
     loadData()
+    getAdminPlayableAlbumIds(aid).then(setPlayableAlbumIds)
   }, [aid])
 
   async function loadData() {
@@ -59,6 +63,7 @@ export default function ArtistAlbumsPage() {
     setDisableAlbumId(null)
     await toggleAlbumSelectable(id, false)
     setAlbums((prev) => prev.map((a) => (a.id === id ? { ...a, is_selectable: false } : a)))
+    getAdminPlayableAlbumIds(aid).then(setPlayableAlbumIds)
   }
 
   return (
@@ -86,11 +91,27 @@ export default function ArtistAlbumsPage() {
         </div>
       </div>
 
-      <h2 className="text-lg font-semibold mb-2">Albums</h2>
+      <div className="flex items-center gap-2 mb-4">
+        <label className="text-sm font-medium">Is Playable?</label>
+        <select
+          value={playableFilter}
+          onChange={(e) => setPlayableFilter(e.target.value as 'all' | 'yes' | 'no')}
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        >
+          <option value="all">All</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </div>
       <AdminTable
-        data={albums}
+        data={
+          playableFilter === 'all' ? albums :
+          playableFilter === 'yes' ? albums.filter((a) => playableAlbumIds.has(a.id)) :
+          albums.filter((a) => !playableAlbumIds.has(a.id))
+        }
         keyFn={(a) => a.id}
         loading={loading}
+        rowClassName={(a) => playableAlbumIds.size > 0 && !playableAlbumIds.has(a.id) ? 'bg-gray-100' : undefined}
         columns={[
           { header: 'Name', accessor: (a) => (
               <Link to={`/admin/artists/${aid}/albums/${a.id}`} className="text-primary hover:underline">
@@ -115,7 +136,7 @@ export default function ArtistAlbumsPage() {
               ),
           },
           { header: 'Songs', accessor: (a) => (
-              <Link to={`/admin/artists/${aid}/songs?album=${a.id}&enabled=true`} className="text-primary hover:underline">
+              <Link to={`/admin/artists/${aid}/songs?album=${a.id}`} className="text-primary hover:underline">
                 {a.song_count}
               </Link>
             ),
