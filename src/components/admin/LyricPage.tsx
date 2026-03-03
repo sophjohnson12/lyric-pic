@@ -312,6 +312,12 @@ export default function LyricPage() {
         <div>
           <div>{lyric && (
             <div className="mt-2 mb-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm items-center">
+              <span className="font-semibold text-text/60">Playable?</span>
+              {minImageCount !== null ? (
+                images.filter((img) => img.is_selectable).length >= minImageCount
+                  ? <CircleCheck size={20} className="text-green-500" />
+                  : <CircleX size={20} className="text-red-500" />
+              ) : null}
               <span className="font-semibold text-text/60">ID</span>
               <span>{lyric.id}</span>
               <span className="font-semibold text-text/60">Stem</span>
@@ -328,12 +334,6 @@ export default function LyricPage() {
                   </Link>
                 ) : '—'}
               </span>
-              <span className="font-semibold text-text/60">Playable?</span>
-              {minImageCount !== null ? (
-                images.filter((img) => img.is_selectable).length >= minImageCount
-                  ? <CircleCheck size={20} className="text-green-500" />
-                  : <CircleX size={20} className="text-red-500" />
-              ) : null}
               <span className="font-semibold text-text/60">Flagged?</span>
               <ToggleSwitch
                 checked={lyric.is_flagged}
