@@ -394,7 +394,7 @@ export default function ArtistSongsPage() {
           className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
         >
           {bulkLoading?.type === 'edit' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          Edit All
+          Edit Album
         </button>
         <button
           onClick={() => setBulkProcessConfirm(true)}
@@ -402,7 +402,7 @@ export default function ArtistSongsPage() {
           className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
         >
           {bulkLoading?.type === 'process' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          {bulkLoading?.type === 'process' ? `Process All (${bulkLoading.done}/${bulkLoading.total})` : 'Process All'}
+          {bulkLoading?.type === 'process' ? `Process Lyrics (${bulkLoading.done}/${bulkLoading.total})` : 'Process Lyrics'}
         </button>
         <button
           onClick={() => setBulkClearConfirm(true)}
@@ -410,7 +410,7 @@ export default function ArtistSongsPage() {
           className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
         >
           {bulkLoading?.type === 'clear' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          {bulkLoading?.type === 'clear' ? `Clear All (${bulkLoading.done}/${bulkLoading.total})` : 'Clear All'}
+          {bulkLoading?.type === 'clear' ? `Clear Lyrics (${bulkLoading.done}/${bulkLoading.total})` : 'Clear Lyrics'}
         </button>
         <button
           onClick={() => setBulkHideConfirm(true)}
@@ -418,7 +418,7 @@ export default function ArtistSongsPage() {
           className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
         >
           {bulkLoading?.type === 'hide' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          {bulkLoading?.type === 'hide' ? `Hide All (${bulkLoading.done}/${bulkLoading.total})` : 'Hide All'}
+          {bulkLoading?.type === 'hide' ? `Hide (${bulkLoading.done}/${bulkLoading.total})` : 'Hide'}
         </button>
       </div>
       <div className="mb-4 flex items-center">

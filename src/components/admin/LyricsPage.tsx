@@ -1,105 +1,163 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { FlagOff, Ban, Pencil } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Check, Pencil, Flag, Ban } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
+import ConfirmPopup from '../common/ConfirmPopup'
 import Toast from '../common/Toast'
 import {
-  getFlaggedLyrics,
-  unflagLyric,
+  getAllLyrics,
+  flagLyric,
+  bulkFlagLyrics,
   blocklistLyric,
   bulkBlocklistLyrics,
   getBlocklistReasons,
+  deleteUnusedLyrics,
 } from '../../services/adminService'
-import type { AdminFlaggedLyricRow } from '../../services/adminService'
-import { searchImagesOrThrow as pexelsSearch, RateLimitError } from '../../services/pexels'
-import { searchImagesOrThrow as unsplashSearch } from '../../services/unsplash'
-import { saveLyricImages } from '../../services/supabase'
-import FetchImagesModal from './FetchImagesModal'
+import type { AdminAllLyricRow } from '../../services/adminService'
 
 export default function LyricsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
-  const navigate = useNavigate()
-  const [flagged, setFlagged] = useState<AdminFlaggedLyricRow[]>([])
-  const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
+  const [data, setData] = useState<AdminAllLyricRow[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
+  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('all')
   const [loading, setLoading] = useState(true)
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+  const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
   const [toast, setToast] = useState<string | null>(null)
   const [blocklistModal, setBlocklistModal] = useState<{ lyricId: number; word: string } | null>(null)
   const [selectedReason, setSelectedReason] = useState('')
-  const [flaggedSelectedIds, setFlaggedSelectedIds] = useState<Set<string | number>>(new Set())
+  const [blocklisting, setBlocklisting] = useState(false)
   const [bulkBlockModal, setBulkBlockModal] = useState(false)
   const [bulkBlockReason, setBulkBlockReason] = useState('')
-  const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
-  const [showFetchImagesModal, setShowFetchImagesModal] = useState(false)
-  const [fetchImagesJob, setFetchImagesJob] = useState<{ done: number; total: number } | null>(null)
-  const fetchCancelRef = useRef(false)
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [deleteUnusedConfirm, setDeleteUnusedConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    setBreadcrumbs([
-      { label: 'Lyrics' },
-    ])
+    setBreadcrumbs([{ label: 'All Lyrics' }])
+    getBlocklistReasons().then(setReasons)
   }, [setBreadcrumbs])
 
   useEffect(() => {
-    loadData()
-  }, [])
-
-  useEffect(() => {
-    if (!bulkLoading && !fetchImagesJob) return
+    if (!bulkLoading && !deleting) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading, fetchImagesJob])
+  }, [bulkLoading, deleting])
 
   useEffect(() => {
-    return () => { fetchCancelRef.current = true }
-  }, [])
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
 
   async function loadData() {
     setLoading(true)
     try {
-      const [f, r] = await Promise.all([
-        getFlaggedLyrics(),
-        getBlocklistReasons(),
-      ])
-      setFlagged(f)
-      setReasons(r)
+      const result = await getAllLyrics(page, pageSize, debouncedSearch, blocklistedFilter, playableFilter)
+      setData(result.data)
+      setTotal(result.total)
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, debouncedSearch, blocklistedFilter, playableFilter])
 
   function showToast(message: string) {
     setToast(message)
     setTimeout(() => setToast(null), 5000)
   }
 
-  async function handleUnflag(lyricId: number) {
+  async function handleFlag(lyricId: number) {
     try {
-      await unflagLyric(lyricId)
-      setFlagged((prev) => prev.filter((l) => l.id !== lyricId))
-      showToast('Lyric unflagged')
+      await flagLyric(lyricId)
+      setData((prev) => prev.map((l) => l.id === lyricId ? { ...l, is_flagged: true } : l))
+      showToast('Lyric flagged')
     } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unflag'}`)
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to flag'}`)
     }
   }
 
   async function handleBlocklistConfirm() {
     if (!blocklistModal || !selectedReason) return
+    setBlocklisting(true)
     try {
       await blocklistLyric(blocklistModal.lyricId, Number(selectedReason))
+      setData((prev) => prev.map((l) =>
+        l.id === blocklistModal.lyricId ? { ...l, is_blocklisted: true, is_flagged: false } : l
+      ))
       showToast('Lyric blocklisted')
       setBlocklistModal(null)
       setSelectedReason('')
-      loadData()
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
+    } finally {
+      setBlocklisting(false)
     }
   }
 
-  function handleToggleFlaggedSelect(key: string | number) {
-    setFlaggedSelectedIds((prev) => {
+  async function handleBulkFlag() {
+    if (selectedIds.size === 0) return
+    setBulkLoading(true)
+    try {
+      await bulkFlagLyrics([...selectedIds] as number[])
+      setData((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, is_flagged: true } : l))
+      showToast(`Flagged ${selectedIds.size} lyrics`)
+      setSelectedIds(new Set())
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to flag'}`)
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  async function handleBulkBlockConfirm() {
+    if (!bulkBlockReason || selectedIds.size === 0) return
+    setBulkLoading(true)
+    try {
+      await bulkBlocklistLyrics([...selectedIds] as number[], Number(bulkBlockReason))
+      setData((prev) => prev.map((l) =>
+        selectedIds.has(l.id) ? { ...l, is_blocklisted: true, is_flagged: false } : l
+      ))
+      showToast(`Blocklisted ${selectedIds.size} lyrics`)
+      setBulkBlockModal(false)
+      setBulkBlockReason('')
+      setSelectedIds(new Set())
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  async function handleDeleteUnused() {
+    setDeleteUnusedConfirm(false)
+    setDeleting(true)
+    try {
+      const count = await deleteUnusedLyrics()
+      showToast(`Deleted ${count} unused lyrics`)
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to delete unused lyrics'}`)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  function handleToggleSelect(key: string | number) {
+    setSelectedIds((prev) => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
@@ -107,159 +165,146 @@ export default function LyricsPage() {
     })
   }
 
-  function handleToggleAllFlaggedSelect(keys: (string | number)[]) {
-    setFlaggedSelectedIds((prev) => {
+  function handleToggleAllSelect(keys: (string | number)[]) {
+    setSelectedIds((prev) => {
       const allSelected = keys.every((k) => prev.has(k))
       const next = new Set(prev)
-      if (allSelected) {
-        keys.forEach((k) => next.delete(k))
-      } else {
-        keys.forEach((k) => next.add(k))
-      }
+      if (allSelected) keys.forEach((k) => next.delete(k))
+      else keys.forEach((k) => next.add(k))
       return next
     })
   }
 
-  async function handleBulkUnflag() {
-    if (flaggedSelectedIds.size === 0) return
-    const ids = [...flaggedSelectedIds] as number[]
-    setBulkLoading({ type: 'unflag', done: 0, total: ids.length })
-    try {
-      for (let i = 0; i < ids.length; i++) {
-        await unflagLyric(ids[i])
-        setBulkLoading({ type: 'unflag', done: i + 1, total: ids.length })
-      }
-      setFlagged((prev) => prev.filter((l) => !flaggedSelectedIds.has(l.id)))
-      showToast(`Unflagged ${ids.length} lyrics`)
-      setFlaggedSelectedIds(new Set())
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unflag'}`)
-    } finally {
-      setBulkLoading(null)
-    }
-  }
-
-  async function handleBulkBlockConfirm() {
-    if (!bulkBlockReason || flaggedSelectedIds.size === 0) return
-    setBulkLoading({ type: 'block', done: 0, total: 1 })
-    try {
-      await bulkBlocklistLyrics([...flaggedSelectedIds] as number[], Number(bulkBlockReason))
-      showToast(`Blocklisted ${flaggedSelectedIds.size} lyrics`)
-      setBulkBlockModal(false)
-      setBulkBlockReason('')
-      setFlaggedSelectedIds(new Set())
-      loadData()
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
-    } finally {
-      setBulkLoading(null)
-    }
-  }
-
-  async function handleBulkFetchImages(api: string, count: number) {
-    setShowFetchImagesModal(false)
-    const selectedLyrics = flagged.filter((l) => flaggedSelectedIds.has(l.id))
-    if (selectedLyrics.length === 0) return
-    fetchCancelRef.current = false
-    setFetchImagesJob({ done: 0, total: selectedLyrics.length })
-    const search = api === 'unsplash' ? unsplashSearch : pexelsSearch
-    try {
-      for (let i = 0; i < selectedLyrics.length; i++) {
-        if (fetchCancelRef.current) break
-        try {
-          const images = await search(selectedLyrics[i].root_word, count)
-          if (images.length > 0) await saveLyricImages(selectedLyrics[i].id, images)
-        } catch (err) {
-          if (err instanceof RateLimitError) {
-            showToast('Rate limit hit — try again later')
-            setFetchImagesJob(null)
-            return
-          }
-          console.error(`Failed for "${selectedLyrics[i].root_word}":`, err)
-        }
-        setFetchImagesJob({ done: i + 1, total: selectedLyrics.length })
-      }
-      showToast(`Fetched images for ${selectedLyrics.length} lyrics`)
-    } finally {
-      setFetchImagesJob(null)
-    }
-  }
-
-return (
+  return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Flagged Lyrics</h1>
-
-      <div className="flex flex-wrap items-center gap-y-2 mb-2">
-        <h2 className="text-lg font-semibold">Flagged Lyrics</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
+        <h1 className="text-2xl font-bold">All Lyrics</h1>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
-            onClick={() => {
-              if (flagged.length === 0) return
-              const [first, ...rest] = flagged
-              navigate(`/admin/lyrics/${first.id}`, { state: { reviewQueue: rest.map((l) => l.id) } })
-            }}
-            disabled={flagged.length === 0 || !!bulkLoading || !!fetchImagesJob}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center"
+            onClick={() => setDeleteUnusedConfirm(true)}
+            disabled={deleting}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
-            Review All
-          </button>
-          <button
-            onClick={handleBulkUnflag}
-            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading || !!fetchImagesJob}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {bulkLoading?.type === 'unflag' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            {bulkLoading?.type === 'unflag' ? `Unflag All (${bulkLoading.done}/${bulkLoading.total})` : 'Unflag All'}
-          </button>
-          <button
-            onClick={() => { setBulkBlockModal(true); setBulkBlockReason('') }}
-            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading || !!fetchImagesJob}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {bulkLoading?.type === 'block' && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Block All
-          </button>
-          <button
-            onClick={() => setShowFetchImagesModal(true)}
-            disabled={flaggedSelectedIds.size === 0 || !!fetchImagesJob || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {fetchImagesJob && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            {fetchImagesJob ? `Fetch Images (${fetchImagesJob.done}/${fetchImagesJob.total})` : 'Fetch Images'}
+            {deleting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Delete Unused Lyrics
           </button>
         </div>
       </div>
+      <div className="flex justify-end mb-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
+          <button
+            onClick={handleBulkFlag}
+            disabled={selectedIds.size === 0 || bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {bulkLoading && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Flag
+          </button>
+          <button
+            onClick={() => { setBulkBlockModal(true); setBulkBlockReason('') }}
+            disabled={selectedIds.size === 0 || bulkLoading}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            Block
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Search lyrics..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-base md:text-text focus:outline-none focus:border-primary text-sm"
+        />
+        <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+          Blocklisted:
+          <select
+            value={blocklistedFilter}
+            onChange={(e) => { setBlocklistedFilter(e.target.value as 'all' | 'yes' | 'no'); setPage(1) }}
+            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          >
+            <option value="all">All</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+          Is Playable?
+          <select
+            value={playableFilter}
+            onChange={(e) => { setPlayableFilter(e.target.value as 'all' | 'yes' | 'no'); setPage(1) }}
+            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          >
+            <option value="all">All</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
+      </div>
+
       <AdminTable
-        data={flagged}
+        data={data}
         keyFn={(l) => l.id}
         loading={loading}
+        rowClassName={(l) => !l.is_playable ? 'bg-gray-100' : undefined}
+        serverPagination={{
+          total,
+          page,
+          pageSize,
+          onPageChange: setPage,
+          onPageSizeChange: (size) => { setPageSize(size); setPage(1) },
+        }}
         selection={{
-          selected: flaggedSelectedIds,
-          onToggle: handleToggleFlaggedSelect,
-          onToggleAll: handleToggleAllFlaggedSelect,
+          selected: selectedIds,
+          onToggle: handleToggleSelect,
+          onToggleAll: handleToggleAllSelect,
         }}
         columns={[
-          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">{l.root_word}</Link> },
-          { header: 'Flagged By', accessor: (l) => l.flagged_by ?? '—' },
+          {
+            header: 'Lyric',
+            accessor: (l) => (
+              <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/all' }} className="text-primary hover:underline">
+                {l.root_word}
+              </Link>
+            ),
+          },
+          { header: 'Images', accessor: (l) => l.image_count },
+          {
+            header: 'Group',
+            accessor: (l) => l.lyric_group ? (
+              <Link
+                to={`/admin/lyrics/groups/${l.lyric_group.id}`}
+                className="text-primary hover:underline"
+              >
+                {l.lyric_group.name}-
+              </Link>
+            ) : null,
+          },
+          {
+            header: 'Flagged?',
+            accessor: (l) => l.is_flagged ? <Check size={16} className="text-primary" /> : null,
+          },
+          {
+            header: 'Blocklisted?',
+            accessor: (l) => l.is_blocklisted ? <Check size={16} className="text-primary" /> : null,
+          },
           {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/${l.id}`} className="hover:opacity-70" title="View lyric">
+                <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/all' }} className="hover:opacity-70" title="Edit lyric">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
-                  onClick={() => handleUnflag(l.id)}
+                  onClick={() => handleFlag(l.id)}
                   className="hover:opacity-70 cursor-pointer"
-                  title="Unflag"
+                  title="Flag"
                 >
-                  <FlagOff size={20} className="drop-shadow-md" />
+                  <Flag size={20} className="drop-shadow-md" />
                 </button>
                 <button
-                  onClick={() => {
-                    setBlocklistModal({ lyricId: l.id, word: l.root_word })
-                    setSelectedReason('')
-                  }}
+                  onClick={() => { setBlocklistModal({ lyricId: l.id, word: l.root_word }); setSelectedReason('') }}
                   className="hover:opacity-70 cursor-pointer"
                   title="Blocklist"
                 >
@@ -300,7 +345,7 @@ return (
             </button>
             <button
               onClick={handleBlocklistConfirm}
-              disabled={!selectedReason}
+              disabled={!selectedReason || blocklisting}
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               Yes
@@ -313,7 +358,7 @@ return (
         <Modal onClose={() => { setBulkBlockModal(false); setBulkBlockReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Words</h2>
           <p className="text-sm text-text/70 mb-4">
-            Blocklist all selected lyrics ({flaggedSelectedIds.size}). This will disable them for existing songs.
+            Blocklist all selected lyrics ({selectedIds.size}). This will disable them for existing songs.
           </p>
           <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
           <select
@@ -335,7 +380,7 @@ return (
             </button>
             <button
               onClick={handleBulkBlockConfirm}
-              disabled={!bulkBlockReason}
+              disabled={!bulkBlockReason || bulkLoading}
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               Blocklist
@@ -344,10 +389,11 @@ return (
         </Modal>
       )}
 
-      {showFetchImagesModal && (
-        <FetchImagesModal
-          onConfirm={handleBulkFetchImages}
-          onCancel={() => setShowFetchImagesModal(false)}
+      {deleteUnusedConfirm && (
+        <ConfirmPopup
+          message="Are you sure? This will permanently delete all lyric records that are not referenced by any song or artist."
+          onConfirm={handleDeleteUnused}
+          onCancel={() => setDeleteUnusedConfirm(false)}
         />
       )}
 

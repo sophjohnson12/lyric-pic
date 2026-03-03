@@ -13,6 +13,7 @@ import {
   bulkUpdateImageBlocklistReason,
   bulkUnblocklistImages,
   getBlocklistReasons,
+  clearLyricsForBlocklistedImages,
 } from '../../services/adminService'
 import type { AdminBlocklistedImageRow } from '../../services/adminService'
 
@@ -44,6 +45,8 @@ export default function BlocklistedImagesPage() {
   const [bulkUnblockConfirm, setBulkUnblockConfirm] = useState(false)
   const [unblocklistId, setUnblocklistId] = useState<number | null>(null)
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Blocklisted Images' }])
@@ -54,11 +57,11 @@ export default function BlocklistedImagesPage() {
   }, [])
 
   useEffect(() => {
-    if (!bulkLoading) return
+    if (!bulkLoading && !clearing) return
     const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading])
+  }, [bulkLoading, clearing])
 
   async function loadBlocklistedImages() {
     setLoading(true)
@@ -77,6 +80,20 @@ export default function BlocklistedImagesPage() {
   function showToast(message: string) {
     setToast(message)
     setTimeout(() => setToast(null), 5000)
+  }
+
+  async function handleClearBlocklistLyrics() {
+    setShowClearConfirm(false)
+    setClearing(true)
+    try {
+      const count = await clearLyricsForBlocklistedImages()
+      showToast(`Deleted ${count} lyric_image records`)
+      loadBlocklistedImages()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to clear'}`)
+    } finally {
+      setClearing(false)
+    }
   }
 
   async function handleEditReasonConfirm() {
@@ -162,7 +179,17 @@ export default function BlocklistedImagesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Blocklisted Images</h1>
+      <div className="flex flex-wrap items-start justify-between gap-y-3 mb-4">
+        <h1 className="text-2xl font-bold">Blocklisted Images</h1>
+        <button
+          onClick={() => setShowClearConfirm(true)}
+          disabled={clearing}
+          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+        >
+          {clearing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          Clear Lyrics For Blocklist
+        </button>
+      </div>
 
       <div className="mb-2">
         <div className="flex flex-wrap items-center gap-y-2 mb-2">
@@ -175,7 +202,7 @@ export default function BlocklistedImagesPage() {
               {bulkLoading?.type === 'edit' && (
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
               )}
-              Edit All
+              Edit Reason
             </button>
             <button
               onClick={() => setBulkUnblockConfirm(true)}
@@ -185,7 +212,7 @@ export default function BlocklistedImagesPage() {
               {bulkLoading?.type === 'unblock' && (
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
               )}
-              Unblock All
+              Unblock
             </button>
           </div>
         </div>
@@ -345,6 +372,17 @@ export default function BlocklistedImagesPage() {
           message={`Are you sure? All selected images (${selectedIds.size}) will be re-enabled in the game.`}
           onConfirm={handleBulkUnblockConfirm}
           onCancel={() => setBulkUnblockConfirm(false)}
+        />
+      )}
+
+      {showClearConfirm && (
+        <ConfirmPopup
+          title="Clear Lyrics For Blocklist?"
+          message="Are you sure? This action will permanently delete all lyrics associated with the blocklisted images."
+          confirmLabel="Yes"
+          cancelLabel="Cancel"
+          onConfirm={handleClearBlocklistLyrics}
+          onCancel={() => setShowClearConfirm(false)}
         />
       )}
 

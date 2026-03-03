@@ -1,398 +1,145 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { FlagOff, Ban, Pencil, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
-import AdminTable from './AdminTable'
-import Modal from '../common/Modal'
-import ConfirmPopup from '../common/ConfirmPopup'
-import Toast from '../common/Toast'
-import {
-  getFlaggedImages,
-  unflagImage,
-  blocklistImage,
-  bulkBlocklistImages,
-  getBlocklistReasons,
-  clearLyricsForBlocklistedImages,
-  saveSharedImages,
-} from '../../services/adminService'
-import type { AdminFlaggedImageRow } from '../../services/adminService'
-
-function ImageThumb({ url, imageId }: { url: string; imageId: number }) {
-  return (
-    <Link to={`/admin/images/${imageId}`}>
-      <img
-        src={url}
-        alt=""
-        className="w-12 h-12 object-cover rounded shrink-0 hover:opacity-80"
-        loading="lazy"
-      />
-    </Link>
-  )
-}
-
+import { getAllImages } from '../../services/adminService'
+import type { AdminAllImageRow } from '../../services/adminService'
 
 export default function ImagesPage() {
-  const navigate = useNavigate()
   const { setBreadcrumbs } = useAdminBreadcrumbs()
-  const [flagged, setFlagged] = useState<AdminFlaggedImageRow[]>([])
-  const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
+  const [data, setData] = useState<AdminAllImageRow[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
   const [loading, setLoading] = useState(true)
-  const [toast, setToast] = useState<string | null>(null)
-  const [blocklistModal, setBlocklistModal] = useState<{ imageId: number; url: string } | null>(null)
-  const [selectedReason, setSelectedReason] = useState('')
-  const [flaggedSelectedIds, setFlaggedSelectedIds] = useState<Set<string | number>>(new Set())
-  const [bulkBlockModal, setBulkBlockModal] = useState(false)
-  const [bulkBlockReason, setBulkBlockReason] = useState('')
-  const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const [clearing, setClearing] = useState(false)
-  const [savingShared, setSavingShared] = useState(false)
-
-  const unknownImageId = String(reasons.find((r) => r.reason.toLowerCase() === 'unknown_image')?.id ?? '')
 
   useEffect(() => {
-    setBreadcrumbs([{ label: 'Images' }])
+    setBreadcrumbs([{ label: 'All Images' }])
   }, [setBreadcrumbs])
 
   useEffect(() => {
-    loadData()
-  }, [])
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
 
   useEffect(() => {
-    if (!bulkLoading && !savingShared) return
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault() }
-    window.addEventListener('beforeunload', handler)
-    return () => window.removeEventListener('beforeunload', handler)
-  }, [bulkLoading, savingShared])
+    loadData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, blocklistedFilter, debouncedSearch])
 
   async function loadData() {
     setLoading(true)
     try {
-      const [f, r] = await Promise.all([
-        getFlaggedImages(),
-        getBlocklistReasons(),
-      ])
-      setFlagged(f)
-      setReasons(r)
+      const result = await getAllImages(page, pageSize, blocklistedFilter, debouncedSearch)
+      setData(result.data)
+      setTotal(result.total)
     } finally {
       setLoading(false)
     }
   }
 
-  function showToast(message: string) {
-    setToast(message)
-    setTimeout(() => setToast(null), 5000)
+  const showAll = pageSize === 0
+  const totalPages = showAll ? 1 : Math.max(1, Math.ceil(total / pageSize))
+  const from = total === 0 ? 0 : showAll ? 1 : (page - 1) * pageSize + 1
+  const to = showAll ? total : Math.min(page * pageSize, total)
+
+  function handlePageSizeChange(size: number) {
+    setPageSize(size)
+    setPage(1)
   }
 
-  async function handleSaveSharedImages() {
-    setSavingShared(true)
-    try {
-      const { inserted, lyricsUpdated } = await saveSharedImages()
-      if (inserted === 0) {
-        showToast('All stem groups already share their images')
-      } else {
-        showToast(`Saved ${inserted} lyric_image records across ${lyricsUpdated} lyrics`)
-      }
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to save shared images'}`)
-    } finally {
-      setSavingShared(false)
-    }
-  }
-
-  async function handleClearBlocklistLyrics() {
-    setShowClearConfirm(false)
-    setClearing(true)
-    try {
-      const count = await clearLyricsForBlocklistedImages()
-      showToast(`Deleted ${count} lyric_image records`)
-      loadData()
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to clear'}`)
-    } finally {
-      setClearing(false)
-    }
-  }
-
-  async function handleUnflag(imageId: number) {
-    try {
-      await unflagImage(imageId)
-      setFlagged((prev) => prev.filter((img) => img.id !== imageId))
-      showToast('Image unflagged')
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unflag'}`)
-    }
-  }
-
-  async function handleBlocklistConfirm() {
-    if (!blocklistModal || !selectedReason) return
-    try {
-      await blocklistImage(blocklistModal.imageId, Number(selectedReason))
-      showToast('Image blocklisted')
-      setBlocklistModal(null)
-      setSelectedReason('')
-      loadData()
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
-    }
-  }
-
-  function handleToggleFlaggedSelect(key: string | number) {
-    setFlaggedSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
-
-  function handleToggleAllFlaggedSelect(keys: (string | number)[]) {
-    setFlaggedSelectedIds((prev) => {
-      const allSelected = keys.every((k) => prev.has(k))
-      const next = new Set(prev)
-      if (allSelected) keys.forEach((k) => next.delete(k))
-      else keys.forEach((k) => next.add(k))
-      return next
-    })
-  }
-
-  async function handleBulkUnflag() {
-    if (flaggedSelectedIds.size === 0) return
-    const ids = [...flaggedSelectedIds] as number[]
-    setBulkLoading({ type: 'unflag', done: 0, total: ids.length })
-    try {
-      for (let i = 0; i < ids.length; i++) {
-        await unflagImage(ids[i])
-        setBulkLoading({ type: 'unflag', done: i + 1, total: ids.length })
-      }
-      setFlagged((prev) => prev.filter((img) => !flaggedSelectedIds.has(img.id)))
-      showToast(`Unflagged ${ids.length} images`)
-      setFlaggedSelectedIds(new Set())
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unflag'}`)
-    } finally {
-      setBulkLoading(null)
-    }
-  }
-
-  async function handleBulkBlockConfirm() {
-    if (!bulkBlockReason || flaggedSelectedIds.size === 0) return
-    setBulkLoading({ type: 'block', done: 0, total: 1 })
-    try {
-      await bulkBlocklistImages([...flaggedSelectedIds] as number[], Number(bulkBlockReason))
-      showToast(`Blocklisted ${flaggedSelectedIds.size} images`)
-      setBulkBlockModal(false)
-      setBulkBlockReason('')
-      setFlaggedSelectedIds(new Set())
-      loadData()
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to blocklist'}`)
-    } finally {
-      setBulkLoading(null)
-    }
+  function handleFilterChange(value: 'all' | 'yes' | 'no') {
+    setBlocklistedFilter(value)
+    setPage(1)
   }
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-y-3 mb-4">
-        <h1 className="text-2xl font-bold">Flagged Images</h1>
-        <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              disabled={clearing}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {clearing && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-              Clear Lyrics For Blocklist
-            </button>
-            <button
-              onClick={handleSaveSharedImages}
-              disabled={savingShared || clearing}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {savingShared && (
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              )}
-              Save Shared Images
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-y-2 mb-2">
-        <h2 className="text-lg font-semibold">Flagged Images</h2>
-        <div className="grid grid-cols-3 sm:flex sm:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
-          <button
-            onClick={() => {
-              if (flagged.length === 0) return
-              const [first, ...rest] = flagged
-              navigate(`/admin/images/${first.id}`, { state: { reviewQueue: rest.map((img) => img.id) } })
-            }}
-            disabled={flagged.length === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center"
-          >
-            Review All
-          </button>
-          <button
-            onClick={handleBulkUnflag}
-            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {bulkLoading?.type === 'unflag' && (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            )}
-            {bulkLoading?.type === 'unflag'
-              ? `Unflag All (${bulkLoading.done}/${bulkLoading.total})`
-              : 'Unflag All'}
-          </button>
-          <button
-            onClick={() => { setBulkBlockModal(true); setBulkBlockReason(unknownImageId) }}
-            disabled={flaggedSelectedIds.size === 0 || !!bulkLoading}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {bulkLoading?.type === 'block' && (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            )}
-            Block All
-          </button>
-        </div>
-      </div>
-      <AdminTable
-        data={flagged}
-        keyFn={(img) => img.id}
-        loading={loading}
-        selection={{
-          selected: flaggedSelectedIds,
-          onToggle: handleToggleFlaggedSelect,
-          onToggleAll: handleToggleAllFlaggedSelect,
-        }}
-        columns={[
-          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} /> },
-          { header: 'Image ID', accessor: (img) => img.image_id },
-          { header: 'Flagged By', accessor: (img) => img.flagged_by ?? '—' },
-          { header: 'Lyrics', accessor: (img) => img.lyric_count },
-          {
-            header: 'Actions',
-            accessor: (img) => (
-              <div className="flex items-center gap-2">
-                <Link to={`/admin/images/${img.id}`} className="hover:opacity-70" title="View image">
-                  <Pencil size={20} className="drop-shadow-md" />
-                </Link>
-                <button
-                  onClick={() => handleUnflag(img.id)}
-                  className="hover:opacity-70 cursor-pointer"
-                  title="Unflag"
-                >
-                  <FlagOff size={20} className="drop-shadow-md" />
-                </button>
-                <button
-                  onClick={() => { setBlocklistModal({ imageId: img.id, url: img.url }); setSelectedReason(unknownImageId) }}
-                  className="hover:opacity-70 cursor-pointer"
-                  title="Blocklist"
-                >
-                  <Ban size={20} className="drop-shadow-md" />
-                </button>
-                <a
-                  href={img.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:opacity-70"
-                  title="Open image"
-                >
-                  <ExternalLink size={20} className="drop-shadow-md" />
-                </a>
-              </div>
-            ),
-          },
-        ]}
-      />
-
-      {blocklistModal && (
-        <Modal onClose={() => { setBlocklistModal(null); setSelectedReason('') }}>
-          <h2 className="text-lg font-bold mb-2">Blocklist Image</h2>
-          <p className="text-sm text-text/70 mb-4">
-            Are you sure? This image will be hidden from the game.
-          </p>
-          <div className="flex items-center gap-3 mb-4">
-            <img src={blocklistModal.url} alt="" className="w-12 h-12 object-cover rounded shrink-0" />
-          </div>
-          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
-          <select
-            value={selectedReason}
-            onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
-          >
-            <option value="" disabled>Select a reason...</option>
-            {reasons.map((r) => (
-              <option key={r.id} value={r.id}>{r.reason}</option>
-            ))}
-          </select>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setBlocklistModal(null); setSelectedReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
-            >
-              No
-            </button>
-            <button
-              onClick={handleBlocklistConfirm}
-              disabled={!selectedReason}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              Yes
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {bulkBlockModal && (
-        <Modal onClose={() => { setBulkBlockModal(false); setBulkBlockReason('') }}>
-          <h2 className="text-lg font-bold mb-2">Blocklist Images</h2>
-          <p className="text-sm text-text/70 mb-4">
-            Blocklist all selected images ({flaggedSelectedIds.size}). They will be hidden from the game.
-          </p>
-          <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
-          <select
-            value={bulkBlockReason}
-            onChange={(e) => setBulkBlockReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
-          >
-            <option value="" disabled>Select a reason...</option>
-            {reasons.map((r) => (
-              <option key={r.id} value={r.id}>{r.reason}</option>
-            ))}
-          </select>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setBulkBlockModal(false); setBulkBlockReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleBulkBlockConfirm}
-              disabled={!bulkBlockReason}
-              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              Blocklist
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {showClearConfirm && (
-        <ConfirmPopup
-          title="Clear Lyrics For Blocklist?"
-          message="Are you sure? This action will permanently delete all lyrics associated with the blocklisted images."
-          confirmLabel="Yes"
-          cancelLabel="Cancel"
-          onConfirm={handleClearBlocklistLyrics}
-          onCancel={() => setShowClearConfirm(false)}
+      <h1 className="text-2xl font-bold mb-4">All Images</h1>
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Search images..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
         />
+        <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
+          Blocklisted:
+          <select
+            value={blocklistedFilter}
+            onChange={(e) => handleFilterChange(e.target.value as 'all' | 'yes' | 'no')}
+            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          >
+            <option value="all">All</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      ) : data.length === 0 ? (
+        <p className="text-center py-8 text-text/50">No images found</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-4">
+          {data.map((img) => (
+            <Link
+              key={img.id}
+              to={`/admin/images/${img.id}`}
+              state={{ backUrl: '/admin/images/all' }}
+            >
+              <img
+                src={img.url}
+                alt=""
+                className="w-full aspect-square object-cover rounded hover:opacity-80"
+                loading="lazy"
+              />
+            </Link>
+          ))}
+        </div>
       )}
 
-      <Toast message={toast} />
+      {total > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 text-sm text-text/70 border-t border-primary/20">
+          <span>Showing {from}–{to} of {total}</span>
+          <div className="flex items-center gap-3">
+            <select
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+              className="border border-primary/30 rounded px-2 py-1 bg-bg text-text text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={0}>All</option>
+            </select>
+            <button
+              onClick={() => setPage((p) => p - 1)}
+              disabled={page <= 1 || showAll}
+              className="px-3 py-1 rounded border border-primary/30 disabled:opacity-30 hover:bg-primary/10"
+            >
+              Prev
+            </button>
+            <span>{page} / {totalPages}</span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= totalPages || showAll}
+              className="px-3 py-1 rounded border border-primary/30 disabled:opacity-30 hover:bg-primary/10"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

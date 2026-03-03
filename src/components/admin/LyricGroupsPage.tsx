@@ -9,8 +9,6 @@ import Toast from '../common/Toast'
 import {
   getLyricGroups,
   deleteLyricGroup,
-  seedLyricGroups,
-  backfillLyricStems,
   createLyricGroup,
 } from '../../services/adminService'
 import type { AdminLyricGroupRow } from '../../services/adminService'
@@ -21,8 +19,6 @@ export default function LyricGroupsPage() {
   const [groups, setGroups] = useState<AdminLyricGroupRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [backfilling, setBackfilling] = useState(false)
-  const [seeding, setSeeding] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -50,35 +46,6 @@ export default function LyricGroupsPage() {
   function showToast(message: string) {
     setToast(message)
     setTimeout(() => setToast(null), 5000)
-  }
-
-  async function handleBackfill() {
-    setBackfilling(true)
-    try {
-      const count = await backfillLyricStems()
-      showToast(count > 0 ? `Backfilled stems for ${count} lyrics` : 'All stems already filled')
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to backfill stems'}`)
-    } finally {
-      setBackfilling(false)
-    }
-  }
-
-  async function handleSeed() {
-    setSeeding(true)
-    try {
-      const { created, assigned } = await seedLyricGroups()
-      showToast(
-        created > 0
-          ? `Created ${created} groups, assigned ${assigned} lyrics`
-          : 'No new groups to seed'
-      )
-      await loadData()
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to seed groups'}`)
-    } finally {
-      setSeeding(false)
-    }
   }
 
   async function handleDelete() {
@@ -123,22 +90,6 @@ export default function LyricGroupsPage() {
             className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
           >
             Add Group
-          </button>
-          <button
-            onClick={handleBackfill}
-            disabled={backfilling}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {backfilling && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Backfill Stems
-          </button>
-          <button
-            onClick={handleSeed}
-            disabled={seeding}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-          >
-            {seeding && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-            Seed Groups from Stems
           </button>
         </div>
       </div>

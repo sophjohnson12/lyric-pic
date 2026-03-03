@@ -11,15 +11,15 @@ import ImportAlbumsPage from './components/admin/ImportAlbumsPage'
 import ArtistSongsPage from './components/admin/ArtistSongsPage'
 import SongFormPage from './components/admin/SongFormPage'
 import SongLyricsPage from './components/admin/SongLyricsPage'
-import LyricsPage from './components/admin/LyricsPage'
+import FlaggedLyricsPage from './components/admin/FlaggedLyricsPage'
 import LyricPage from './components/admin/LyricPage'
-import AllLyricsPage from './components/admin/AllLyricsPage'
+import LyricsPage from './components/admin/LyricsPage'
 import BlocklistedLyricsPage from './components/admin/BlocklistedLyricsPage'
 import LyricGroupsPage from './components/admin/LyricGroupsPage'
 import LyricGroupPage from './components/admin/LyricGroupPage'
-import ImagesPage from './components/admin/ImagesPage'
+import FlaggedImagesPage from './components/admin/FlaggedImagesPage'
 import ImagePage from './components/admin/ImagePage'
-import AllImagesPage from './components/admin/AllImagesPage'
+import ImagesPage from './components/admin/ImagesPage'
 import BlocklistedImagesPage from './components/admin/BlocklistedImagesPage'
 import SettingsPage from './components/admin/SettingsPage'
 
@@ -41,14 +41,14 @@ export default function App() {
           <Route path="artists/:artistId/songs/new" element={<SongFormPage />} />
           <Route path="artists/:artistId/songs/:id" element={<SongFormPage />} />
           <Route path="artists/:artistId/songs/:songId/lyrics" element={<SongLyricsPage />} />
-          <Route path="lyrics" element={<LyricsPage />} />
-          <Route path="lyrics/all" element={<AllLyricsPage />} />
+          <Route path="lyrics" element={<FlaggedLyricsPage />} />
+          <Route path="lyrics/all" element={<LyricsPage />} />
           <Route path="lyrics/blocklisted" element={<BlocklistedLyricsPage />} />
           <Route path="lyrics/groups" element={<LyricGroupsPage />} />
           <Route path="lyrics/groups/:groupId" element={<LyricGroupPage />} />
           <Route path="lyrics/:lyricId" element={<LyricPage />} />
-          <Route path="images" element={<ImagesPage />} />
-          <Route path="images/all" element={<AllImagesPage />} />
+          <Route path="images" element={<FlaggedImagesPage />} />
+          <Route path="images/all" element={<ImagesPage />} />
           <Route path="images/blocklisted" element={<BlocklistedImagesPage />} />
           <Route path="images/:imageId" element={<ImagePage />} />
           <Route path="settings" element={<SettingsPage />} />

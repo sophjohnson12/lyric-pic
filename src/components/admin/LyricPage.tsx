@@ -194,20 +194,6 @@ export default function LyricPage() {
     }
   }
 
-  async function handleDisableAll() {
-    if (!lyricId) return
-    setDisablingAll(true)
-    try {
-      await Promise.all(images.map((img) => updateLyricImageSelectable(img.image_id, Number(lyricId), false)))
-      setImages((prev) => prev.map((img) => ({ ...img, is_selectable: false })))
-      showToast('All images disabled')
-    } catch (err) {
-      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to disable all'}`)
-    } finally {
-      setDisablingAll(false)
-    }
-  }
-
   async function openGroupModal() {
     setGroupSearch('')
     setSelectedGroupId(lyric?.lyric_group_id ?? null)
@@ -309,14 +295,6 @@ export default function LyricPage() {
         <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
           <h2 className="text-4xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              onClick={handleDisableAll}
-              disabled={disablingAll || loading || images.length === 0}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {disablingAll && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-              Disable All Images
-            </button>
             <button
               onClick={openGroupModal}
               disabled={loading}
