@@ -13,6 +13,7 @@ import {
   getAlbumById,
   getLyricByWord,
   getSongLyricIds,
+  getLyricGroupMemberIds,
   getAppConfig,
   getCachedImages,
   saveLyricImages,
@@ -73,6 +74,8 @@ export function useGame(artistSlug: string) {
 
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songLyricIdsRef = useRef<number[]>([])
+  // Key = puzzle word index (0–2), value = Set of all lyric IDs in that word's group
+  const puzzleWordGroupMembersRef = useRef<Map<number, Set<number>>>(new Map())
   const currentAlbumRef = useRef<Album | null>(null)
   const maxImageCountRef = useRef<number | undefined>(undefined)
 
@@ -124,6 +127,7 @@ export function useGame(artistSlug: string) {
       const puzzleWords: PuzzleWord[] = selected.map((w, i) => ({
         lyricId: w.lyric_id,
         word: w.word,
+        lyricGroupId: w.lyric_group_id,
         imageUrls: imageUrls[i],
         currentImageIndex: 0,
         guessed: false,
@@ -132,6 +136,18 @@ export function useGame(artistSlug: string) {
 
       // Pre-fetch song lyric IDs for validation
       songLyricIdsRef.current = await getSongLyricIds(song.id)
+
+      // Pre-load group members for each puzzle word that has a group
+      const groupMembersMap = new Map<number, Set<number>>()
+      await Promise.all(
+        puzzleWords.map(async (pw, i) => {
+          if (pw.lyricGroupId !== null) {
+            const memberIds = await getLyricGroupMemberIds(pw.lyricGroupId)
+            groupMembersMap.set(i, new Set(memberIds))
+          }
+        })
+      )
+      puzzleWordGroupMembersRef.current = groupMembersMap
 
       // Get the display album for this song (direct FK now)
       currentAlbumRef.current = song.album_id ? await getAlbumById(song.album_id) : null
@@ -255,6 +271,17 @@ export function useGame(artistSlug: string) {
 
       // Check if this lyric is in the song
       if (!songLyricIdsRef.current.includes(lyricId)) {
+        // Accept if guessed lyric belongs to the puzzle word's lyric group
+        const groupMembers = puzzleWordGroupMembersRef.current.get(wordIndex)
+        if (groupMembers && groupMembers.has(lyricId)) {
+          setState((prev) => {
+            const newPuzzleWords = [...prev.puzzleWords]
+            newPuzzleWords[wordIndex] = { ...newPuzzleWords[wordIndex], guessed: true }
+            const allGuessed = newPuzzleWords.every((w) => w.guessed || w.revealed)
+            return { ...prev, puzzleWords: newPuzzleWords, allWordsGuessed: allGuessed }
+          })
+          return 'correct'
+        }
         setState((prev) => {
           const newIncorrect = { ...prev.incorrectWordGuesses }
           const existing = newIncorrect[wordIndex] || []

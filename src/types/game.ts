@@ -3,6 +3,7 @@ import type { Artist, Album, Song } from './database'
 export interface PuzzleWord {
   lyricId: number
   word: string
+  lyricGroupId: number | null
   imageUrls: string[]
   currentImageIndex: number
   guessed: boolean
@@ -13,6 +14,7 @@ export interface WordWithStats {
   lyric_id: number
   word: string
   song_count: number | null
+  lyric_group_id: number | null
 }
 
 export interface GameState {

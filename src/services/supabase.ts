@@ -147,6 +147,15 @@ export async function getSongLyricIds(songId: number): Promise<number[]> {
   return data.map((d: { lyric_id: number }) => d.lyric_id)
 }
 
+export async function getLyricGroupMemberIds(groupId: number): Promise<number[]> {
+  const { data, error } = await supabase
+    .from('lyric')
+    .select('id')
+    .eq('lyric_group_id', groupId)
+  if (error) throw error
+  return (data as { id: number }[]).map((r) => r.id)
+}
+
 export async function flagWord(lyricId: number): Promise<void> {
   const { error } = await supabase.rpc('flag_lyric', { lyric_id: lyricId })
   if (error) throw error
