@@ -18,7 +18,7 @@ export default function InfoModal({ wordCount, guessCount, songCount, albums, on
       <div className="space-y-4 text-sm text-text/80">
         <div>
           <p className="font-semibold text-text">1. Guess the {wordCount} Words</p>
-          <p> Each picture represents a word from the song. Type a word and press Enter. You have unlimited guesses!</p>
+          <p> Each picture shows a word from the song. Type and press Enter for unlimited guesses!</p>
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"><RefreshCw size={15} strokeWidth={3} className="mr-2 text-primary"/> Load new picture</li>
             <li className="flex items-center"><LockOpen size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
