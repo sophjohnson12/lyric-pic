@@ -1751,41 +1751,38 @@ export async function resetArtistLyricCounts(artistId: number) {
     }
   }
 
-  // Fetch root_word for every unique lyric_id (paginated in batches of 1000)
+  // Fetch lyric_group_id for every unique lyric_id (paginated in batches of 1000)
   const uniqueLyricIds = [...new Set(allSongLyrics.map((sl) => sl.lyric_id))]
-  const lyricIdToWord = new Map<number, string>()
+  const lyricIdToGroupKey = new Map<number, string>()
   for (let i = 0; i < uniqueLyricIds.length; i += 1000) {
     const batch = uniqueLyricIds.slice(i, i + 1000)
-    const { data, error } = await supabase.from('lyric').select('id, root_word').in('id', batch)
+    const { data, error } = await supabase.from('lyric').select('id, lyric_group_id').in('id', batch)
     if (error) throw error
-    for (const row of data) lyricIdToWord.set(row.id, row.root_word)
+    for (const row of data as { id: number; lyric_group_id: number | null }[]) {
+      // Grouped lyrics share a key; ungrouped lyrics each get a unique key
+      lyricIdToGroupKey.set(row.id, row.lyric_group_id != null ? `group:${row.lyric_group_id}` : `lyric:${row.id}`)
+    }
   }
 
-  // Map each lyric_id to its Porter stem
-  const lyricIdToStem = new Map<number, string>()
-  for (const [lyricId, word] of lyricIdToWord) {
-    lyricIdToStem.set(lyricId, porterStem(word))
-  }
-
-  // Aggregate per stem: distinct song_ids and total word count
-  const stemStats = new Map<string, { songIds: Set<number>; totalCount: number }>()
+  // Aggregate per lyric group: distinct song_ids and total word count
+  const groupStats = new Map<string, { songIds: Set<number>; totalCount: number }>()
   for (const sl of allSongLyrics) {
-    const stem = lyricIdToStem.get(sl.lyric_id) ?? String(sl.lyric_id)
-    const existing = stemStats.get(stem)
+    const key = lyricIdToGroupKey.get(sl.lyric_id) ?? `lyric:${sl.lyric_id}`
+    const existing = groupStats.get(key)
     if (existing) {
       existing.songIds.add(sl.song_id)
       existing.totalCount += sl.count
     } else {
-      stemStats.set(stem, { songIds: new Set([sl.song_id]), totalCount: sl.count })
+      groupStats.set(key, { songIds: new Set([sl.song_id]), totalCount: sl.count })
     }
   }
 
-  // Build one artist_lyric row per lyric_id, sharing the stem group's aggregated counts
+  // Build one artist_lyric row per lyric_id, sharing the group's aggregated counts
   const rows = uniqueLyricIds
-    .filter((lyricId) => lyricIdToStem.has(lyricId))
+    .filter((lyricId) => lyricIdToGroupKey.has(lyricId))
     .map((lyricId) => {
-      const stem = lyricIdToStem.get(lyricId)!
-      const stats = stemStats.get(stem)!
+      const key = lyricIdToGroupKey.get(lyricId)!
+      const stats = groupStats.get(key)!
       return {
         artist_id: artistId,
         lyric_id: lyricId,
