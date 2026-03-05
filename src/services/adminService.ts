@@ -490,6 +490,7 @@ export interface SongFormData {
   genius_song_id: number | null
   album_id: number | null
   track_number: number | null
+  difficulty_rank: number
   featured_artists: string[] | null
   lyrics_full_text: string | null
   success_message: string | null

@@ -48,6 +48,7 @@ export interface Song {
   album_id: number | null
   name: string
   track_number: number | null
+  difficulty_rank: number
   is_selectable: boolean
   featured_artists: string[] | null
   lyrics_full_text: string | null

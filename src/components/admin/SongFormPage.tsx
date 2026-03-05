@@ -29,6 +29,7 @@ export default function SongFormPage() {
   const [geniusSongId, setGeniusSongId] = useState('')
   const [albumId, setAlbumId] = useState<string>('')
   const [trackNumber, setTrackNumber] = useState('')
+  const [difficultyRank, setDifficultyRank] = useState('')
   const [featuredArtists, setFeaturedArtists] = useState('')
   const [fullLyrics, setFullLyrics] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -72,6 +73,7 @@ export default function SongFormPage() {
         setGeniusSongId(s.genius_song_id?.toString() ?? '')
         setAlbumId(s.album_id?.toString() ?? '')
         setTrackNumber(s.track_number?.toString() ?? '')
+        setDifficultyRank(s.difficulty_rank?.toString() ?? '')
         setFeaturedArtists(s.featured_artists?.join(', ') ?? '')
         setFullLyrics(s.lyrics_full_text ?? '')
         setSuccessMessage(s.success_message ?? '')
@@ -87,7 +89,8 @@ export default function SongFormPage() {
       name,
       genius_song_id: geniusSongId ? Number(geniusSongId) : null,
       album_id: albumId ? Number(albumId) : null,
-      track_number: trackNumber ? Number(trackNumber) : null,
+      track_number: Number(trackNumber),
+      difficulty_rank: Number(difficultyRank),
       featured_artists: featuredArtists
         ? featuredArtists.split(',').map((s) => s.trim()).filter(Boolean)
         : null,
@@ -154,7 +157,7 @@ export default function SongFormPage() {
               <input type="number" value={geniusSongId} onChange={(e) => setGeniusSongId(e.target.value)} className={inputClass} />
             </FormField>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <FormField label="Album">
               <select value={albumId} onChange={(e) => setAlbumId(e.target.value)} className={inputClass}>
                 <option value="">None</option>
@@ -167,6 +170,14 @@ export default function SongFormPage() {
             </FormField>
             <FormField label="Track Number">
               <input type="number" value={trackNumber} onChange={(e) => setTrackNumber(e.target.value)} className={inputClass} />
+            </FormField>
+            <FormField label="Difficulty Rank" required>
+              <select value={difficultyRank} onChange={(e) => setDifficultyRank(e.target.value)} required className={inputClass}>
+                <option value="">Select...</option>
+                <option value="1">1 - Easy</option>
+                <option value="2">2 - Medium</option>
+                <option value="3">3 - Hard</option>
+              </select>
             </FormField>
           </div>
           <FormField label="Featured Artists">
