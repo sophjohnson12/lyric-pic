@@ -46,30 +46,34 @@ export default function SongDropdown({
         </div>
         {showModal && (
           <Modal showClose={false} onClose={() => setShowModal(false)}>
-            <SongWheelPicker
-              songs={songs}
-              incorrectGuesses={incorrectGuesses}
-              visibleCount={5}
-              onSelectionChange={(id, name) =>
-                setModalSelection(id !== null ? { id, name } : null)
-              }
-            />
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={() => setShowModal(false)}
-                className="h-12 flex-1 px-4 py-2 rounded-lg border border-gray-200 
+            <form onSubmit={(e) => { e.preventDefault(); handleModalGuess() }}>
+              <SongWheelPicker
+                songs={songs}
+                incorrectGuesses={incorrectGuesses}
+                visibleCount={5}
+                onSelectionChange={(id, name) =>
+                  setModalSelection(id !== null ? { id, name } : null)
+                }
+              />
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="h-12 flex-1 px-4 py-2 rounded-lg border border-gray-200
                 text-text text-base font-medium hover:bg-gray-50 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleModalGuess}
-                disabled={!modalSelection}
-                className="h-12 flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default border border-secondary"
-              >
-                Submit
-              </button>
-            </div>
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  autoFocus
+                  disabled={!modalSelection}
+                  className="h-12 flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default border border-secondary"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
           </Modal>
         )}
       </div>
@@ -92,24 +96,36 @@ export default function SongDropdown({
     }
   }
 
+  const handleEnterSelect = (id: number | null, label: string) => {
+    if (id === null) return
+    const result = onGuess(id, label)
+    if (result !== 'correct') {
+      setSelectedId(undefined)
+      setSelectedLabel('')
+    }
+  }
+
   return (
     <div className="w-full">
-      <div className="flex items-center gap-2">
-        <Dropdown
-          key={incorrectGuesses.length}
-          options={options}
-          placeholder="Guess the song..."
-          onSelect={handleSelect}
-          excludeLabels={incorrectGuesses}
-        />
-        <button
-          onClick={handleSubmit}
-          disabled={selectedId === undefined}
-          className="h-12 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0 border border-secondary"
-        >
-          Submit
-        </button>
-      </div>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }}>
+        <div className="flex items-center gap-2">
+          <Dropdown
+            key={incorrectGuesses.length}
+            options={options}
+            placeholder="Guess the song..."
+            onSelect={handleSelect}
+            onEnterSelect={handleEnterSelect}
+            excludeLabels={incorrectGuesses}
+          />
+          <button
+            type="submit"
+            disabled={selectedId === undefined}
+            className="h-12 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0 border border-secondary"
+          >
+            Submit
+          </button>
+        </div>
+      </form>
     </div>
   )
 }

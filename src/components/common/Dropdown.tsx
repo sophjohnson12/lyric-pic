@@ -9,11 +9,12 @@ interface DropdownProps {
   options: DropdownOption[]
   placeholder: string
   onSelect: (id: number | null, label: string) => void
+  onEnterSelect?: (id: number | null, label: string) => void
   disabled?: boolean
   excludeLabels?: string[]
 }
 
-export default function Dropdown({ options, placeholder, onSelect, disabled = false, excludeLabels = [] }: DropdownProps) {
+export default function Dropdown({ options, placeholder, onSelect, onEnterSelect, disabled = false, excludeLabels = [] }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedLabel, setSelectedLabel] = useState('')
@@ -66,8 +67,15 @@ export default function Dropdown({ options, placeholder, onSelect, disabled = fa
           {filteredOptions.map((opt) => (
             <li
               key={`${opt.id}-${opt.label}`}
+              tabIndex={0}
               onClick={() => handleSelect(opt)}
-              className="h-12 px-3 flex items-center hover:bg-primary/10 cursor-pointer text-sm text-text"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSelect(opt)
+                  onEnterSelect?.(opt.id, opt.label)
+                }
+              }}
+              className="h-12 px-3 flex items-center hover:bg-primary/10 focus:bg-primary/10 focus:outline-none cursor-pointer text-sm text-text"
             >
               {opt.label}
             </li>

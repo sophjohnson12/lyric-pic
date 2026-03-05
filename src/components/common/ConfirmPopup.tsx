@@ -30,6 +30,7 @@ export default function ConfirmPopup({
         </button>
         <button
           onClick={onConfirm}
+          autoFocus
           className="bg-primary text-white border border-secondary px-4 py-2 h-12 md:h-auto rounded-lg font-semibold hover:opacity-90 cursor-pointer"
         >
           {confirmLabel}

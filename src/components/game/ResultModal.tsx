@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import Modal from '../common/Modal'
 import type { Song, Album } from '../../types/database'
 
@@ -9,6 +10,13 @@ interface ResultModalProps {
 }
 
 export default function ResultModal({ message, song, album, onNext }: ResultModalProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const id = setTimeout(() => buttonRef.current?.focus(), 100)
+    return () => clearTimeout(id)
+  }, [])
+
   const songDisplay = song.featured_artists?.length
     ? `${song.name} ft. ${song.featured_artists.join(', ')}`
     : song.name
@@ -20,6 +28,7 @@ export default function ResultModal({ message, song, album, onNext }: ResultModa
         <p className="text-lg font-semibold text-text mb-1">{songDisplay}</p>
         <p className="text-sm text-text/60 mb-6">{album ? album.name : 'Single'}</p>
         <button
+          ref={buttonRef}
           onClick={onNext}
           className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition-opacity cursor-pointer"
         >
