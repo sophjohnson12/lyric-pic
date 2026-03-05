@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams, useLocation } from 'react-router-dom'
-import { Pencil, ExternalLink, TriangleAlert, RefreshCcw, ChartNoAxesColumnIncreasing } from 'lucide-react'
+import { Pencil, ExternalLink, TriangleAlert, RefreshCcw, SlidersHorizontal } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ToggleSwitch from './ToggleSwitch'
@@ -145,7 +145,7 @@ export default function ArtistsPage() {
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <Link to={`/admin/artists/${a.id}/difficulty`} state={{ backUrl: '/admin' + location.search }} title="Manage difficulty levels">
-                  <ChartNoAxesColumnIncreasing size={20} className="drop-shadow-md" />
+                  <SlidersHorizontal size={20} className="drop-shadow-md" />
                 </Link>
                 <button
                   onClick={() => setResetConfirm({ id: a.id, name: a.name })}
