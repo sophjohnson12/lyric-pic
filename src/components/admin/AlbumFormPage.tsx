@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
@@ -12,6 +12,9 @@ export default function AlbumFormPage() {
   const aid = Number(artistId)
   const isEdit = !!id
   const navigate = useNavigate()
+  const location = useLocation()
+  const locationState = location.state as { backUrl?: string; backState?: unknown } | null
+  const backUrl = locationState?.backUrl ?? `/admin/artists/${aid}/albums`
   const { setBreadcrumbs } = useAdminBreadcrumbs()
 
   const [name, setName] = useState('')
@@ -28,11 +31,11 @@ export default function AlbumFormPage() {
       setBreadcrumbs([
         { label: 'Artists', to: '/admin' },
         { label: a.name },
-        { label: 'Albums', to: `/admin/artists/${aid}/albums` },
+        { label: 'Albums', to: backUrl },
         { label: isEdit ? 'Edit Album' : 'Add Album' },
       ])
     })
-  }, [aid, setBreadcrumbs, isEdit])
+  }, [aid, setBreadcrumbs, isEdit, backUrl])
 
   useEffect(() => {
     if (isEdit) {
@@ -66,7 +69,7 @@ export default function AlbumFormPage() {
         await createAlbum(data)
       }
       setToast('Album saved')
-      setTimeout(() => navigate(`/admin/artists/${aid}/albums`), 1000)
+      setTimeout(() => navigate(backUrl, { state: locationState?.backState ?? undefined }), 1000)
     } finally {
       setSaving(false)
     }
@@ -77,7 +80,7 @@ export default function AlbumFormPage() {
   return (
     <>
       <Toast message={toast} />
-      <AdminFormPage title={isEdit ? 'Edit Album' : 'Add Album'} onSubmit={handleSubmit} onCancel={() => navigate(`/admin/artists/${aid}/albums`)} loading={saving} backUrl={`/admin/artists/${aid}/albums`}>
+      <AdminFormPage title={isEdit ? 'Edit Album' : 'Add Album'} onSubmit={handleSubmit} onCancel={() => navigate(backUrl, { state: locationState?.backState ?? undefined })} loading={saving} backUrl={backUrl} backState={locationState?.backState}>
         <div className="space-y-5">
           <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
           <div className="grid grid-cols-2 gap-4">

@@ -8,15 +8,16 @@ interface AdminFormPageProps {
   loading?: boolean
   canSubmit?: boolean
   backUrl?: string
+  backState?: unknown
   children: React.ReactNode
 }
 
-export default function AdminFormPage({ title, onSubmit, onCancel, loading = false, canSubmit = true, backUrl, children }: AdminFormPageProps) {
+export default function AdminFormPage({ title, onSubmit, onCancel, loading = false, canSubmit = true, backUrl, backState, children }: AdminFormPageProps) {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-3 mb-1">
         {backUrl && (
-          <Link to={backUrl} className="text-primary hover:opacity-70" title="Back">
+          <Link to={backUrl} state={backState} className="text-primary hover:opacity-70" title="Back">
             <ArrowLeft size={24} />
           </Link>
         )}

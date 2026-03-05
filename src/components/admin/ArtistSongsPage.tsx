@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { Pencil, Download, Cog, Trash2, EyeOff, ArrowLeft } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -34,7 +34,15 @@ const CONFIRM_MESSAGES: Record<ConfirmAction['type'], string> = {
 export default function ArtistSongsPage() {
   const { artistId } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const aid = Number(artistId)
+  // Snapshot on mount — setSearchParams clears location.state on each call, so we capture once
+  const [capturedLocationState] = useState(() => location.state as { backUrl?: string; backState?: unknown } | null)
+  const arrowBackUrl = capturedLocationState?.backUrl ?? `/admin/artists/${aid}/albums`
+  // Only use backUrl for Artists breadcrumb when it points to the artists list, not an albums sub-page
+  const artistsBackUrl = capturedLocationState?.backUrl && !capturedLocationState.backUrl.startsWith('/admin/artists/')
+    ? capturedLocationState.backUrl
+    : '/admin'
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [songs, setSongs] = useState<AdminSongRow[]>([])
   const [loading, setLoading] = useState(false)
@@ -44,7 +52,7 @@ export default function ArtistSongsPage() {
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
   const albumParam = searchParams.get('album')
   const albumFilter = albumParam === 'none' ? 'none' as const : albumParam ? Number(albumParam) : null
-  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('yes')
+  const playableFilter = (searchParams.get('playable') as 'all' | 'yes' | 'no') ?? 'yes'
   const [playableSongIds, setPlayableSongIds] = useState<Set<number>>(new Set())
   const playableIdsRef = useRef<number[]>([])
   const [playableIdsReady, setPlayableIdsReady] = useState(false)
@@ -64,16 +72,20 @@ export default function ArtistSongsPage() {
   const [bulkLoading, setBulkLoading] = useState<{ type: string; done: number; total: number } | null>(null)
   const paramSuffix = searchParams.toString() ? `?${searchParams.toString()}` : ''
 
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '')
+  const debouncedSearch = searchParams.get('search') ?? ''
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search)
+      setSearchParams(prev => {
+        if (searchInput) prev.set('search', searchInput)
+        else prev.delete('search')
+        return prev
+      }, { replace: true })
       setPage(1)
     }, 300)
     return () => clearTimeout(timer)
-  }, [search])
+  }, [searchInput, setSearchParams])
 
   const [artistName, setArtistName] = useState('')
 
@@ -93,14 +105,14 @@ export default function ArtistSongsPage() {
       ? albums.find((a) => a.id === albumFilter)?.name
       : null
     const crumbs = [
-      { label: 'Artists', to: '/admin' },
+      { label: 'Artists', to: artistsBackUrl },
       { label: artistName },
       { label: 'Albums', to: `/admin/artists/${aid}/albums` },
       ...(albumName ? [{ label: albumName }] : []),
       { label: 'Songs' },
     ]
     setBreadcrumbs(crumbs)
-  }, [aid, artistName, albumFilter, albums, setBreadcrumbs])
+  }, [aid, artistName, albumFilter, albums, setBreadcrumbs, artistsBackUrl])
 
   useEffect(() => {
     getAlbumsForDropdown(aid).then(setAlbums)
@@ -151,7 +163,11 @@ export default function ArtistSongsPage() {
   }
 
   function handleFilterChange(newFilter: 'all' | 'yes' | 'no') {
-    setPlayableFilter(newFilter)
+    setSearchParams(prev => {
+      if (newFilter === 'yes') prev.delete('playable')
+      else prev.set('playable', newFilter)
+      return prev
+    }, { replace: true })
     setPage(1)
   }
 
@@ -366,7 +382,7 @@ export default function ArtistSongsPage() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Link to={`/admin/artists/${aid}/albums`} className="text-primary hover:opacity-70" title="Back to Albums">
+          <Link to={arrowBackUrl} state={capturedLocationState?.backState ?? undefined} className="text-primary hover:opacity-70" title="Back">
             <ArrowLeft size={24} />
           </Link>
           <h1 className="text-2xl font-bold">Songs</h1>
@@ -425,8 +441,8 @@ export default function ArtistSongsPage() {
         <input
           type="text"
           placeholder="Search songs..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="w-full sm:w-64 px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mr-4"
         />
         <label className="text-sm font-medium mr-2">Album:</label>
@@ -484,7 +500,7 @@ export default function ArtistSongsPage() {
         }}
         columns={[
           { header: 'Name', accessor: (s) => (
-              <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} className="text-primary hover:underline">
+              <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} state={{ backUrl: location.pathname + location.search, backState: capturedLocationState }} className="text-primary hover:underline">
                 {s.name}
               </Link>
             ),
@@ -495,6 +511,7 @@ export default function ArtistSongsPage() {
             accessor: (s) => (
               <Link
                 to={`/admin/artists/${aid}/songs/${s.id}/lyrics${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
+                state={{ backUrl: location.pathname + location.search, backState: capturedLocationState }}
                 className="text-primary hover:underline"
               >
                 {s.lyric_count}
@@ -516,7 +533,7 @@ export default function ArtistSongsPage() {
             header: 'Actions',
             accessor: (s) => (
               <div className="flex gap-2">
-                <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} title="Edit">
+                <Link to={`/admin/artists/${aid}/songs/${s.id}${paramSuffix}`} state={{ backUrl: location.pathname + location.search, backState: capturedLocationState }} title="Edit">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button

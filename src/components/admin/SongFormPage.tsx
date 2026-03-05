@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
@@ -19,11 +19,10 @@ export default function SongFormPage() {
   const aid = Number(artistId)
   const isEdit = !!id
   const navigate = useNavigate()
+  const location = useLocation()
+  const locationState = location.state as { backState?: unknown } | null
   const [searchParams] = useSearchParams()
-  const backParams = new URLSearchParams()
-  if (searchParams.get('album')) backParams.set('album', searchParams.get('album')!)
-  if (searchParams.get('enabled')) backParams.set('enabled', searchParams.get('enabled')!)
-  const songsUrl = `/admin/artists/${aid}/songs${backParams.toString() ? `?${backParams.toString()}` : ''}`
+  const songsUrl = `/admin/artists/${aid}/songs${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
   const { setBreadcrumbs } = useAdminBreadcrumbs()
 
   const [name, setName] = useState('')
@@ -126,7 +125,7 @@ export default function SongFormPage() {
         await createSong(data)
       }
       setToast('Song saved')
-      setTimeout(() => navigate(songsUrl), 1000)
+      setTimeout(() => navigate(songsUrl, { state: locationState?.backState ?? undefined }), 1000)
     } finally {
       setSaving(false)
     }
@@ -144,7 +143,7 @@ export default function SongFormPage() {
           onCancel={() => setShowDisableConfirm(false)}
         />
       )}
-      <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} onCancel={() => navigate(songsUrl)} loading={saving} backUrl={songsUrl}>
+      <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} onCancel={() => navigate(songsUrl, { state: locationState?.backState ?? undefined })} loading={saving} backUrl={songsUrl} backState={locationState?.backState}>
         <div className="space-y-5">
           <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
           <div className="grid grid-cols-2 gap-4">

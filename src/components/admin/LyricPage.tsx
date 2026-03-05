@@ -34,7 +34,7 @@ export default function LyricPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { setBreadcrumbs } = useAdminBreadcrumbs()
-  const state = location.state as { reviewQueue?: number[]; parentBreadcrumbs?: Breadcrumb[]; backUrl?: string } | null
+  const state = location.state as { reviewQueue?: number[]; parentBreadcrumbs?: Breadcrumb[]; backUrl?: string; backState?: unknown } | null
   const backUrl = state?.backUrl ?? '/admin/lyrics'
   const reviewQueue: number[] = state?.reviewQueue ?? []
   const [lyric, setLyric] = useState<AdminLyricRow | null>(null)
@@ -176,7 +176,7 @@ export default function LyricPage() {
       const [next, ...rest] = reviewQueue
       navigate(`/admin/lyrics/${next}`, { state: { reviewQueue: rest } })
     } else {
-      navigate(backUrl)
+      navigate(backUrl, { state: state?.backState ?? undefined })
     }
   }
 
@@ -265,6 +265,7 @@ export default function LyricPage() {
         <div className="flex items-center gap-3">
           <Link
             to={backUrl}
+            state={state?.backState ?? undefined}
             className="flex items-center gap-1.5 text-sm text-primary hover:opacity-70"
           >
             <ArrowLeft size={16} />

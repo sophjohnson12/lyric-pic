@@ -110,7 +110,7 @@ export default function LyricGroupsPage() {
           {
             header: 'Name',
             accessor: (g) => (
-              <Link to={`/admin/lyrics/groups/${g.id}`} className="text-primary hover:underline font-medium">
+              <Link to={`/admin/lyrics/groups/${g.id}`} className="text-primary hover:underline">
                 {g.name}-
               </Link>
             ),

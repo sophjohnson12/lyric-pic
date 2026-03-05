@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
@@ -11,6 +11,8 @@ export default function ArtistFormPage() {
   const { id } = useParams()
   const isEdit = !!id
   const navigate = useNavigate()
+  const location = useLocation()
+  const backUrl = (location.state as { backUrl?: string } | null)?.backUrl ?? '/admin'
   const { setBreadcrumbs } = useAdminBreadcrumbs()
 
   const [name, setName] = useState('')
@@ -32,10 +34,10 @@ export default function ArtistFormPage() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: 'Artists', to: '/admin' },
+      { label: 'Artists', to: backUrl },
       { label: isEdit ? 'Edit Artist' : 'Add Artist' },
     ])
-  }, [setBreadcrumbs, isEdit])
+  }, [setBreadcrumbs, isEdit, backUrl])
 
   useEffect(() => {
     if (isEdit) {
@@ -96,7 +98,7 @@ export default function ArtistFormPage() {
         await createArtist(data)
       }
       setToast('Artist saved')
-      setTimeout(() => navigate('/admin'), 1000)
+      setTimeout(() => navigate(backUrl), 1000)
     } catch (err) {
       setToast(`Error: ${err instanceof Error ? err.message : 'Save failed'}`)
     } finally {
@@ -111,7 +113,7 @@ export default function ArtistFormPage() {
   return (
     <>
       <Toast message={toast} />
-      <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} onCancel={() => navigate('/admin')} loading={saving} canSubmit={canSubmit} backUrl="/admin">
+      <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} onCancel={() => navigate(backUrl)} loading={saving} canSubmit={canSubmit} backUrl={backUrl}>
       <div>
         <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
         <div className="space-y-5">

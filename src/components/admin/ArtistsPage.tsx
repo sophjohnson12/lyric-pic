@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { Pencil, ExternalLink, TriangleAlert, RefreshCcw } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -11,12 +11,14 @@ import type { AdminArtistRow } from '../../services/adminService'
 
 export default function ArtistsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const [artists, setArtists] = useState<AdminArtistRow[]>([])
   const [loading, setLoading] = useState(true)
   const [resetConfirm, setResetConfirm] = useState<{ id: number; name: string } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [playableArtistIds, setPlayableArtistIds] = useState<Set<number>>(new Set())
-  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('all')
+  const playableFilter = (searchParams.get('playable') as 'all' | 'yes' | 'no') ?? 'all'
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'Artists' }])
@@ -66,6 +68,7 @@ export default function ArtistsPage() {
         <h1 className="text-2xl font-bold">Artists</h1>
         <Link
           to="/admin/artists/new"
+          state={{ backUrl: '/admin' + location.search }}
           className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
         >
           Add Artist
@@ -75,7 +78,14 @@ export default function ArtistsPage() {
         <label className="text-sm font-medium">Is Playable?</label>
         <select
           value={playableFilter}
-          onChange={(e) => setPlayableFilter(e.target.value as 'all' | 'yes' | 'no')}
+          onChange={(e) => {
+            const value = e.target.value as 'all' | 'yes' | 'no'
+            setSearchParams(prev => {
+              if (value === 'all') prev.delete('playable')
+              else prev.set('playable', value)
+              return prev
+            }, { replace: true })
+          }}
           className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
         >
           <option value="all">All</option>
@@ -94,7 +104,7 @@ export default function ArtistsPage() {
         rowClassName={(a) => playableArtistIds.size > 0 && !playableArtistIds.has(a.id) ? 'bg-gray-100' : undefined}
         columns={[
           { header: 'Name', accessor: (a) => (
-              <Link to={`/admin/artists/${a.id}`} className="text-primary hover:underline">
+              <Link to={`/admin/artists/${a.id}`} state={{ backUrl: '/admin' + location.search }} className="text-primary hover:underline">
                 {a.name}
               </Link>
             ),
@@ -102,7 +112,7 @@ export default function ArtistsPage() {
           {
             header: 'Albums',
             accessor: (a) => (
-              <Link to={`/admin/artists/${a.id}/albums`} className="text-primary hover:underline">
+              <Link to={`/admin/artists/${a.id}/albums`} state={{ backUrl: '/admin' + location.search }} className="text-primary hover:underline">
                 {a.album_count}
               </Link>
             ),
@@ -110,7 +120,7 @@ export default function ArtistsPage() {
           {
             header: 'Songs',
             accessor: (a) => (
-              <Link to={`/admin/artists/${a.id}/songs`} className="text-primary hover:underline">
+              <Link to={`/admin/artists/${a.id}/songs`} state={{ backUrl: '/admin' + location.search }} className="text-primary hover:underline">
                 {a.song_count}
               </Link>
             ),
@@ -131,7 +141,7 @@ export default function ArtistsPage() {
             header: 'Actions',
             accessor: (a) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/artists/${a.id}`} title="Edit">
+                <Link to={`/admin/artists/${a.id}`} state={{ backUrl: '/admin' + location.search }} title="Edit">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button

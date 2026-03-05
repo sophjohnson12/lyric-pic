@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { Check, Pencil, Flag, Ban } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -19,14 +19,16 @@ import type { AdminAllLyricRow } from '../../services/adminService'
 
 export default function LyricsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const [data, setData] = useState<AdminAllLyricRow[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
-  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('all')
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '')
+  const debouncedSearch = searchParams.get('search') ?? ''
+  const blocklistedFilter = (searchParams.get('blocklisted') as 'all' | 'yes' | 'no') ?? 'no'
+  const playableFilter = (searchParams.get('playable') as 'all' | 'yes' | 'no') ?? 'all'
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
@@ -54,11 +56,15 @@ export default function LyricsPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search)
+      setSearchParams(prev => {
+        if (searchInput) prev.set('search', searchInput)
+        else prev.delete('search')
+        return prev
+      }, { replace: true })
       setPage(1)
     }, 300)
     return () => clearTimeout(timer)
-  }, [search])
+  }, [searchInput, setSearchParams])
 
   async function loadData() {
     setLoading(true)
@@ -213,15 +219,23 @@ export default function LyricsPage() {
         <input
           type="text"
           placeholder="Search lyrics..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm"
         />
         <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
           Blocklisted:
           <select
             value={blocklistedFilter}
-            onChange={(e) => { setBlocklistedFilter(e.target.value as 'all' | 'yes' | 'no'); setPage(1) }}
+            onChange={(e) => {
+              const value = e.target.value as 'all' | 'yes' | 'no'
+              setSearchParams(prev => {
+                if (value === 'no') prev.delete('blocklisted')
+                else prev.set('blocklisted', value)
+                return prev
+              }, { replace: true })
+              setPage(1)
+            }}
             className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
           >
             <option value="all">All</option>
@@ -233,7 +247,15 @@ export default function LyricsPage() {
           Is Playable?
           <select
             value={playableFilter}
-            onChange={(e) => { setPlayableFilter(e.target.value as 'all' | 'yes' | 'no'); setPage(1) }}
+            onChange={(e) => {
+              const value = e.target.value as 'all' | 'yes' | 'no'
+              setSearchParams(prev => {
+                if (value === 'all') prev.delete('playable')
+                else prev.set('playable', value)
+                return prev
+              }, { replace: true })
+              setPage(1)
+            }}
             className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
           >
             <option value="all">All</option>
@@ -264,7 +286,7 @@ export default function LyricsPage() {
           {
             header: 'Lyric',
             accessor: (l) => (
-              <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/all' }} className="text-primary hover:underline">
+              <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: location.pathname + location.search }} className="text-primary hover:underline">
                 {l.root_word}
               </Link>
             ),
@@ -274,6 +296,7 @@ export default function LyricsPage() {
             accessor: (l) => l.lyric_group ? (
               <Link
                 to={`/admin/lyrics/groups/${l.lyric_group.id}`}
+                state={{ backUrl: location.pathname + location.search }}
                 className="text-primary hover:underline"
               >
                 {l.lyric_group.name}-
@@ -293,7 +316,7 @@ export default function LyricsPage() {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/all' }} className="hover:opacity-70" title="Edit lyric">
+                <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: location.pathname + location.search }} className="hover:opacity-70" title="Edit lyric">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button

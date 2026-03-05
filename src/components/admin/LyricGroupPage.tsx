@@ -24,7 +24,8 @@ export default function LyricGroupPage() {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const backUrl = (location.state as { backUrl?: string } | null)?.backUrl ?? '/admin/lyrics/groups'
+  const locationState = location.state as { backUrl?: string; backState?: unknown } | null
+  const backUrl = locationState?.backUrl ?? '/admin/lyrics/groups'
   const { setBreadcrumbs } = useAdminBreadcrumbs()
   const [group, setGroup] = useState<{ id: number; name: string } | null>(null)
   const [members, setMembers] = useState<AdminLyricGroupMemberRow[]>([])
@@ -225,6 +226,7 @@ export default function LyricGroupPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             to={backUrl}
+            state={locationState?.backState ?? undefined}
             className="flex items-center gap-1.5 text-sm text-primary hover:opacity-70"
           >
             <ArrowLeft size={16} />

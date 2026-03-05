@@ -11,15 +11,13 @@ import type { Breadcrumb } from './AdminBreadcrumbContext'
 
 export default function SongLyricsPage() {
   const { artistId, songId } = useParams()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const aid = Number(artistId)
   const sid = Number(songId)
-  const backParams = new URLSearchParams()
-  if (searchParams.get('album')) backParams.set('album', searchParams.get('album')!)
-  if (searchParams.get('enabled')) backParams.set('enabled', searchParams.get('enabled')!)
-  const songsBackUrl = `/admin/artists/${aid}/songs${backParams.toString() ? `?${backParams.toString()}` : ''}`
+  const songsBackUrl = `/admin/artists/${aid}/songs${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
   const location = useLocation()
-  const locationState = location.state as { parentBreadcrumbs?: Breadcrumb[]; backUrl?: string; backState?: unknown } | null
+  // Snapshot on mount — setSearchParams clears location.state on each call, so we capture once
+  const [locationState] = useState(() => location.state as { parentBreadcrumbs?: Breadcrumb[]; backUrl?: string; backState?: unknown } | null)
   const backUrl = locationState?.backUrl ?? songsBackUrl
   const { breadcrumbs, setBreadcrumbs } = useAdminBreadcrumbs()
   const [lyrics, setLyrics] = useState<AdminSongLyricRow[]>([])
@@ -31,7 +29,7 @@ export default function SongLyricsPage() {
   const [artistName, setArtistName] = useState('')
   const [songName, setSongName] = useState('')
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
-  const [playableFilter, setPlayableFilter] = useState<'all' | 'yes' | 'no'>('yes')
+  const playableFilter = (searchParams.get('playable') as 'all' | 'yes' | 'no') ?? 'yes'
   const [playableLyricIds, setPlayableLyricIds] = useState<Set<number>>(new Set())
   const [allLyrics, setAllLyrics] = useState<AdminSongLyricRow[]>([])
   const [allLyricsLoading, setAllLyricsLoading] = useState(false)
@@ -96,7 +94,11 @@ export default function SongLyricsPage() {
   }
 
   async function handleFilterChange(newFilter: 'all' | 'yes' | 'no') {
-    setPlayableFilter(newFilter)
+    setSearchParams(prev => {
+      if (newFilter === 'yes') prev.delete('playable')
+      else prev.set('playable', newFilter)
+      return prev
+    }, { replace: true })
     setPage(1)
     if (newFilter !== 'all' && allLyrics.length === 0) {
       setAllLyricsLoading(true)
@@ -177,13 +179,13 @@ export default function SongLyricsPage() {
           },
         })}
         columns={[
-          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search }} className="text-primary hover:underline">{l.root_word}</Link> }, 
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search, backState: locationState }} className="text-primary hover:underline">{l.root_word}</Link> },
           {
             header: 'Group',
             accessor: (l) => l.lyric_group_id ? (
               <Link
                 to={`/admin/lyrics/groups/${l.lyric_group_id}`}
-                state={{ backUrl: location.pathname + location.search }}
+                state={{ backUrl: location.pathname + location.search, backState: locationState }}
                 className="text-primary hover:underline"
               >
                 {l.lyric_group_name}-
@@ -209,7 +211,7 @@ export default function SongLyricsPage() {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search }} className="hover:opacity-70" title="View lyric">
+                <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: breadcrumbs, backUrl: location.pathname + location.search, backState: locationState }} className="hover:opacity-70" title="View lyric">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
