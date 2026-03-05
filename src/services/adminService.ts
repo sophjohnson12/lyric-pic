@@ -2484,3 +2484,66 @@ export async function updateAppConfig(
     .eq('id', true)
   if (error) throw error
 }
+
+// ─── Difficulty Levels ───────────────────────────────────────────
+
+export interface DifficultySong {
+  id: number
+  name: string
+  difficulty_rank: number
+  album: {
+    id: number
+    name: string
+    release_year: number | null
+    image_url: string | null
+    theme_primary_color: string | null
+    theme_secondary_color: string | null
+  } | null
+}
+
+export async function getPlayableSongsForDifficulty(artistId: number): Promise<DifficultySong[]> {
+  // playable_song does SELECT s.* so all song columns (including difficulty_rank
+  // and album_id) are exposed. But PostgREST can't resolve FK joins on views,
+  // so fetch flat from the view then fetch albums separately and join client-side.
+  const { data: songData, error: songError } = await supabase
+    .from('playable_song')
+    .select('id, name, difficulty_rank, album_id')
+    .eq('artist_id', artistId)
+  if (songError) throw songError
+
+  const albumIds = [...new Set((songData ?? []).map((s: { album_id: number | null }) => s.album_id).filter((id): id is number => id != null))]
+  const albumMap = new Map<number, DifficultySong['album']>()
+  if (albumIds.length > 0) {
+    const { data: albumData, error: albumError } = await supabase
+      .from('album')
+      .select('id, name, release_year, image_url, theme_primary_color, theme_secondary_color')
+      .in('id', albumIds)
+    if (albumError) throw albumError
+    for (const a of albumData ?? []) albumMap.set(a.id, a)
+  }
+
+  const rows: DifficultySong[] = (songData ?? []).map((s: { id: number; name: string; difficulty_rank: number; album_id: number | null }) => ({
+    id: s.id,
+    name: s.name,
+    difficulty_rank: s.difficulty_rank,
+    album: s.album_id != null ? (albumMap.get(s.album_id) ?? null) : null,
+  }))
+
+  return rows.sort((a, b) => {
+    const aYear = a.album?.release_year ?? Infinity
+    const bYear = b.album?.release_year ?? Infinity
+    if (aYear !== bYear) return aYear - bYear
+    const aAlbumId = a.album?.id ?? Infinity
+    const bAlbumId = b.album?.id ?? Infinity
+    if (aAlbumId !== bAlbumId) return aAlbumId - bAlbumId
+    return a.name.localeCompare(b.name)
+  })
+}
+
+export async function updateSongDifficultyRank(id: number, rank: number): Promise<void> {
+  const { error } = await supabase
+    .from('song')
+    .update({ difficulty_rank: rank, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}

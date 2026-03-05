@@ -162,13 +162,13 @@ export default function AdminLayout() {
 
   return (
     <AdminBreadcrumbProvider>
-      <div className="min-h-screen bg-bg text-text">
+      <div className="h-screen flex flex-col bg-bg text-text">
         <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} />
-        <div className="flex">
+        <div className="flex flex-1 overflow-hidden">
           <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
           <div className="flex-1 flex flex-col min-w-0">
             <Breadcrumbs />
-            <main className="flex-1 p-6">
+            <main className="flex-1 overflow-y-auto p-6">
               <Outlet />
             </main>
           </div>

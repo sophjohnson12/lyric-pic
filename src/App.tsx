@@ -22,6 +22,7 @@ import ImagePage from './components/admin/ImagePage'
 import ImagesPage from './components/admin/ImagesPage'
 import BlocklistedImagesPage from './components/admin/BlocklistedImagesPage'
 import SettingsPage from './components/admin/SettingsPage'
+import DifficultyLevelsPage from './components/admin/DifficultyLevelsPage'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="artists/:artistId/albums/imports" element={<ImportAlbumsPage />} />
           <Route path="artists/:artistId/albums/new" element={<AlbumFormPage />} />
           <Route path="artists/:artistId/albums/:id" element={<AlbumFormPage />} />
+          <Route path="artists/:artistId/difficulty" element={<DifficultyLevelsPage />} />
           <Route path="artists/:artistId/songs" element={<ArtistSongsPage />} />
           <Route path="artists/:artistId/songs/new" element={<SongFormPage />} />
           <Route path="artists/:artistId/songs/:id" element={<SongFormPage />} />
