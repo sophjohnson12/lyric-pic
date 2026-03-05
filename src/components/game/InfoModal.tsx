@@ -38,7 +38,7 @@ export default function InfoModal({ wordCount, guessCount, songCount, albums, on
           <p>
             <span className="hidden md:inline">You have {guessCount} chances to select a song from the dropdown and click Submit.</span>
             <span className="inline md:hidden">You have {guessCount} chances to select a song and press Submit.</span>
-            <span> Play until you guess all {songCount} songs!</span>
+            <span> Play all {songCount} songs!</span>
           </p>
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"> <History size={15} strokeWidth={3} className="mr-2 text-primary"/> View  played songs</li>
