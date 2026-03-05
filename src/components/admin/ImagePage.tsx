@@ -153,7 +153,7 @@ export default function ImagePage() {
     try {
       await Promise.all([...selectedLyricIds].map((lyricId) => addLyricImage(Number(imageId), lyricId)))
       const added = allLyrics.filter((l) => selectedLyricIds.has(l.id))
-      setLyrics((prev) => [...prev, ...added.map((l) => ({ lyric_id: l.id, root_word: l.root_word, is_selectable: true, is_blocklisted: l.is_blocklisted }))])
+      setLyrics((prev) => [...prev, ...added.map((l) => ({ lyric_id: l.id, root_word: l.root_word, is_selectable: true, is_blocklisted: l.is_blocklisted, lyric_group: null }))])
       setShowAddLyricModal(false)
       showToast(`Added ${added.length} lyric${added.length !== 1 ? 's' : ''}`)
     } catch (err) {
@@ -257,6 +257,18 @@ export default function ImagePage() {
             loading={loading}
             columns={[
               { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: state }} className="text-primary hover:underline">{l.root_word}</Link> },
+              {
+                header: 'Group',
+                accessor: (l) => l.lyric_group ? (
+                  <Link
+                    to={`/admin/lyrics/groups/${l.lyric_group.id}`}
+                    state={{ backUrl: `/admin/images/${imageId}` }}
+                    className="text-primary hover:underline"
+                  >
+                    {l.lyric_group.name}-
+                  </Link>
+                ) : null,
+              },
               { header: 'Blocklisted?', accessor: (l) => l.is_blocklisted ? <Check size={16} /> : null },
               {
                 header: 'Enabled?',

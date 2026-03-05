@@ -686,6 +686,7 @@ export interface AdminFlaggedLyricRow {
   id: number
   root_word: string
   flagged_by: string | null
+  lyric_group: { id: number; name: string } | null
 }
 
 export interface AdminBlocklistedLyricRow {
@@ -693,6 +694,7 @@ export interface AdminBlocklistedLyricRow {
   root_word: string
   is_blocklisted: boolean
   blocklist_reason: string | null
+  lyric_group: { id: number; name: string } | null
 }
 
 export interface AdminUnreviewedLyricRow {
@@ -792,26 +794,26 @@ export async function getAllLyrics(
 export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
   const { data, error } = await supabase
     .from('lyric')
-    .select('id, root_word, flagged_by')
+    .select('id, root_word, flagged_by, lyric_group!lyric_group_id(id, name)')
     .eq('is_flagged', true)
     .order('root_word')
   if (error) throw error
-  return data
+  return (data as unknown as (Omit<AdminFlaggedLyricRow, 'lyric_group'> & { lyric_group: { id: number; name: string } | null })[])
 }
 
 export async function getBlocklistedLyrics(): Promise<AdminBlocklistedLyricRow[]> {
-  const allLyrics: { id: number; root_word: string; is_blocklisted: boolean; blocklist_reason: number | null }[] = []
+  const allLyrics: { id: number; root_word: string; is_blocklisted: boolean; blocklist_reason: number | null; lyric_group: { id: number; name: string } | null }[] = []
   let from = 0
   const batchSize = 1000
   while (true) {
     const { data, error } = await supabase
       .from('lyric')
-      .select('id, root_word, is_blocklisted, blocklist_reason')
+      .select('id, root_word, is_blocklisted, blocklist_reason, lyric_group!lyric_group_id(id, name)')
       .eq('is_blocklisted', true)
       .order('root_word')
       .range(from, from + batchSize - 1)
     if (error) throw error
-    allLyrics.push(...data)
+    allLyrics.push(...(data as unknown as typeof allLyrics))
     if (data.length < batchSize) break
     from += batchSize
   }
@@ -1186,6 +1188,7 @@ export interface AdminImageLyricRow {
   root_word: string
   is_selectable: boolean
   is_blocklisted: boolean
+  lyric_group: { id: number; name: string } | null
 }
 
 export async function markImageReviewed(imageId: number) {
@@ -1244,15 +1247,16 @@ export async function updateLyricImageSelectable(imageId: number, lyricId: numbe
 export async function getImageLyrics(imageId: number): Promise<AdminImageLyricRow[]> {
   const { data, error } = await supabase
     .from('lyric_image')
-    .select('lyric_id, is_selectable, lyric(root_word, is_blocklisted)')
+    .select('lyric_id, is_selectable, lyric(root_word, is_blocklisted, lyric_group!lyric_group_id(id, name))')
     .eq('image_id', imageId)
     .order('lyric_id')
   if (error) throw error
-  return (data as unknown as { lyric_id: number; is_selectable: boolean; lyric: { root_word: string; is_blocklisted: boolean } }[]).map((r) => ({
+  return (data as unknown as { lyric_id: number; is_selectable: boolean; lyric: { root_word: string; is_blocklisted: boolean; lyric_group: { id: number; name: string } | null } }[]).map((r) => ({
     lyric_id: r.lyric_id,
     root_word: r.lyric.root_word,
     is_selectable: r.is_selectable,
     is_blocklisted: r.lyric.is_blocklisted,
+    lyric_group: r.lyric.lyric_group,
   }))
 }
 

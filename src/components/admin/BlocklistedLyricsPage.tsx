@@ -223,6 +223,18 @@ export default function BlocklistedLyricsPage() {
         }}
         columns={[
           { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/blocklisted' }} className="text-primary hover:underline">{l.root_word}</Link> },
+          {
+            header: 'Group',
+            accessor: (l) => l.lyric_group ? (
+              <Link
+                to={`/admin/lyrics/groups/${l.lyric_group.id}`}
+                state={{ backUrl: '/admin/lyrics/blocklisted' }}
+                className="text-primary hover:underline"
+              >
+                {l.lyric_group.name}-
+              </Link>
+            ) : null,
+          },
           { header: 'Blocklist Reason', accessor: (l) => l.blocklist_reason ?? '—' },
           {
             header: 'Actions',

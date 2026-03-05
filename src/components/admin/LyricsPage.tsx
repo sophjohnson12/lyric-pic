@@ -269,7 +269,6 @@ export default function LyricsPage() {
               </Link>
             ),
           },
-          { header: 'Images', accessor: (l) => l.image_count },
           {
             header: 'Group',
             accessor: (l) => l.lyric_group ? (
@@ -281,6 +280,7 @@ export default function LyricsPage() {
               </Link>
             ) : null,
           },
+          { header: 'Images', accessor: (l) => l.image_count },
           {
             header: 'Flagged?',
             accessor: (l) => l.is_flagged ? <Check size={16} className="text-primary" /> : null,

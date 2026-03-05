@@ -243,6 +243,18 @@ return (
         }}
         columns={[
           { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} className="text-primary hover:underline">{l.root_word}</Link> },
+          {
+            header: 'Group',
+            accessor: (l) => l.lyric_group ? (
+              <Link
+                to={`/admin/lyrics/groups/${l.lyric_group.id}`}
+                state={{ backUrl: '/admin/lyrics' }}
+                className="text-primary hover:underline"
+              >
+                {l.lyric_group.name}-
+              </Link>
+            ) : null,
+          },
           { header: 'Flagged By', accessor: (l) => l.flagged_by ?? '—' },
           {
             header: 'Actions',
