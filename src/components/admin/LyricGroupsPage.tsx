@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -16,9 +16,11 @@ import type { AdminLyricGroupRow } from '../../services/adminService'
 export default function LyricGroupsPage() {
   const navigate = useNavigate()
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const [groups, setGroups] = useState<AdminLyricGroupRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const search = searchParams.get('search') ?? ''
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -98,7 +100,14 @@ export default function LyricGroupsPage() {
           type="text"
           placeholder="Search groups..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value
+            setSearchParams(prev => {
+              if (!value) prev.delete('search')
+              else prev.set('search', value)
+              return prev
+            }, { replace: true })
+          }}
           className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
         />
       </div>
@@ -110,7 +119,7 @@ export default function LyricGroupsPage() {
           {
             header: 'Name',
             accessor: (g) => (
-              <Link to={`/admin/lyrics/groups/${g.id}`} className="text-primary hover:underline">
+              <Link to={`/admin/lyrics/groups/${g.id}`} state={{ backUrl: location.pathname + location.search }} className="text-primary hover:underline">
                 {g.name}-
               </Link>
             ),
@@ -120,7 +129,7 @@ export default function LyricGroupsPage() {
             header: 'Actions',
             accessor: (g) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/groups/${g.id}`} className="hover:opacity-70" title="Edit group">
+                <Link to={`/admin/lyrics/groups/${g.id}`} state={{ backUrl: location.pathname + location.search }} className="hover:opacity-70" title="Edit group">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button

@@ -330,7 +330,7 @@ export default function LyricPage() {
                 {lyric.lyric_group_id ? (
                   <Link
                     to={`/admin/lyrics/groups/${lyric.lyric_group_id}`}
-                    state={{ backUrl: `/admin/lyrics/${lyricId}` }}
+                    state={{ backUrl: `/admin/lyrics/${lyricId}`, backState: state }}
                     className="text-primary hover:underline"
                   >
                     {lyric.lyric_group_name}-

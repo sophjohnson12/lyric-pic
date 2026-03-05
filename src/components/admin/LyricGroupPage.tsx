@@ -264,7 +264,7 @@ export default function LyricGroupPage() {
             accessor: (m) => (
               <Link
                 to={`/admin/lyrics/${m.id}`}
-                state={{ backUrl: `/admin/lyrics/groups/${groupId}` }}
+                state={{ backUrl: `/admin/lyrics/groups/${groupId}`, backState: locationState }}
                 className="text-primary hover:underline"
               >
                 {m.root_word}
@@ -316,7 +316,7 @@ export default function LyricGroupPage() {
                     {chunk.map((img, colIdx) => (
                       <th key={img ? img.image_id : `empty-${colIdx}`} className="px-3 py-2 border-b border-primary/20 text-center">
                         {img && (
-                          <Link to={`/admin/images/${img.image_id}`} state={{ backUrl: `/admin/lyrics/groups/${groupId}` }}>
+                          <Link to={`/admin/images/${img.image_id}`} state={{ backUrl: `/admin/lyrics/groups/${groupId}`, backState: locationState }}>
                             <img src={img.url} alt="" className="w-full aspect-square object-cover rounded hover:opacity-80" loading="lazy" />
                           </Link>
                         )}
@@ -348,7 +348,7 @@ export default function LyricGroupPage() {
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <Link
                           to={`/admin/lyrics/${member.id}`}
-                          state={{ backUrl: `/admin/lyrics/groups/${groupId}` }}
+                          state={{ backUrl: `/admin/lyrics/groups/${groupId}`, backState: locationState }}
                           className="text-primary hover:underline"
                         >
                           {member.root_word}

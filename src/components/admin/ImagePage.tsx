@@ -33,10 +33,10 @@ export default function ImagePage() {
   const [selectedLyricIds, setSelectedLyricIds] = useState<Set<number>>(new Set())
   const [addingLyric, setAddingLyric] = useState(false)
 
-  const state = location.state as { reviewQueue?: number[]; parentBreadcrumbs?: Breadcrumb[]; backUrl?: string; backState?: unknown } | null
-  const reviewQueue: number[] = state?.reviewQueue ?? []
-  const backUrl = state?.backUrl ?? '/admin/images'
-  const backState = state?.backState ?? null
+  const [locationState] = useState(() => location.state as { reviewQueue?: number[]; parentBreadcrumbs?: Breadcrumb[]; backUrl?: string; backState?: unknown } | null)
+  const reviewQueue: number[] = locationState?.reviewQueue ?? []
+  const backUrl = locationState?.backUrl ?? '/admin/images'
+  const backState = locationState?.backState ?? null
 
   function navigateNext() {
     if (reviewQueue.length > 0) {
@@ -52,8 +52,8 @@ export default function ImagePage() {
     setTimeout(() => setToast(null), 5000)
   }
 
-  const currentBreadcrumbs: Breadcrumb[] = state?.parentBreadcrumbs
-    ? [...state.parentBreadcrumbs, { label: 'Images' }, { label: 'Image' }]
+  const currentBreadcrumbs: Breadcrumb[] = locationState?.parentBreadcrumbs
+    ? [...locationState.parentBreadcrumbs, { label: 'Images' }, { label: 'Image' }]
     : [{ label: 'Images', to: '/admin/images' }, { label: 'Image' }]
 
   useEffect(() => {
@@ -213,7 +213,7 @@ export default function ImagePage() {
               {image?.is_blocklisted ? 'Unblock' : 'Block'}
             </button>
           </div>
-          {state?.reviewQueue !== undefined && (
+          {locationState?.reviewQueue !== undefined && (
             <button
               onClick={navigateNext}
               disabled={loading}
@@ -256,13 +256,13 @@ export default function ImagePage() {
             keyFn={(l) => l.lyric_id}
             loading={loading}
             columns={[
-              { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: state }} className="text-primary hover:underline">{l.root_word}</Link> },
+              { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.lyric_id}`} state={{ parentBreadcrumbs: [...currentBreadcrumbs, { label: 'Lyrics' }], backUrl: `/admin/images/${imageId}`, backState: locationState }} className="text-primary hover:underline">{l.root_word}</Link> },
               {
                 header: 'Group',
                 accessor: (l) => l.lyric_group ? (
                   <Link
                     to={`/admin/lyrics/groups/${l.lyric_group.id}`}
-                    state={{ backUrl: `/admin/images/${imageId}` }}
+                    state={{ backUrl: `/admin/images/${imageId}`, backState: locationState }}
                     className="text-primary hover:underline"
                   >
                     {l.lyric_group.name}-

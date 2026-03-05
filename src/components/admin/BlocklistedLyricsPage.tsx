@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { Ban, Pencil, Trash2 } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -19,11 +19,13 @@ import type { AdminBlocklistedLyricRow } from '../../services/adminService'
 
 export default function BlocklistedLyricsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const [blocklisted, setBlocklisted] = useState<AdminBlocklistedLyricRow[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
-  const [reasonFilter, setReasonFilter] = useState('')
+  const reasonFilter = searchParams.get('reason') ?? ''
   const [editReasonModal, setEditReasonModal] = useState<{ lyricId: number; word: string; currentReason: string } | null>(null)
   const [editReasonValue, setEditReasonValue] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
@@ -201,7 +203,14 @@ export default function BlocklistedLyricsPage() {
           <label className="text-sm font-medium">Blocklist Reason:</label>
           <select
             value={reasonFilter}
-            onChange={(e) => setReasonFilter(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              setSearchParams(prev => {
+                if (!value) prev.delete('reason')
+                else prev.set('reason', value)
+                return prev
+              }, { replace: true })
+            }}
             className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
           >
             <option value="">All Reasons</option>
@@ -222,13 +231,13 @@ export default function BlocklistedLyricsPage() {
           onToggleAll: handleToggleAllSelect,
         }}
         columns={[
-          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/blocklisted' }} className="text-primary hover:underline">{l.root_word}</Link> },
+          { header: 'Lyric', accessor: (l) => <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: location.pathname + location.search }} className="text-primary hover:underline">{l.root_word}</Link> },
           {
             header: 'Group',
             accessor: (l) => l.lyric_group ? (
               <Link
                 to={`/admin/lyrics/groups/${l.lyric_group.id}`}
-                state={{ backUrl: '/admin/lyrics/blocklisted' }}
+                state={{ backUrl: location.pathname + location.search }}
                 className="text-primary hover:underline"
               >
                 {l.lyric_group.name}-
@@ -240,7 +249,7 @@ export default function BlocklistedLyricsPage() {
             header: 'Actions',
             accessor: (l) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: '/admin/lyrics/blocklisted' }} className="hover:opacity-70" title="View lyric">
+                <Link to={`/admin/lyrics/${l.id}`} state={{ backUrl: location.pathname + location.search }} className="hover:opacity-70" title="View lyric">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button

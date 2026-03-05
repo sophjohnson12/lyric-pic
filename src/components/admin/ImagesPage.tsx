@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import { getAllImages } from '../../services/adminService'
 import type { AdminAllImageRow } from '../../services/adminService'
 
 export default function ImagesPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const [data, setData] = useState<AdminAllImageRow[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [blocklistedFilter, setBlocklistedFilter] = useState<'all' | 'yes' | 'no'>('no')
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('search') ?? '')
+  const blocklistedFilter = (searchParams.get('blocklisted') as 'all' | 'yes' | 'no') ?? 'no'
+  const debouncedSearch = searchParams.get('search') ?? ''
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,11 +23,15 @@ export default function ImagesPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search)
+      setSearchParams(prev => {
+        if (searchInput) prev.set('search', searchInput)
+        else prev.delete('search')
+        return prev
+      }, { replace: true })
       setPage(1)
     }, 300)
     return () => clearTimeout(timer)
-  }, [search])
+  }, [searchInput, setSearchParams])
 
   useEffect(() => {
     loadData()
@@ -54,7 +60,11 @@ export default function ImagesPage() {
   }
 
   function handleFilterChange(value: 'all' | 'yes' | 'no') {
-    setBlocklistedFilter(value)
+    setSearchParams(prev => {
+      if (value === 'no') prev.delete('blocklisted')
+      else prev.set('blocklisted', value)
+      return prev
+    }, { replace: true })
     setPage(1)
   }
 
@@ -65,8 +75,8 @@ export default function ImagesPage() {
         <input
           type="text"
           placeholder="Search images..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm"
         />
         <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
@@ -95,7 +105,7 @@ export default function ImagesPage() {
             <Link
               key={img.id}
               to={`/admin/images/${img.id}`}
-              state={{ backUrl: '/admin/images/all' }}
+              state={{ backUrl: location.pathname + location.search }}
             >
               <img
                 src={img.url}

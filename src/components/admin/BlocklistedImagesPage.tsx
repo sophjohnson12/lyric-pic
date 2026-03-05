@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useLocation } from 'react-router-dom'
 import { Ban, Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -17,9 +17,9 @@ import {
 } from '../../services/adminService'
 import type { AdminBlocklistedImageRow } from '../../services/adminService'
 
-function ImageThumb({ url, imageId }: { url: string; imageId: number }) {
+function ImageThumb({ url, imageId, backUrl }: { url: string; imageId: number; backUrl: string }) {
   return (
-    <Link to={`/admin/images/${imageId}`} state={{ backUrl: '/admin/images/blocklisted' }}>
+    <Link to={`/admin/images/${imageId}`} state={{ backUrl }}>
       <img
         src={url}
         alt=""
@@ -32,11 +32,13 @@ function ImageThumb({ url, imageId }: { url: string; imageId: number }) {
 
 export default function BlocklistedImagesPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const [blocklisted, setBlocklisted] = useState<AdminBlocklistedImageRow[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
   const [reasons, setReasons] = useState<{ id: number; reason: string }[]>([])
-  const [reasonFilter, setReasonFilter] = useState('')
+  const reasonFilter = searchParams.get('reason') ?? ''
   const [editReasonModal, setEditReasonModal] = useState<{ imageId: number; url: string; currentReason: string } | null>(null)
   const [editReasonValue, setEditReasonValue] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
@@ -220,7 +222,14 @@ export default function BlocklistedImagesPage() {
           <label className="text-sm font-medium">Blocklist Reason:</label>
           <select
             value={reasonFilter}
-            onChange={(e) => setReasonFilter(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              setSearchParams(prev => {
+                if (!value) prev.delete('reason')
+                else prev.set('reason', value)
+                return prev
+              }, { replace: true })
+            }}
             className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
           >
             <option value="">All Reasons</option>
@@ -241,7 +250,7 @@ export default function BlocklistedImagesPage() {
           onToggleAll: handleToggleAllSelect,
         }}
         columns={[
-          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} /> },
+          { header: 'Image', accessor: (img) => <ImageThumb url={img.url} imageId={img.id} backUrl={location.pathname + location.search} /> },
           { header: 'Image ID', accessor: (img) => img.image_id },
           { header: 'Blocklist Reason', accessor: (img) => img.blocklist_reason ?? '—' },
           { header: 'Lyrics', accessor: (img) => img.lyric_count },
@@ -249,7 +258,7 @@ export default function BlocklistedImagesPage() {
             header: 'Actions',
             accessor: (img) => (
               <div className="flex items-center gap-2">
-                <Link to={`/admin/images/${img.id}`} state={{ backUrl: '/admin/images/blocklisted' }} className="hover:opacity-70" title="View image">
+                <Link to={`/admin/images/${img.id}`} state={{ backUrl: location.pathname + location.search }} className="hover:opacity-70" title="View image">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
                 <button
