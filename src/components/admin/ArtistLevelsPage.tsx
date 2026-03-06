@@ -8,6 +8,7 @@ import Toast from '../common/Toast'
 import {
   getAdminArtistById,
   getAdminLevels,
+  getPlayableSongDifficultyRanks,
   deleteLevel,
 } from '../../services/adminService'
 import type { AdminLevelRow } from '../../services/adminService'
@@ -21,6 +22,7 @@ export default function ArtistLevelsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
 
   const [levels, setLevels] = useState<AdminLevelRow[]>([])
+  const [songRanks, setSongRanks] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: number; name: string } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -42,7 +44,9 @@ export default function ArtistLevelsPage() {
   async function loadData() {
     setLoading(true)
     try {
-      setLevels(await getAdminLevels(aid))
+      const [lvls, ranks] = await Promise.all([getAdminLevels(aid), getPlayableSongDifficultyRanks(aid)])
+      setLevels(lvls)
+      setSongRanks(ranks)
     } catch (err) {
       showToast(`Error loading levels: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
@@ -103,8 +107,20 @@ export default function ArtistLevelsPage() {
               </Link>
             ),
           },
+          { header: 'Difficulty Rank', accessor: (l) => '≤' + l.max_difficulty_rank },
+          {
+            header: 'Songs',
+            accessor: (l) => (
+              <Link
+                to={`/admin/artists/${aid}/difficulty`}
+                state={{ backUrl: location.pathname, backState: capturedLocationState }}
+                className="text-primary hover:underline"
+              >
+                {songRanks.filter((r) => r <= l.max_difficulty_rank).length}
+              </Link>
+            ),
+          },
           { header: 'Description', accessor: (l) => l.description ?? '—' },
-          { header: 'Max Difficulty Rank', accessor: (l) => l.max_difficulty_rank },
           {
             header: 'Actions',
             accessor: (l) => (

@@ -17,8 +17,10 @@ import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import Toast from '../common/Toast'
 import {
   getAdminArtistById,
+  getAdminLevels,
   getPlayableSongsForDifficulty,
   updateSongDifficultyRank,
+  type AdminLevelRow,
   type DifficultySong,
 } from '../../services/adminService'
 
@@ -124,18 +126,17 @@ function DroppableColumn({ id, label, songs, activeId }: DroppableColumnProps) {
   )
 }
 
-// ─── DifficultyLevelsPage ─────────────────────────────────────────────────────
+// ─── DifficultyRanksPage ─────────────────────────────────────────────────────
 
-const COLUMN_TO_RANK: Record<string, number> = { easy: 1, medium: 2, hard: 3 }
-
-export default function DifficultyLevelsPage() {
+export default function DifficultyRanksPage() {
   const { artistId } = useParams()
   const aid = Number(artistId)
   const location = useLocation()
-  const [capturedLocationState] = useState(() => location.state as { backUrl?: string } | null)
+  const [capturedLocationState] = useState(() => location.state as { backUrl?: string; backState?: unknown } | null)
   const backUrl = capturedLocationState?.backUrl ?? '/admin'
   const { setBreadcrumbs } = useAdminBreadcrumbs()
 
+  const [levels, setLevels] = useState<AdminLevelRow[]>([])
   const [songs, setSongs] = useState<DifficultySong[]>([])
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState<number | null>(null)
@@ -146,16 +147,16 @@ export default function DifficultyLevelsPage() {
       setBreadcrumbs([
         { label: 'Artists', to: '/admin' },
         { label: a.name },
-        { label: 'Difficulty Levels' },
+        { label: 'Difficulty Ranks' },
       ])
     })
   }, [aid, setBreadcrumbs])
 
   useEffect(() => {
     setLoading(true)
-    getPlayableSongsForDifficulty(aid)
-      .then(setSongs)
-      .catch((err) => showToast(`Error: ${err instanceof Error ? err.message : 'Failed to load songs'}`))
+    Promise.all([getAdminLevels(aid), getPlayableSongsForDifficulty(aid)])
+      .then(([lvls, sngs]) => { setLevels(lvls); setSongs(sngs) })
+      .catch((err) => showToast(`Error: ${err instanceof Error ? err.message : 'Failed to load data'}`))
       .finally(() => setLoading(false))
   }, [aid])
 
@@ -178,9 +179,10 @@ export default function DifficultyLevelsPage() {
 
     if (!over) return
 
-    const newRank = COLUMN_TO_RANK[over.id as string]
-    if (newRank == null) return
+    const level = levels.find((l) => String(l.id) === String(over.id))
+    if (!level) return
 
+    const newRank = level.max_difficulty_rank
     const songId = active.id as number
     const song = songs.find((s) => s.id === songId)
     if (!song || song.difficulty_rank === newRank) return
@@ -195,28 +197,36 @@ export default function DifficultyLevelsPage() {
     })
   }
 
-  const easySongs = songs.filter((s) => s.difficulty_rank === 1)
-  const mediumSongs = songs.filter((s) => s.difficulty_rank === 2)
-  const hardSongs = songs.filter((s) => s.difficulty_rank === 3)
   const activeSong = activeId != null ? songs.find((s) => s.id === activeId) : null
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 mb-6">
-        <Link to={backUrl} className="text-primary hover:opacity-70" title="Back to Artists">
+        <Link to={backUrl} state={capturedLocationState?.backState} className="text-primary hover:opacity-70" title="Back to Artists">
           <ArrowLeft size={24} />
         </Link>
-        <h1 className="text-2xl font-bold">Difficulty Levels</h1>
+        <h1 className="text-2xl font-bold">Difficulty Ranks</h1>
       </div>
 
       {loading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
+      ) : levels.length === 0 ? (
+        <p className="text-gray-500 text-sm">No levels defined for this artist. Add levels first.</p>
       ) : (
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex-1 min-h-0 grid grid-cols-3 gap-4 overflow-hidden">
-            <DroppableColumn id="easy" label="Easy" songs={easySongs} activeId={activeId} />
-            <DroppableColumn id="medium" label="Medium" songs={mediumSongs} activeId={activeId} />
-            <DroppableColumn id="hard" label="Hard" songs={hardSongs} activeId={activeId} />
+          <div
+            className="flex-1 min-h-0 grid gap-4 overflow-hidden"
+            style={{ gridTemplateColumns: `repeat(${levels.length}, minmax(0, 1fr))` }}
+          >
+            {levels.map((level) => (
+              <DroppableColumn
+                key={level.id}
+                id={String(level.id)}
+                label={level.name}
+                songs={songs.filter((s) => s.difficulty_rank === level.max_difficulty_rank)}
+                activeId={activeId}
+              />
+            ))}
           </div>
           <DragOverlay>
             {activeSong ? <SongCard song={activeSong} /> : null}

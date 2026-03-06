@@ -17,6 +17,7 @@ export default function ArtistFormPage() {
 
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
+  const [fanbaseName, setFanbaseName] = useState('')
   const [loadMessage, setLoadMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [failureMessage, setFailureMessage] = useState('')
@@ -44,6 +45,7 @@ export default function ArtistFormPage() {
       getAdminArtistById(Number(id)).then((a) => {
         setName(a.name)
         setSlug(a.slug)
+        setFanbaseName(a.fanbase_name ?? '')
         setLoadMessage(a.load_message ?? '')
         setSuccessMessage(a.success_message ?? '')
         setFailureMessage(a.failure_message ?? '')
@@ -81,6 +83,7 @@ export default function ArtistFormPage() {
       const data = {
         name,
         slug,
+        fanbase_name: fanbaseName,
         load_message: loadMessage,
         success_message: successMessage,
         failure_message: failureMessage,
@@ -117,7 +120,7 @@ export default function ArtistFormPage() {
       <div>
         <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
         <div className="space-y-5">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <FormField label="Name" required>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
             </FormField>
@@ -138,10 +141,13 @@ export default function ArtistFormPage() {
               </div>
               {geniusError && <p className="text-red-500 text-sm mt-1">{geniusError}</p>}
             </FormField>
+            <FormField label="Fanbase Name">
+              <input type="text" value={fanbaseName} onChange={(e) => setFanbaseName(e.target.value)} className={inputClass} />
+            </FormField>
           </div>
           <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
-           <FormField label="Load Message" required>
-            <input type="text" value={loadMessage} onChange={(e) => setLoadMessage(e.target.value)} required className={inputClass} />
+           <FormField label="Load Message">
+            <input type="text" value={loadMessage} onChange={(e) => setLoadMessage(e.target.value)} className={inputClass} />
           </FormField>
           <FormField label="Success Message" required>
             <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} required className={inputClass} />

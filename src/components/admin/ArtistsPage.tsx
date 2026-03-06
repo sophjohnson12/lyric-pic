@@ -152,7 +152,7 @@ export default function ArtistsPage() {
                 <Link to={`/admin/artists/${a.id}`} state={{ backUrl: '/admin' + location.search }} title="Edit">
                   <Pencil size={20} className="drop-shadow-md" />
                 </Link>
-                <Link to={`/admin/artists/${a.id}/difficulty`} state={{ backUrl: '/admin' + location.search }} title="Manage difficulty levels">
+                <Link to={`/admin/artists/${a.id}/difficulty`} state={{ backUrl: '/admin' + location.search }} title="Manage difficulty ranks">
                   <SlidersHorizontal size={20} className="drop-shadow-md" />
                 </Link>
                 <button

@@ -565,6 +565,15 @@ export async function getAdminPlayableSongIds(artistId: number): Promise<Set<num
   return new Set((data as { id: number }[]).map((r) => r.id))
 }
 
+export async function getPlayableSongDifficultyRanks(artistId: number): Promise<number[]> {
+  const { data, error } = await supabase
+    .from('playable_song')
+    .select('difficulty_rank')
+    .eq('artist_id', artistId)
+  if (error) throw error
+  return (data as { difficulty_rank: number }[]).map((r) => r.difficulty_rank)
+}
+
 export async function getPlayableSongLyricIds(songId: number): Promise<Set<number>> {
   const { data, error } = await supabase.rpc('get_song_lyrics', { p_song_id: songId })
   if (error) throw error
