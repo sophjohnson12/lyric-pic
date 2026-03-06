@@ -5,6 +5,7 @@ export interface GameLevel {
   name: string
   description: string | null
   max_difficulty_rank: number
+  show_album_filters: boolean
 }
 
 export function parseLevelId(raw: string | undefined): number | null {

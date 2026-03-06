@@ -466,10 +466,13 @@ export function useGame(artistSlug: string, levelId: number | null) {
     }
   }, [state.artist, setPlayedSongIds, loadNewSong])
 
+  const showAlbumFilters = levels.find((l) => l.id === levelId)?.show_album_filters ?? true
+
   return {
     ...state,
     levels,
     levelId,
+    showAlbumFilters,
     albums,
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,
     toastMessage,

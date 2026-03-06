@@ -270,15 +270,17 @@ export default function GamePage() {
         {/* Album and Song dropdowns */}
         {(
           <div>
-            <div className="max-w-xxl mb-6 md:mb-12">
-              <AlbumButtons
-                albums={game.albums}
-                incorrectAlbumIds={game.incorrectAlbumIds}
-                albumGuessed={game.albumGuessed}
-                correctAlbumId={game.correctAlbum?.id || null}
-                onGuess={game.guessAlbum}
-              />
-            </div>
+            {game.showAlbumFilters && (
+              <div className="max-w-xxl mb-6 md:mb-12">
+                <AlbumButtons
+                  albums={game.albums}
+                  incorrectAlbumIds={game.incorrectAlbumIds}
+                  albumGuessed={game.albumGuessed}
+                  correctAlbumId={game.correctAlbum?.id || null}
+                  onGuess={game.guessAlbum}
+                />
+              </div>
+            )}
             <div className="max-w-lg mx-auto">
               <SongDropdown
                 songs={game.allSongs}
@@ -327,12 +329,13 @@ export default function GamePage() {
         />
       )}
       {showInfo && (
-        <InfoModal 
-        wordCount={game.puzzleWords.length}
-        guessCount={game.maxGuessCount}
-        songCount={game.totalPlayableSongs}
-        albums={game.albums} 
-        onClose={() => setShowInfo(false)} 
+        <InfoModal
+          wordCount={game.puzzleWords.length}
+          guessCount={game.maxGuessCount}
+          songCount={game.totalPlayableSongs}
+          albums={game.albums}
+          showAlbumFilters={game.showAlbumFilters}
+          onClose={() => setShowInfo(false)}
         />
       )}
       {showHistory && (

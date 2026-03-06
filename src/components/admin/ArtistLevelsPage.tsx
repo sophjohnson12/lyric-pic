@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useLocation } from 'react-router-dom'
-import { Pencil, Trash2, ArrowLeft } from 'lucide-react'
+import { Pencil, Trash2, ArrowLeft, Check } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import ConfirmPopup from '../common/ConfirmPopup'
@@ -119,6 +119,10 @@ export default function ArtistLevelsPage() {
                 {songRanks.filter((r) => r <= l.max_difficulty_rank).length}
               </Link>
             ),
+          },
+          {
+            header: 'Album Filters?',
+            accessor: (l) => l.show_album_filters ? <Check size={20} className="drop-shadow-md" /> : null,
           },
           { header: 'Description', accessor: (l) => l.description ?? '—' },
           {

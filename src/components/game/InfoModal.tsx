@@ -8,10 +8,11 @@ interface InfoModalProps {
   guessCount: number
   songCount: number
   albums: Album[]
+  showAlbumFilters: boolean
   onClose: () => void
 }
 
-export default function InfoModal({ wordCount, guessCount, songCount, albums, onClose }: InfoModalProps) {
+export default function InfoModal({ wordCount, guessCount, songCount, albums, showAlbumFilters, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
@@ -26,16 +27,18 @@ export default function InfoModal({ wordCount, guessCount, songCount, albums, on
             <li className="flex items-center"><Flag size={15} strokeWidth={3} className="mr-2 text-primary"/> Flag word for review</li>
           </ul>
         </div>
-        <div>
-          <p className="font-semibold text-text">2. Guess the Album</p>
-          <p className="hidden md:inline">Click the buttons to guess the album.</p>
-          <p className="inline md:hidden">Tap the buttons to guess the album.</p>
-          <div className="mt-1">
-            {albums.length > 0 && <AlbumButtons albums={albums} readonly list />}
+        {showAlbumFilters && (
+          <div>
+            <p className="font-semibold text-text">2. Guess the Album</p>
+            <p className="hidden md:inline">Click the buttons to guess the album.</p>
+            <p className="inline md:hidden">Tap the buttons to guess the album.</p>
+            <div className="mt-1">
+              {albums.length > 0 && <AlbumButtons albums={albums} readonly list />}
+            </div>
           </div>
-        </div>        
+        )}
         <div>
-          <p className="font-semibold text-text">3. Guess the Song</p>
+          <p className="font-semibold text-text">{showAlbumFilters ? '3' : '2'}. Guess the Song</p>
           <p>
             <span className="hidden md:inline">You have {guessCount} chances to select a song from the dropdown and click Submit.</span>
             <span className="inline md:hidden">You have {guessCount} chances to select a song and press Submit.</span>

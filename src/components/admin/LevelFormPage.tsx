@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
+import ToggleSwitch from './ToggleSwitch'
 import Toast from '../common/Toast'
 import {
   getAdminArtistById,
@@ -24,6 +25,7 @@ export default function LevelFormPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [maxDifficultyRank, setMaxDifficultyRank] = useState('')
+  const [showAlbumFilters, setShowAlbumFilters] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -44,6 +46,7 @@ export default function LevelFormPage() {
         setName(l.name)
         setDescription(l.description ?? '')
         setMaxDifficultyRank(l.max_difficulty_rank.toString())
+        setShowAlbumFilters(l.show_album_filters)
       })
     }
   }, [id, isEdit])
@@ -57,6 +60,7 @@ export default function LevelFormPage() {
           name,
           description: description || null,
           max_difficulty_rank: Number(maxDifficultyRank),
+          show_album_filters: showAlbumFilters,
         })
       } else {
         await createLevel({
@@ -64,6 +68,7 @@ export default function LevelFormPage() {
           name,
           description: description || null,
           max_difficulty_rank: Number(maxDifficultyRank),
+          show_album_filters: showAlbumFilters,
         })
       }
       setToast('Level saved')
@@ -117,6 +122,9 @@ export default function LevelFormPage() {
               rows={3}
               className={inputClass}
             />
+          </FormField>
+          <FormField label="Album Filters?">
+            <ToggleSwitch checked={showAlbumFilters} onChange={setShowAlbumFilters} />
           </FormField>
         </div>
       </AdminFormPage>
