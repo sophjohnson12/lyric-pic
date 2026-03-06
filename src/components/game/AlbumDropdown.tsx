@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Album } from '../../types/database'
+import AlbumIcon from '../common/AlbumIcon'
 
 interface AlbumButtonsProps {
   albums: Album[]
@@ -19,31 +20,6 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 3)
-}
-
-function AlbumIcon({ album }: { album: Album }) {
-  return (
-    <div
-      className="w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0 overflow-hidden"
-      style={{ 
-        backgroundColor: album.theme_primary_color || '#6b7280', 
-        border: "solid",
-        borderWidth: "1px",
-        borderColor: album.theme_secondary_color || '#9ca3af',
-        fontSize: '10px', 
-        fontWeight: 'bold' }}
-    >
-      {album.image_url !== null ? (
-        <img
-          src={album.image_url}
-          alt={album.name}
-          style={{ width: '15px', height: '15px' }}
-        />
-      ) : (
-        getInitials(album.name)
-      )}
-    </div>
-  )
 }
 
 export default function AlbumButtons({

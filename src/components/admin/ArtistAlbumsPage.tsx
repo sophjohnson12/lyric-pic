@@ -12,6 +12,7 @@ import {
   getAdminPlayableAlbumIds,
 } from '../../services/adminService'
 import type { AdminAlbumRow } from '../../services/adminService'
+import AlbumIcon from '../common/AlbumIcon'
 
 export default function ArtistAlbumsPage() {
   const { artistId } = useParams()
@@ -126,19 +127,8 @@ export default function ArtistAlbumsPage() {
           },
           { header: 'Release Year', accessor: (a) => a.release_year ?? '—' },
           {
-            header: 'Primary Color',
-            accessor: (a) =>
-              a.theme_primary_color ? (
-                <span className="flex items-center gap-2">
-                  <span
-                    className="inline-block w-6 h-6 rounded border border-primary/20"
-                    style={{ backgroundColor: a.theme_primary_color }}
-                  />
-                  <span className="text-xs">{a.theme_primary_color}</span>
-                </span>
-              ) : (
-                '—'
-              ),
+            header: 'Icon',
+            accessor: (a) => <AlbumIcon album={a} />,
           },
           { header: 'Songs', accessor: (a) => (
               <Link to={`/admin/artists/${aid}/songs?album=${a.id}&enabled=true`} state={{ backUrl: location.pathname + location.search, backState: capturedLocationState }} className="text-primary hover:underline">

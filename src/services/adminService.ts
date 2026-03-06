@@ -236,13 +236,15 @@ export interface AdminAlbumRow {
   release_year: number | null
   is_selectable: boolean
   theme_primary_color: string | null
+  theme_secondary_color: string | null
+  image_url: string | null
   song_count: number
 }
 
 export async function getAdminAlbums(artistId: number): Promise<AdminAlbumRow[]> {
   const { data, error } = await supabase
     .from('album')
-    .select('id, name, release_year, is_selectable, theme_primary_color')
+    .select('id, name, release_year, is_selectable, theme_primary_color, theme_secondary_color, image_url')
     .eq('artist_id', artistId)
     .order('release_year', { ascending: true })
   if (error) throw error

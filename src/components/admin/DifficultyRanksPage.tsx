@@ -15,6 +15,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import Toast from '../common/Toast'
+import AlbumIcon from '../common/AlbumIcon'
 import {
   getAdminArtistById,
   getAdminLevels,
@@ -33,39 +34,12 @@ interface SongCardProps {
 
 function SongCard({ song, isDragging }: SongCardProps) {
   const album = song.album
-  const initials = album?.name
-    ? album.name
-        .split(' ')
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join('')
-        .toUpperCase()
-    : '?'
 
   return (
     <div
       className={`flex items-center gap-2 bg-white rounded-lg px-2.5 py-2 shadow-sm border border-gray-200 select-none${isDragging ? ' opacity-50' : ''}`}
     >
-      {/* Album icon */}
-      <div
-        className="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border"
-        style={{
-          backgroundColor: album?.theme_primary_color ?? '#6b7280',
-          borderColor: album?.theme_secondary_color ?? 'transparent',
-        }}
-      >
-        {album?.image_url ? (
-          <img
-            src={album.image_url}
-            style={{ width: 15, height: 15, objectFit: 'contain' }}
-            alt=""
-          />
-        ) : (
-          <span className="text-white font-bold leading-none" style={{ fontSize: 9 }}>
-            {initials}
-          </span>
-        )}
-      </div>
+      {album && <AlbumIcon album={album} />}
       <span className="text-sm text-gray-800 leading-tight">{song.name}</span>
     </div>
   )

@@ -6,6 +6,7 @@ import FormField from './FormField'
 import ColorField from './ColorField'
 import Toast from '../common/Toast'
 import { getAdminAlbumById, getAdminArtistById, createAlbum, updateAlbum, uploadAlbumIcon } from '../../services/adminService'
+import AlbumIcon from '../common/AlbumIcon'
 
 export default function AlbumFormPage() {
   const { artistId, id } = useParams()
@@ -110,18 +111,14 @@ export default function AlbumFormPage() {
           </div>
           <FormField label="Icon (SVG)">
             <div className="flex items-center gap-3">
-              {(pendingFile || imageUrl) && (
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
-                  style={{ backgroundColor: primaryColor || '#6b7280', border: '1px solid', borderColor: secondaryColor || '#9ca3af' }}
-                >
-                  <img
-                    src={pendingFile ? URL.createObjectURL(pendingFile) : imageUrl}
-                    alt="icon preview"
-                    style={{ width: 24, height: 24, objectFit: 'contain' }}
-                  />
-                </div>
-              )}
+              <AlbumIcon
+                album={{
+                  name,
+                  image_url: pendingFile ? URL.createObjectURL(pendingFile) : imageUrl,
+                  theme_primary_color: primaryColor,
+                  theme_secondary_color: secondaryColor,
+                }}
+              />
               <label className={`${inputClass} cursor-pointer`}>
                 {pendingFile ? pendingFile.name : 'Choose file…'}
                 <input
