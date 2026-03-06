@@ -119,6 +119,14 @@ export default function ArtistAlbumsPage() {
         loading={loading}
         rowClassName={(a) => playableAlbumIds.size > 0 && !playableAlbumIds.has(a.id) ? 'bg-gray-100' : undefined}
         columns={[
+          {
+            header: 'Icon',
+            accessor: (a) => (
+            <Link to={`/admin/artists/${aid}/albums/${a.id}`} state={{ backUrl: location.pathname + location.search, backState: capturedLocationState }}>
+                <AlbumIcon album={a} />
+              </Link>            
+            ),
+          },
           { header: 'Name', accessor: (a) => (
               <Link to={`/admin/artists/${aid}/albums/${a.id}`} state={{ backUrl: location.pathname + location.search, backState: capturedLocationState }} className="text-primary hover:underline">
                 {a.name}
@@ -126,10 +134,6 @@ export default function ArtistAlbumsPage() {
             ),
           },
           { header: 'Release Year', accessor: (a) => a.release_year ?? '—' },
-          {
-            header: 'Icon',
-            accessor: (a) => <AlbumIcon album={a} />,
-          },
           { header: 'Songs', accessor: (a) => (
               <Link to={`/admin/artists/${aid}/songs?album=${a.id}&enabled=true`} state={{ backUrl: location.pathname + location.search, backState: capturedLocationState }} className="text-primary hover:underline">
                 {a.song_count}

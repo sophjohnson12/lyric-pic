@@ -47,7 +47,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="text-xl font-bold text-primary mb-4">Settings and Stats</h2>
+      <h2 className="text-xl font-bold text-primary mb-4">Settings & Stats</h2>
 
       <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
       <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
