@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getArtistBySlug } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
+import { LOAD_MESSAGE_KEY } from '../../utils/constants'
 import type { Artist } from '../../types/database'
 import type { Difficulty } from '../../types/game'
 
@@ -29,10 +30,12 @@ export default function DifficultyPage() {
   }, [artistSlug, applyArtistTheme])
 
   function handleSelect(difficulty: Difficulty) {
-    const params = artist?.load_message
-      ? `?msg=${encodeURIComponent(artist.load_message)}`
-      : ''
-    navigate(`/${artistSlug}/${difficulty}${params}`)
+    if (artist?.load_message) {
+      localStorage.setItem(LOAD_MESSAGE_KEY, artist.load_message)
+    } else {
+      localStorage.removeItem(LOAD_MESSAGE_KEY)
+    }
+    navigate(`/${artistSlug}/${difficulty}`)
   }
 
   if (loading) {

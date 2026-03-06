@@ -1,4 +1,5 @@
-import { Info, History, SkipForward } from 'lucide-react';
+import { Info, Sliders, SkipForward } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
 import ProgressBar from '../common/ProgressBar';
 
 interface HeaderProps {
@@ -19,12 +20,14 @@ export default function Header({
   onHistory,
   onSkip,
 }: HeaderProps) {
+  const { artistSlug } = useParams<{ artistSlug: string }>()
+
   return (
     <header className="sticky bg-bg top-0 z-50 px-4 py-3">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-primary">
-            Lyric Pic
+            <Link to={`/${artistSlug}`}>Lyric Pic</Link>
           </h1>
           {artistName && (
             <span className="text-xs text-gray-600 hidden sm:inline mt-1">
@@ -50,7 +53,7 @@ export default function Header({
             className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
             title="Song history"
           >
-            <History size={20} />
+            <Sliders size={20} />
           </button>
           <button
             onClick={onSkip}

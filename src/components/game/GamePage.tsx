@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import { parseDifficulty } from '../../types/game'
+import { LOAD_MESSAGE_KEY } from '../../utils/constants'
 import Header from '../layout/Header'
 import WordInput from './WordInput'
 import AlbumButtons from './AlbumDropdown'
@@ -9,7 +10,7 @@ import SongDropdown from './SongDropdown'
 import GuessCounter from './GuessCounter'
 import ResultModal from './ResultModal'
 import InfoModal from './InfoModal'
-import HistoryModal from './HistoryModal'
+import SettingsModal from './SettingsModal'
 import Toast from '../common/Toast'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { flagWord, flagImage } from '../../services/supabase'
@@ -17,8 +18,7 @@ import { flagWord, flagImage } from '../../services/supabase'
 export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const loadMessage = searchParams.get('msg')
+  const loadMessage = localStorage.getItem(LOAD_MESSAGE_KEY)
   const difficulty = parseDifficulty(rawDifficulty)
 
   const game = useGame(artistSlug || '', difficulty ?? 'hard')
@@ -183,10 +183,11 @@ export default function GamePage() {
           </div>
         </div>
         {showHistory && (
-          <HistoryModal
+          <SettingsModal
             playedSongIds={game.playedSongIds}
             playedCount={game.playedSongIds.length}
             totalSongs={game.totalPlayableSongs}
+            difficulty={difficulty}
             onClose={() => setShowHistory(false)}
             onClearHistory={game.clearHistory}
           />
@@ -333,10 +334,11 @@ export default function GamePage() {
         />
       )}
       {showHistory && (
-        <HistoryModal
+        <SettingsModal
           playedSongIds={game.playedSongIds}
           playedCount={game.playedSongIds.length}
           totalSongs={game.totalPlayableSongs}
+          difficulty={difficulty}
           onClose={() => setShowHistory(false)}
           onClearHistory={game.clearHistory}
         />
