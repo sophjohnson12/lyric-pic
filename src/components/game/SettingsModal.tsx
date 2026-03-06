@@ -80,12 +80,14 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         </ul>
       )}
       {songNames.length > 0 && (
-        <button
-          onClick={handleClear}
-          className="w-full py-2 h-12 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
-        >
-          Clear {levels.find((l) => l.id === levelId)?.name ?? ''} History
-        </button>
+        <div className="flex items-center justify-center ">
+          <button
+            onClick={handleClear}
+            className="w-full md:w-auto py-2 px-4 h-12 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
+          >
+            Clear {levels.find((l) => l.id === levelId)?.name ?? ''} History
+          </button>
+        </div>
       )}
     </Modal>
   )

@@ -1,5 +1,5 @@
 import Modal from '../common/Modal'
-import { LockOpen, History, SkipForward, RefreshCw, Flag } from 'lucide-react';
+import { Lock, Sliders, SkipForward, RefreshCw, Flag } from 'lucide-react';
 import type { Album } from '../../types/database'
 import AlbumButtons from './AlbumDropdown'
 
@@ -22,7 +22,7 @@ export default function InfoModal({ wordCount, guessCount, songCount, albums, on
           <p className="inline md:hidden"> Each picture shows a word from the song. Type and press Enter for unlimited guesses!</p>
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"><RefreshCw size={15} strokeWidth={3} className="mr-2 text-primary"/> Load new picture</li>
-            <li className="flex items-center"><LockOpen size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
+            <li className="flex items-center"><Lock size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
             <li className="flex items-center"><Flag size={15} strokeWidth={3} className="mr-2 text-primary"/> Flag word for review</li>
           </ul>
         </div>
@@ -42,7 +42,7 @@ export default function InfoModal({ wordCount, guessCount, songCount, albums, on
             <span> Play all {songCount} songs!</span>
           </p>
           <ul className="mt-1 space-y-1">
-            <li className="flex items-center"> <History size={15} strokeWidth={3} className="mr-2 text-primary"/> View  played songs</li>
+            <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/> Manage levels and game history</li>
             <li className="flex items-center"><SkipForward size={15} strokeWidth={3} className="mr-2 text-primary"/>  Skip song</li>
           </ul>
         </div>
