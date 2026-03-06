@@ -26,22 +26,30 @@ export async function getAllArtists(): Promise<Artist[]> {
   return data
 }
 
-export async function getPlayableSongIds(artistId: number): Promise<number[]> {
-  const { data, error } = await supabase
+export async function getPlayableSongIds(artistId: number, maxDifficultyRank?: number): Promise<number[]> {
+  let query = supabase
     .from('playable_song')
     .select('id, album!inner(is_selectable)')
     .eq('artist_id', artistId)
     .eq('album.is_selectable', true)
+  if (maxDifficultyRank != null) {
+    query = query.lte('difficulty_rank', maxDifficultyRank)
+  }
+  const { data, error } = await query
   if (error) throw error
   return (data as { id: number }[]).map((d) => d.id)
 }
 
-export async function getRandomSong(artistId: number, excludeIds: number[]): Promise<Song | null> {
+export async function getRandomSong(artistId: number, excludeIds: number[], maxDifficultyRank?: number): Promise<Song | null> {
   let query = supabase
     .from('playable_song')
     .select('*, album!inner(is_selectable)')
     .eq('artist_id', artistId)
     .eq('album.is_selectable', true)
+
+  if (maxDifficultyRank != null) {
+    query = query.lte('difficulty_rank', maxDifficultyRank)
+  }
 
   if (excludeIds.length > 0) {
     query = query.not('id', 'in', `(${excludeIds.join(',')})`)
@@ -84,13 +92,17 @@ export async function getAlbumById(albumId: number): Promise<Album | null> {
   return data
 }
 
-export async function getArtistSongs(artistId: number, excludeIds: number[]): Promise<Song[]> {
+export async function getArtistSongs(artistId: number, excludeIds: number[], maxDifficultyRank?: number): Promise<Song[]> {
   let query = supabase
     .from('playable_song')
     .select('*, album!inner(is_selectable)')
     .eq('artist_id', artistId)
     .eq('album.is_selectable', true)
     .order('name')
+
+  if (maxDifficultyRank != null) {
+    query = query.lte('difficulty_rank', maxDifficultyRank)
+  }
 
   if (excludeIds.length > 0) {
     query = query.not('id', 'in', `(${excludeIds.join(',')})`)
@@ -104,7 +116,8 @@ export async function getArtistSongs(artistId: number, excludeIds: number[]): Pr
 export async function getSongsByAlbum(
   artistId: number,
   albumId: number | null,
-  excludeIds: number[]
+  excludeIds: number[],
+  maxDifficultyRank?: number
 ): Promise<Song[]> {
   let query = supabase
     .from('playable_song')
@@ -112,6 +125,10 @@ export async function getSongsByAlbum(
     .eq('artist_id', artistId)
     .eq('is_selectable', true)
     .order('name')
+
+  if (maxDifficultyRank != null) {
+    query = query.lte('difficulty_rank', maxDifficultyRank)
+  }
 
   if (albumId === null) {
     query = query.is('album_id', null)

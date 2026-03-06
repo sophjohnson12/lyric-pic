@@ -1,5 +1,18 @@
 import type { Artist, Album, Song } from './database'
 
+export type Difficulty = 'easy' | 'medium' | 'hard'
+
+export const DIFFICULTY_MAX_RANK: Record<Difficulty, number> = {
+  easy: 1,
+  medium: 2,
+  hard: 3,
+}
+
+const VALID_DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
+export function parseDifficulty(raw: string | undefined): Difficulty | null {
+  return VALID_DIFFICULTIES.includes(raw as Difficulty) ? (raw as Difficulty) : null
+}
+
 export interface PuzzleWord {
   lyricId: number
   word: string

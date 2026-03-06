@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import GamePage from './components/game/GamePage'
+import DifficultyPage from './components/game/DifficultyPage'
 import LoginPage from './components/admin/LoginPage'
 import ProtectedRoute from './components/admin/ProtectedRoute'
 import AdminLayout from './components/admin/AdminLayout'
@@ -55,7 +56,8 @@ export default function App() {
           <Route path="images/:imageId" element={<ImagePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
-        <Route path="/:artistSlug" element={<GamePage />} />
+        <Route path="/:artistSlug" element={<DifficultyPage />} />
+        <Route path="/:artistSlug/:difficulty" element={<GamePage />} />
       </Routes>
     </BrowserRouter>
   )

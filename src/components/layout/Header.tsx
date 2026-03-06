@@ -8,6 +8,7 @@ interface HeaderProps {
   onInfo: () => void
   onHistory: () => void
   onSkip: () => void
+  onChangeDifficulty?: () => void
 }
 
 export default function Header({

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
+import { parseDifficulty } from '../../types/game'
 import Header from '../layout/Header'
 import WordInput from './WordInput'
 import AlbumButtons from './AlbumDropdown'
@@ -14,8 +15,13 @@ import ConfirmPopup from '../common/ConfirmPopup'
 import { flagWord, flagImage } from '../../services/supabase'
 
 export default function GamePage() {
-  const { artistSlug } = useParams<{ artistSlug: string }>()
-  const game = useGame(artistSlug || '')
+  const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const loadMessage = searchParams.get('msg')
+  const difficulty = parseDifficulty(rawDifficulty)
+
+  const game = useGame(artistSlug || '', difficulty ?? 'hard')
 
   const [showInfo, setShowInfo] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -115,10 +121,17 @@ export default function GamePage() {
   }, [guessedCount])
 
 
+  if (!difficulty) {
+    return <Navigate to={`/${artistSlug}`} replace />
+  }
+
   if (game.loading) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-gray-500 border-t-transparent rounded-full animate-spin" />
+        {loadMessage && (
+          <p className="text-text/60 font-medium text-center max-w-xs px-4">{loadMessage}</p>
+        )}
       </div>
     )
   }
@@ -147,6 +160,7 @@ export default function GamePage() {
           onInfo={() => setShowInfo(true)}
           onHistory={() => setShowHistory(true)}
           onSkip={() => {}}
+          onChangeDifficulty={() => navigate(`/${artistSlug}`)}
         />
         <div className="flex items-center justify-center p-8">
           <div className="text-center">
