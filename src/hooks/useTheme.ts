@@ -23,7 +23,7 @@ export function useTheme() {
 
       setTimeout(() => {
         document.documentElement.classList.remove('theme-transitioning')
-      }, 2000)
+      }, 1000)
     }
   }, [])
 

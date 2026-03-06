@@ -411,27 +411,33 @@ export function useGame(artistSlug: string, levelId: number | null) {
       }
 
       if (songId === state.currentSong.id) {
+        const correctAlbum = currentAlbumRef.current
         setState((prev) => ({
           ...prev,
           songGuessed: true,
-          correctAlbum: prev.correctAlbum || currentAlbumRef.current,
+          correctAlbum: prev.correctAlbum || correctAlbum,
         }))
+        // Fade into album theme after modal renders (if not already on album theme)
+        if (!state.albumGuessed && correctAlbum) {
+          setTimeout(() => applyAlbumTheme(correctAlbum), 50)
+        }
         return 'correct'
       }
 
       const newIncorrect = [...state.incorrectSongGuesses, songName].sort()
       const isLastGuess = newIncorrect.length >= maxGuessCount
 
-      if (isLastGuess && !state.albumGuessed) {
-        const correctAlbum = currentAlbumRef.current
-        if (correctAlbum) applyAlbumTheme(correctAlbum)
-      }
-
       setState((prev) => ({
         ...prev,
         incorrectSongGuesses: newIncorrect,
         ...(isLastGuess ? { correctAlbum: prev.correctAlbum || currentAlbumRef.current } : {}),
       }))
+
+      // Fade into album theme after modal renders (if not already on album theme)
+      if (isLastGuess && !state.albumGuessed) {
+        const correctAlbum = currentAlbumRef.current
+        if (correctAlbum) setTimeout(() => applyAlbumTheme(correctAlbum), 50)
+      }
       return 'incorrect'
     },
     [state.currentSong, state.incorrectSongGuesses, state.albumGuessed, maxGuessCount, showToast, applyAlbumTheme]
