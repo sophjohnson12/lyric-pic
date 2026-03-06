@@ -304,6 +304,7 @@ export default function GamePage() {
       {/* Modals */}
       {game.songGuessed && (
         <ResultModal
+          correct={true}
           message={game.currentSong.success_message || game.artist.success_message || "You got it!"}
           song={game.currentSong}
           album={correctAlbumForModal}
@@ -312,6 +313,7 @@ export default function GamePage() {
       )}
       {game.songFailed && (
         <ResultModal
+          correct={false}
           message={game.currentSong.failure_message || game.artist.failure_message || "Better luck next time."}
           song={game.currentSong}
           album={correctAlbumForModal}

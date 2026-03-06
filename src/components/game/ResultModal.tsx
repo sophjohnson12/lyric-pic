@@ -1,15 +1,17 @@
 import { useEffect, useRef } from 'react'
+import { CircleCheck, CircleX } from 'lucide-react'
 import Modal from '../common/Modal'
 import type { Song, Album } from '../../types/database'
 
 interface ResultModalProps {
+  correct: boolean
   message: string
   song: Song
   album: Album | null
   onNext: () => void
 }
 
-export default function ResultModal({ message, song, album, onNext }: ResultModalProps) {
+export default function ResultModal({ correct, message, song, album, onNext }: ResultModalProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -25,6 +27,12 @@ export default function ResultModal({ message, song, album, onNext }: ResultModa
     <Modal showClose={false}>
       <div className="text-center py-4">
         <h2 className="text-2xl font-bold text-primary mb-4">{message}</h2>
+        <div className="flex justify-center mb-4">
+          {correct
+            ? <CircleCheck size={56} className="text-lime-500 drop-shadow-md" />
+            : <CircleX size={56} className="text-red-600 drop-shadow-md" />
+          }
+        </div>
         <p className="text-lg font-semibold text-text mb-1">{songDisplay}</p>
         <p className="text-sm text-text/60 mb-6">{album ? album.name : 'Single'}</p>
         <button
