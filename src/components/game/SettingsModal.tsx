@@ -70,11 +70,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       <div className="md:hidden mb-2">
         <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
       </div>
-      {loading ? (
-        <p className="text-text/60 text-sm">Loading...</p>
-      ) : songNames.length === 0 ? (
-        <p className="text-text/60 text-sm">No songs played yet.</p>
-      ) : (
+      {!loading && songNames.length > 0 && (
         <ul className="space-y-1 mb-4">
           {songNames.map((name) => (
             <li key={name} className="text-sm text-text">
