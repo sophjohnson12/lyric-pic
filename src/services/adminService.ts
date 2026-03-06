@@ -128,6 +128,7 @@ export interface AdminArtistRow {
   name: string
   slug: string
   is_selectable: boolean
+  level_count: number
   album_count: number
   song_count: number
   needs_reset: boolean
@@ -153,7 +154,8 @@ export async function getAdminArtists(): Promise<AdminArtistRow[]> {
         needsResetQuery = needsResetQuery.not('refreshed_at', 'is', null)
       }
 
-      const [{ count: albumCount }, { count: songCount }, { count: needsResetCount }] = await Promise.all([
+      const [{ count: levelCount }, { count: albumCount }, { count: songCount }, { count: needsResetCount }] = await Promise.all([
+        supabase.from('level').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
         supabase.from('playable_album').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
         supabase.from('playable_song').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
         needsResetQuery,
@@ -161,6 +163,7 @@ export async function getAdminArtists(): Promise<AdminArtistRow[]> {
 
       return {
         ...a,
+        level_count: levelCount ?? 0,
         album_count: albumCount ?? 0,
         song_count: songCount ?? 0,
         needs_reset: (needsResetCount ?? 0) > 0,
@@ -2545,5 +2548,59 @@ export async function updateSongDifficultyRank(id: number, rank: number): Promis
     .from('song')
     .update({ difficulty_rank: rank, updated_at: new Date().toISOString() })
     .eq('id', id)
+  if (error) throw error
+}
+
+// ─── Levels ───────────────────────────────────────────────
+
+export interface AdminLevelRow {
+  id: number
+  name: string
+  description: string | null
+  max_difficulty_rank: number
+}
+
+export async function getAdminLevels(artistId: number): Promise<AdminLevelRow[]> {
+  const { data, error } = await supabase
+    .from('level')
+    .select('id, name, description, max_difficulty_rank')
+    .eq('artist_id', artistId)
+    .order('max_difficulty_rank', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getLevelById(id: number): Promise<AdminLevelRow & { artist_id: number }> {
+  const { data, error } = await supabase
+    .from('level')
+    .select('id, artist_id, name, description, max_difficulty_rank')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
+export interface LevelFormData {
+  artist_id: number
+  name: string
+  description: string | null
+  max_difficulty_rank: number
+}
+
+export async function createLevel(data: LevelFormData): Promise<void> {
+  const { error } = await supabase.from('level').insert(data)
+  if (error) throw error
+}
+
+export async function updateLevel(id: number, data: Omit<LevelFormData, 'artist_id'>): Promise<void> {
+  const { error } = await supabase
+    .from('level')
+    .update(data)
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteLevel(id: number): Promise<void> {
+  const { error } = await supabase.from('level').delete().eq('id', id)
   if (error) throw error
 }

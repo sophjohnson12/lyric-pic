@@ -110,6 +110,14 @@ export default function ArtistsPage() {
             ),
           },
           {
+            header: 'Levels',
+            accessor: (a) => (
+              <Link to={`/admin/artists/${a.id}/levels`} state={{ backUrl: '/admin' + location.search }} className="text-primary hover:underline">
+                {a.level_count}
+              </Link>
+            ),
+          },
+          {
             header: 'Albums',
             accessor: (a) => (
               <Link to={`/admin/artists/${a.id}/albums`} state={{ backUrl: '/admin' + location.search }} className="text-primary hover:underline">

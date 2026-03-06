@@ -2,6 +2,7 @@ export interface Artist {
   id: number
   name: string
   slug: string
+  fanbase_name: string | null
   load_message: string | null
   success_message: string | null
   failure_message: string | null
@@ -122,6 +123,16 @@ export interface LyricImage {
   lyric_id: number
   image_id: number       // FK to image.id
   is_selectable: boolean
+}
+
+export interface Level {
+  id: number
+  artist_id: number
+  name: string
+  description: string | null
+  max_difficulty_rank: number
+  created_at: string
+  updated_at: string | null
 }
 
 export interface AppConfig {
