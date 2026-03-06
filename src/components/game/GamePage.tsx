@@ -189,6 +189,7 @@ export default function GamePage() {
             totalSongs={game.totalPlayableSongs}
             levels={game.levels}
           levelId={levelId}
+          fanbaseName={game.artist?.fanbase_name ?? null}
             onClose={() => setShowHistory(false)}
             onClearHistory={game.clearHistory}
           />
@@ -341,6 +342,7 @@ export default function GamePage() {
           totalSongs={game.totalPlayableSongs}
           levels={game.levels}
           levelId={levelId}
+          fanbaseName={game.artist?.fanbase_name ?? null}
           onClose={() => setShowHistory(false)}
           onClearHistory={game.clearHistory}
         />

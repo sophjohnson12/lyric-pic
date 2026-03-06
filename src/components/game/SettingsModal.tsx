@@ -11,11 +11,12 @@ interface SettingsModalProps {
   totalSongs: number
   levels: GameLevel[]
   levelId: number
+  fanbaseName: string | null
   onClose: () => void
   onClearHistory: () => void
 }
 
-export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelId, onClose, onClearHistory }: SettingsModalProps) {
+export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelId, fanbaseName, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,7 +49,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-primary mb-4">Settings and Stats</h2>
 
-      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">Swiftie Level</h3>
+      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
       <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
         {levels.map((level) => (
           <button
