@@ -67,7 +67,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       </div>
 
       <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">Game History</h3>
-      <div className="md:hidden mb-2">
+      <div className="mb-2">
         <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
       </div>
       {!loading && songNames.length > 0 && (
@@ -84,7 +84,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
           onClick={handleClear}
           className="w-full py-2 h-12 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
         >
-          Clear History
+          Clear {levels.find((l) => l.id === levelId)?.name ?? ''} History
         </button>
       )}
     </Modal>
