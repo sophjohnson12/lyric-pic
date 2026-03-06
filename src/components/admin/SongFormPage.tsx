@@ -9,6 +9,7 @@ import {
   getAdminSongById,
   getAdminArtistById,
   getAlbumsForDropdown,
+  getAdminLevels,
   createSong,
   updateSong,
   toggleSongSelectable,
@@ -35,6 +36,7 @@ export default function SongFormPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [failureMessage, setFailureMessage] = useState('')
   const [albums, setAlbums] = useState<{ id: number; name: string }[]>([])
+  const [difficultyRankOptions, setDifficultyRankOptions] = useState<number[]>([])
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [isSelectable, setIsSelectable] = useState(false)
@@ -64,6 +66,13 @@ export default function SongFormPage() {
 
   useEffect(() => {
     getAlbumsForDropdown(aid).then(setAlbums)
+  }, [aid])
+
+  useEffect(() => {
+    getAdminLevels(aid).then((levels) => {
+      const distinct = [...new Set(levels.map((l) => l.max_difficulty_rank))].sort((a, b) => a - b)
+      setDifficultyRankOptions(distinct)
+    })
   }, [aid])
 
   useEffect(() => {
@@ -174,9 +183,9 @@ export default function SongFormPage() {
             <FormField label="Difficulty Rank" required>
               <select value={difficultyRank} onChange={(e) => setDifficultyRank(e.target.value)} required className={inputClass}>
                 <option value="">Select...</option>
-                <option value="1">1 - Easy</option>
-                <option value="2">2 - Medium</option>
-                <option value="3">3 - Hard</option>
+                {difficultyRankOptions.map((rank) => (
+                  <option key={rank} value={rank}>{rank}</option>
+                ))}
               </select>
             </FormField>
           </div>
