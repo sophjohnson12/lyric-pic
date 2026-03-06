@@ -23,7 +23,7 @@ export default function Header({
   const { artistSlug } = useParams<{ artistSlug: string }>()
 
   return (
-    <header className="sticky bg-bg top-0 z-50 px-4 py-3">
+    <header className="sticky bg-bg top-0 z-50 px-4 py-2">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-primary">
