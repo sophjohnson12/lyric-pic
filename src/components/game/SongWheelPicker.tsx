@@ -7,6 +7,10 @@ interface SongWheelPickerProps {
   onSelectionChange?: (songId: number | null, songName: string) => void
   itemHeight?: number
   visibleCount?: number
+  /** Fraction of window.innerHeight available to this picker's container (e.g. 0.8 for max-h-[80vh]) */
+  containerFraction?: number
+  /** Fixed px reserved for non-picker content within that container (padding, buttons, etc.) */
+  reservedHeight?: number
 }
 
 export default function SongWheelPicker({
@@ -15,6 +19,8 @@ export default function SongWheelPicker({
   onSelectionChange,
   itemHeight = 48,
   visibleCount = 3,
+  containerFraction = 1,
+  reservedHeight = 0,
 }: SongWheelPickerProps) {
   const filteredSongs = songs.filter((s) => !incorrectGuesses.includes(s.name))
   const items = filteredSongs
@@ -22,9 +28,23 @@ export default function SongWheelPicker({
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [effectiveVisibleCount, setEffectiveVisibleCount] = useState(visibleCount)
 
-  const containerHeight = visibleCount * itemHeight
-  const padding = Math.floor(visibleCount / 2) * itemHeight
+  useEffect(() => {
+    const update = () => {
+      const available = window.innerHeight * containerFraction - reservedHeight
+      const maxItems = Math.floor(available / itemHeight)
+      // Keep odd so selection is symmetric around the center item; at least 1
+      const maxOdd = maxItems % 2 === 0 ? maxItems - 1 : maxItems
+      setEffectiveVisibleCount(Math.min(visibleCount, Math.max(1, maxOdd)))
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [visibleCount, itemHeight, containerFraction, reservedHeight])
+
+  const containerHeight = effectiveVisibleCount * itemHeight
+  const padding = Math.floor(effectiveVisibleCount / 2) * itemHeight
 
   // Effective index clamped to valid range
   const effectiveIndex = Math.min(selectedIndex, Math.max(0, items.length - 1))

@@ -29,7 +29,7 @@ export default function ResultModal({ correct, message, song, album, onNext }: R
         <h2 className="text-2xl font-bold text-primary mb-4">{message}</h2>
         <div className="flex justify-center mb-4">
           {correct
-            ? <CircleCheck size={56} className="text-lime-500 drop-shadow-md" />
+            ? <CircleCheck size={56} className="text-green-600 drop-shadow-md" />
             : <CircleX size={56} className="text-red-600 drop-shadow-md" />
           }
         </div>

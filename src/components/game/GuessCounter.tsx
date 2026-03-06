@@ -8,8 +8,8 @@ interface GuessCounterProps {
 
 export default function GuessCounter({ guessMessage, guessCount, allowedCount }: GuessCounterProps) {  
     return (
-    <div className="flex flex-col gap-1 w-full">
-        <div className="flex flex-row gap-2 items-center justify-center py-4">
+    <div className="flex flex-col gap-1 w-full items-center justify-center">
+        <div className="flex flex-row gap-2.5 items-center justify-center py-4 w-7/8 sm:w-1/2 md:w-full ">
             <div className="text-xs text-text/60 text-center font-medium">
                 {guessMessage || "Guesses:"}
             </div>

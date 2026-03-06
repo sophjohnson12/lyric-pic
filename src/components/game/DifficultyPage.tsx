@@ -59,7 +59,7 @@ export default function DifficultyPage() {
             <button
               key={level.id}
               onClick={() => handleSelect(level.id)}
-              className="items-center justify-between px-6 py-4 border-primary border text-primary rounded-xl font-semibold hover:bg-secondary transition-opacity cursor-pointer"
+              className="items-center justify-between px-6 py-4 border-primary border-2 text-primary rounded-xl font-semibold hover:bg-secondary/50 transition-opacity cursor-pointer"
             >
               <h2 className="text-xl font-bold">{level.name}</h2>
               {level.description && (

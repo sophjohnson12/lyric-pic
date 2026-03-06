@@ -128,7 +128,7 @@ export default function GamePage() {
   if (game.loading) {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
-        <div className="w-10 h-10 border-4 border-gray-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-text border-t-transparent rounded-full animate-spin" />
         {loadMessage && (
           <p className="text-text/60 font-medium text-center max-w-xs px-4">{loadMessage}</p>
         )}
@@ -218,7 +218,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="flex flex-col bg-bg">
+    <div className="h-dvh md:h-auto flex flex-col bg-bg">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}
@@ -281,7 +281,7 @@ export default function GamePage() {
                 />
               </div>
             )}
-            <div className="max-w-lg mx-auto">
+            <div className="md:max-w-lg mx-auto">
               <SongDropdown
                 songs={game.allSongs}
                 incorrectGuesses={game.incorrectSongGuesses}
@@ -290,7 +290,7 @@ export default function GamePage() {
                 isMd={isMd}
               />
             </div>
-            <div className="max-w-lg mx-auto">
+            <div className="md:max-w-lg mx-auto">
               <GuessCounter
                 guessMessage={game.artist.guess_counter_message}
                 guessCount={game.incorrectSongGuesses.length}
