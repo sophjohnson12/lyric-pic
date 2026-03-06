@@ -3,24 +3,19 @@ import { useParams } from 'react-router-dom'
 import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import { getPlayedSongNames } from '../../services/supabase'
-import type { Difficulty } from '../../types/game'
-
-const DIFFICULTIES: { value: Difficulty; label: string }[] = [
-  { value: 'easy', label: 'Casual' },
-  { value: 'medium', label: 'Moderate' },
-  { value: 'hard', label: 'Hardcore' },
-]
+import type { GameLevel } from '../../types/game'
 
 interface SettingsModalProps {
   playedSongIds: number[]
   playedCount: number
   totalSongs: number
-  difficulty: Difficulty
+  levels: GameLevel[]
+  levelId: number
   onClose: () => void
   onClearHistory: () => void
 }
 
-export default function SettingsModal({ playedSongIds, playedCount, totalSongs, difficulty, onClose, onClearHistory }: SettingsModalProps) {
+export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelId, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,9 +39,9 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     onClose()
   }
 
-  const handleDifficultyChange = (d: Difficulty) => {
-    if (d === difficulty) return
-    window.location.href = `/${artistSlug}/${d}`
+  const handleLevelChange = (id: number) => {
+    if (id === levelId) return
+    window.location.href = `/${artistSlug}/${id}`
   }
 
   return (
@@ -55,17 +50,17 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
 
       <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">Swiftie Level</h3>
       <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
-        {DIFFICULTIES.map(({ value, label }) => (
+        {levels.map((level) => (
           <button
-            key={value}
-            onClick={() => handleDifficultyChange(value)}
+            key={level.id}
+            onClick={() => handleLevelChange(level.id)}
             className={`flex-1 h-12 text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
-              value === difficulty
+              level.id === levelId
                 ? 'bg-primary text-white'
                 : 'text-primary hover:bg-secondary'
             }`}
           >
-            {label}
+            {level.name}
           </button>
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Artist, Album, Song, AppConfig } from '../types/database'
-import type { WordWithStats, PexelsImage } from '../types/game'
+import type { WordWithStats, PexelsImage, GameLevel } from '../types/game'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -24,6 +24,16 @@ export async function getAllArtists(): Promise<Artist[]> {
     .order('name')
   if (error) throw error
   return data
+}
+
+export async function getArtistLevels(artistId: number): Promise<GameLevel[]> {
+  const { data, error } = await supabase
+    .from('level')
+    .select('id, name, description, max_difficulty_rank')
+    .eq('artist_id', artistId)
+    .order('max_difficulty_rank', { ascending: true })
+  if (error) throw error
+  return data ?? []
 }
 
 export async function getPlayableSongIds(artistId: number, maxDifficultyRank?: number): Promise<number[]> {

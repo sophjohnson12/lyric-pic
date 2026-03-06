@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { stem } from '../utils/stem'
 import type { Artist, Album, Song } from '../types/database'
-import type { PuzzleWord, GameState, WordWithStats, Difficulty } from '../types/game'
-import { DIFFICULTY_MAX_RANK } from '../types/game'
+import type { PuzzleWord, GameState, WordWithStats, GameLevel } from '../types/game'
 import {
   getArtistBySlug,
+  getArtistLevels,
   getPlayableSongIds,
   getRandomSong,
   getSongWords,
@@ -40,10 +40,9 @@ function selectPuzzleWords(words: WordWithStats[]): WordWithStats[] {
   return selected
 }
 
-export function useGame(artistSlug: string, difficulty: Difficulty) {
-  const maxDifficultyRank = DIFFICULTY_MAX_RANK[difficulty]
+export function useGame(artistSlug: string, levelId: number | null) {
   const [playedSongIds, setPlayedSongIds] = useLocalStorage<number[]>(
-    `${LOCAL_STORAGE_KEY_PREFIX}${artistSlug}_${difficulty}`,
+    `${LOCAL_STORAGE_KEY_PREFIX}${artistSlug}_level_${levelId}`,
     []
   )
 
@@ -74,12 +73,14 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState(3)
 
+  const [levels, setLevels] = useState<GameLevel[]>([])
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songLyricIdsRef = useRef<number[]>([])
   // Key = puzzle word index (0–2), value = Set of all lyric IDs in that word's group
   const puzzleWordGroupMembersRef = useRef<Map<number, Set<number>>>(new Map())
   const currentAlbumRef = useRef<Album | null>(null)
   const maxImageCountRef = useRef<number | undefined>(undefined)
+  const maxDifficultyRankRef = useRef<number | undefined>(undefined)
 
   // Keep state.playedSongIds in sync
   useEffect(() => {
@@ -92,7 +93,7 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
   }, [])
 
   const loadNewSong = useCallback(
-    async (artist: Artist, excludeIds: number[], difficultyRank: number) => {
+    async (artist: Artist, excludeIds: number[], difficultyRank: number | undefined) => {
       setState((prev) => ({ ...prev, loading: true }))
 
       try {
@@ -210,7 +211,12 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
         }
 
         applyArtistTheme(artist)
-        const playableSongIds = await getPlayableSongIds(artist.id, maxDifficultyRank)
+        const fetchedLevels = await getArtistLevels(artist.id)
+        if (cancelled) return
+        setLevels(fetchedLevels)
+        const currentLevel = fetchedLevels.find((l) => l.id === levelId)
+        maxDifficultyRankRef.current = currentLevel?.max_difficulty_rank
+        const playableSongIds = await getPlayableSongIds(artist.id, maxDifficultyRankRef.current)
         if (cancelled) return
 
         // Reconcile play history: drop any IDs that are no longer in the playable set
@@ -221,7 +227,7 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
         }
 
         setState((prev) => ({ ...prev, artist, totalPlayableSongs: playableSongIds.length }))
-        await loadNewSong(artist, validPlayedIds, maxDifficultyRank)
+        await loadNewSong(artist, validPlayedIds, maxDifficultyRankRef.current)
       } catch (err) {
         console.error('Failed to initialize game:', err)
         if (!cancelled) setState((prev) => ({ ...prev, loading: false }))
@@ -230,7 +236,7 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
     init()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistSlug, difficulty])
+  }, [artistSlug, levelId])
 
   const guessWord = useCallback(
     async (wordIndex: number, guess: string) => {
@@ -368,11 +374,11 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
 
         if (album) {
           applyAlbumTheme(album)
-          getSongsByAlbum(state.artist!.id, albumId, playedSongIds, maxDifficultyRank).then((songs) => {
+          getSongsByAlbum(state.artist!.id, albumId, playedSongIds, maxDifficultyRankRef.current).then((songs) => {
             setFilteredSongs(songs)
           })
         } else {
-          getSongsByAlbum(state.artist!.id, null, playedSongIds, maxDifficultyRank).then((songs) => {
+          getSongsByAlbum(state.artist!.id, null, playedSongIds, maxDifficultyRankRef.current).then((songs) => {
             setFilteredSongs(songs)
           })
         }
@@ -436,13 +442,13 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
     const failed = !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount
     applyArtistTheme(state.artist)
     if (failed) {
-      loadNewSong(state.artist, playedSongIds, maxDifficultyRank)
+      loadNewSong(state.artist, playedSongIds, maxDifficultyRankRef.current)
     } else {
       const newPlayed = [...playedSongIds, state.currentSong.id]
       setPlayedSongIds(newPlayed)
-      loadNewSong(state.artist, newPlayed, maxDifficultyRank)
+      loadNewSong(state.artist, newPlayed, maxDifficultyRankRef.current)
     }
-  }, [state.currentSong, state.artist, state.songGuessed, state.incorrectSongGuesses, maxGuessCount, playedSongIds, setPlayedSongIds, applyArtistTheme, loadNewSong, maxDifficultyRank])
+  }, [state.currentSong, state.artist, state.songGuessed, state.incorrectSongGuesses, maxGuessCount, playedSongIds, setPlayedSongIds, applyArtistTheme, loadNewSong])
 
   const skipSong = useCallback(() => {
     if (!state.artist) return
@@ -450,18 +456,20 @@ export function useGame(artistSlug: string, difficulty: Difficulty) {
     const excludeIds = state.currentSong
       ? [...playedSongIds, state.currentSong.id]
       : playedSongIds
-    loadNewSong(state.artist, excludeIds, maxDifficultyRank)
-  }, [state.artist, state.currentSong, playedSongIds, applyArtistTheme, loadNewSong, maxDifficultyRank])
+    loadNewSong(state.artist, excludeIds, maxDifficultyRankRef.current)
+  }, [state.artist, state.currentSong, playedSongIds, applyArtistTheme, loadNewSong])
 
   const clearHistory = useCallback(() => {
     setPlayedSongIds([])
     if (state.artist) {
-      loadNewSong(state.artist, [], maxDifficultyRank)
+      loadNewSong(state.artist, [], maxDifficultyRankRef.current)
     }
-  }, [state.artist, setPlayedSongIds, loadNewSong, maxDifficultyRank])
+  }, [state.artist, setPlayedSongIds, loadNewSong])
 
   return {
     ...state,
+    levels,
+    levelId,
     albums,
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,
     toastMessage,

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
-import { parseDifficulty } from '../../types/game'
+import { parseLevelId } from '../../types/game'
 import { LOAD_MESSAGE_KEY } from '../../utils/constants'
 import Header from '../layout/Header'
 import WordInput from './WordInput'
@@ -19,9 +19,9 @@ export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
   const navigate = useNavigate()
   const loadMessage = localStorage.getItem(LOAD_MESSAGE_KEY)
-  const difficulty = parseDifficulty(rawDifficulty)
+  const levelId = parseLevelId(rawDifficulty)
 
-  const game = useGame(artistSlug || '', difficulty ?? 'hard')
+  const game = useGame(artistSlug || '', levelId)
 
   const [showInfo, setShowInfo] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -121,7 +121,7 @@ export default function GamePage() {
   }, [guessedCount])
 
 
-  if (!difficulty) {
+  if (!levelId) {
     return <Navigate to={`/${artistSlug}`} replace />
   }
 
@@ -187,7 +187,8 @@ export default function GamePage() {
             playedSongIds={game.playedSongIds}
             playedCount={game.playedSongIds.length}
             totalSongs={game.totalPlayableSongs}
-            difficulty={difficulty}
+            levels={game.levels}
+          levelId={levelId}
             onClose={() => setShowHistory(false)}
             onClearHistory={game.clearHistory}
           />
@@ -338,7 +339,8 @@ export default function GamePage() {
           playedSongIds={game.playedSongIds}
           playedCount={game.playedSongIds.length}
           totalSongs={game.totalPlayableSongs}
-          difficulty={difficulty}
+          levels={game.levels}
+          levelId={levelId}
           onClose={() => setShowHistory(false)}
           onClearHistory={game.clearHistory}
         />
