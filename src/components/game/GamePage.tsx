@@ -237,7 +237,7 @@ export default function GamePage() {
           {game.puzzleWords.map((word: any, index: number) => (
             <div
               key={`${game.currentSong!.id}-${index}`}
-              className="w-full flex-shrink-0 md:w-auto snap-center px-1 md:px-0"
+              className="w-full flex-shrink-0 md:w-auto snap-center md:px-0"
             >
               <WordInput
                 key={`${game.currentSong!.id}-${index}`}

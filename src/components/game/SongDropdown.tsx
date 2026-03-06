@@ -34,8 +34,8 @@ export default function SongDropdown({
     }
 
     return (
-      <div className="w-full px-5">
-        <div className="flex items-center gap-2">
+      <div className="w-full flex items-center justify-center">
+        <div className="w-7/8 md:w-full gap-2">
           <input
             type="text"
             readOnly
