@@ -331,6 +331,17 @@ export async function updateAlbum(id: number, data: AlbumFormData) {
   if (error) throw error
 }
 
+export async function uploadAlbumIcon(file: File): Promise<string> {
+  const ext = file.name.split('.').pop()
+  const fileName = `${Date.now()}.${ext}`
+  const { error } = await supabase.storage
+    .from('album_icons')
+    .upload(fileName, file, { contentType: file.type })
+  if (error) throw error
+  const { data } = supabase.storage.from('album_icons').getPublicUrl(fileName)
+  return data.publicUrl
+}
+
 export async function toggleAlbumSelectable(id: number, value: boolean) {
   const now = new Date().toISOString()
   const { error } = await supabase

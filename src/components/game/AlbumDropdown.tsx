@@ -35,7 +35,7 @@ function AlbumIcon({ album }: { album: Album }) {
     >
       {album.image_url !== null ? (
         <img
-          src={window.location.origin + album.image_url}
+          src={album.image_url}
           alt={album.name}
           style={{ width: '15px', height: '15px' }}
         />
@@ -109,7 +109,7 @@ export default function AlbumButtons({
           >
             {album.image_url !== null ?
               <img
-                src={window.location.origin + album.image_url}
+                src={album.image_url}
                 alt={album.name}
                 style={{ width: '30px', height: '30px' }}
               />

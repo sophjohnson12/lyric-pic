@@ -5,7 +5,7 @@ import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
 import ColorField from './ColorField'
 import Toast from '../common/Toast'
-import { getAdminAlbumById, getAdminArtistById, createAlbum, updateAlbum } from '../../services/adminService'
+import { getAdminAlbumById, getAdminArtistById, createAlbum, updateAlbum, uploadAlbumIcon } from '../../services/adminService'
 
 export default function AlbumFormPage() {
   const { artistId, id } = useParams()
@@ -23,6 +23,7 @@ export default function AlbumFormPage() {
   const [secondaryColor, setSecondaryColor] = useState('')
   const [bgColor, setBgColor] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -54,6 +55,10 @@ export default function AlbumFormPage() {
     e.preventDefault()
     setSaving(true)
     try {
+      let finalImageUrl = imageUrl || null
+      if (pendingFile) {
+        finalImageUrl = await uploadAlbumIcon(pendingFile)
+      }
       const data = {
         artist_id: aid,
         name,
@@ -61,7 +66,7 @@ export default function AlbumFormPage() {
         theme_primary_color: primaryColor || null,
         theme_secondary_color: secondaryColor || null,
         theme_background_color: bgColor || null,
-        image_url: imageUrl || null,
+        image_url: finalImageUrl,
       }
       if (isEdit) {
         await updateAlbum(Number(id), data)
@@ -103,8 +108,30 @@ export default function AlbumFormPage() {
               <ColorField value={bgColor} onChange={setBgColor} />
             </FormField>
           </div>
-          <FormField label="Image URL">
-            <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className={inputClass} />
+          <FormField label="Icon (SVG)">
+            <div className="flex items-center gap-3">
+              {(pendingFile || imageUrl) && (
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
+                  style={{ backgroundColor: primaryColor || '#6b7280', border: '1px solid', borderColor: secondaryColor || '#9ca3af' }}
+                >
+                  <img
+                    src={pendingFile ? URL.createObjectURL(pendingFile) : imageUrl}
+                    alt="icon preview"
+                    style={{ width: 24, height: 24, objectFit: 'contain' }}
+                  />
+                </div>
+              )}
+              <label className={`${inputClass} cursor-pointer`}>
+                {pendingFile ? pendingFile.name : 'Choose file…'}
+                <input
+                  type="file"
+                  accept=".svg,image/svg+xml"
+                  onChange={(e) => setPendingFile(e.target.files?.[0] ?? null)}
+                  className="sr-only"
+                />
+              </label>
+            </div>
           </FormField>
         </div>     
       </AdminFormPage>

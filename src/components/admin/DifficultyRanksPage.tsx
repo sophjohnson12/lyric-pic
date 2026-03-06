@@ -56,7 +56,7 @@ function SongCard({ song, isDragging }: SongCardProps) {
       >
         {album?.image_url ? (
           <img
-            src={window.location.origin + album.image_url}
+            src={album.image_url}
             style={{ width: 15, height: 15, objectFit: 'contain' }}
             alt=""
           />
