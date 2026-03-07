@@ -125,8 +125,8 @@ export default function WordInput({
           <div className="relative h-12 bg-white flex items-center shrink-0">
             {isGuessed ? (
               <motion.div
-                initial={{ width: "3rem" }}
-                animate={{ width: "100%" }}
+                initial={{ clipPath: "inset(0 100% 0 0)" }}
+                animate={{ clipPath: "inset(0 0% 0 0)" }}
                 className={`absolute inset-0 bg-primary flex items-center justify-center text-white rounded-b-xl border border-secondary pl-3 ${debugMode ? 'pr-10' : 'pr-3'}`}
               >
                 {revealBehavior === 'full_lyric' && puzzleWord.lineText
