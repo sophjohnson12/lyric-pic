@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Lock } from 'lucide-react'
 import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import { getPlayedSongNames } from '../../services/supabase'
@@ -72,7 +71,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       </div>
 
       <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2 flex items-center gap-1">
-        Reveal Behavior <Lock size={13} />
+        Reveal Behavior
       </h3>
       <div className="flex gap-6 mb-6">
         {(['word_only', 'full_lyric'] as const).map((value) => (
