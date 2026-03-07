@@ -30,7 +30,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
 
   return (
     <Modal showClose={false}>
-      <div className="flex flex-col text-center justify-center items-center">
+      <div className="flex flex-col text-center justify-center items-center md:w-11/12 mx-auto">
         <div className="flex justify-center mb-2">
           {correct
             ? <CircleCheck size={60} className="text-green-600 drop-shadow-md" />
@@ -38,7 +38,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
           }
         </div>
         <h2 className="text-xl md:text-2xl font-bold text-primary mb-4 mx-auto">{message}</h2>
-        <div className="bg-secondary/25 rounded-xl border-2 border-primary p-4 md:p-6 mb-4 w-11/12">
+        <div className="bg-secondary/25 rounded-xl border-2 border-primary p-4 md:p-6 mb-4 w-full">
           <p className="text-md md:text-xl font-semibold text-text">{songDisplay}</p>
           <p className={"text-sm text-text/80 mb-2 md:mb-4 italic"}>
             {album ? album.name : 'Single'}
@@ -56,7 +56,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
         <button
           ref={buttonRef}
           onClick={onNext}
-          className="h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-medium hover:opacity-90 cursor-pointer"
+          className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-medium hover:opacity-90 cursor-pointer"
         >
           Next Song
         </button>

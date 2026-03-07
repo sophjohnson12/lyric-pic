@@ -21,17 +21,17 @@ export default function ConfirmPopup({
     <Modal onClose={onCancel} showClose={false}>
       {title && <h2 className="text-lg font-bold text-primary mb-2">{title}</h2>}
       <p className="text-sm mb-6">{message}</p>
-      <div className="flex justify-end gap-3">
+      <div className="flex gap-3 md:justify-end">
         <button
           onClick={onCancel}
-          className="bg-gray-200 text-text border border-gray-100 px-4 py-2 h-12 md:h-auto rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+          className="flex-1 md:flex-none text-text border border-gray-200 px-4 py-2 h-12 md:h-auto rounded-lg font-medium hover:bg-black/10 transition-colors cursor-pointer"
         >
           {cancelLabel}
         </button>
         <button
           onClick={onConfirm}
           autoFocus
-          className="bg-primary text-white border border-secondary px-4 py-2 h-12 md:h-auto rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+          className="flex-1 md:flex-none bg-primary text-white border border-secondary px-4 py-2 h-12 md:h-auto rounded-lg font-medium hover:opacity-90 cursor-pointer"
         >
           {confirmLabel}
         </button>
