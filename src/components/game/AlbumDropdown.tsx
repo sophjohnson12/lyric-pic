@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import type { Album } from '../../types/database'
 import AlbumIcon from '../common/AlbumIcon'
 
@@ -88,7 +88,7 @@ export default function AlbumButtons({
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!containerRef.current) return
     const obs = new ResizeObserver(([entry]) => setContainerWidth(entry.contentRect.width))
     obs.observe(containerRef.current)
