@@ -244,16 +244,16 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
       />
 
-      <main className="max-w-4xl w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
+      <main className="max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:grid md:grid-cols-3 gap-0 md:gap-6 mb-3 md:mb-12 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:flex-wrap md:justify-center gap-0 md:gap-6 mb-3 md:mb-12 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
           >
           {game.puzzleWords.map((word: any, index: number) => (
             <div
               key={`${game.currentSong!.id}-${index}`}
-              className="w-full flex-shrink-0 md:w-auto snap-center md:px-0"
+              className="w-full flex-shrink-0 md:w-[calc(33.333%-1rem)] md:flex-none snap-center md:px-0"
             >
               <WordInput
                 key={`${game.currentSong!.id}-${index}`}
@@ -274,7 +274,7 @@ export default function GamePage() {
           ))}
         </div>
         {/* Carousel Dots (Mobile Only) */}
-        <div className="flex justify-center gap-2 mb-3 md:mb-12 md:hidden">
+        <div className={`flex justify-center gap-2 mb-3 md:mb-12 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
           {game.puzzleWords.map((_: any, index: number) => (
             <button
               key={index}
@@ -352,7 +352,7 @@ export default function GamePage() {
       )}
       {showInfo && (
         <InfoModal
-          wordCount={game.puzzleWords.length}
+          minSongLyricCount={game.minSongLyricCount}
           guessCount={game.maxGuessCount}
           songCount={game.totalPlayableSongs}
           albums={game.albums}

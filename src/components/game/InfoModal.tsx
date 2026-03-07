@@ -19,9 +19,9 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
       <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
       <div className="space-y-4 text-sm text-text/80">
         <div>
-          <p className="font-semibold text-text">1. Guess the {minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words</p>
-          <p className="hidden md:inline"> Each picture represents a word from the song. Type a word and press Enter. You have unlimited attempts!</p>
-          <p className="inline md:hidden"> Each picture shows a word from the song. Type and press Enter for unlimited attempts!</p>
+          <p className="font-semibold text-text">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</p>
+          <p className="hidden md:inline"> {minSongLyricCount === 1 ? 'The picture represents' : 'Each picture represents'} a word from the song. Type a word and press Enter. You have unlimited attempts!</p>
+          <p className="inline md:hidden"> {minSongLyricCount === 1 ? 'The picture shows' : 'Each picture shows'} a word from the song. Type and press Enter for unlimited attempts!</p>
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"><RefreshCw size={15} strokeWidth={3} className="mr-2 text-primary"/> Load new picture</li>
             <li className="flex items-center"><Lock size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
