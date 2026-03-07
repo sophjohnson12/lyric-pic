@@ -245,7 +245,7 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
       />
 
-      <main className="min-w-2xs max-w-11/12 lg:max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
+      <main className="min-w-2xs sm:max-w-11/12 lg:max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
