@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
-import { parseLevelId } from '../../types/game'
+import { parseLevelSlug } from '../../types/game'
 import { LOAD_MESSAGE_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import type { RevealBehavior } from './SettingsModal'
@@ -21,9 +21,9 @@ export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
   const navigate = useNavigate()
   const loadMessage = localStorage.getItem(LOAD_MESSAGE_KEY)
-  const levelId = parseLevelId(rawDifficulty)
+  const levelSlug = parseLevelSlug(rawDifficulty)
 
-  const game = useGame(artistSlug || '', levelId)
+  const game = useGame(artistSlug || '', levelSlug)
 
   const [revealBehavior, setRevealBehavior] = useLocalStorage<RevealBehavior>(REVEAL_BEHAVIOR_KEY, 'word_only')
 
@@ -125,7 +125,7 @@ export default function GamePage() {
   }, [guessedCount])
 
 
-  if (!levelId) {
+  if (!levelSlug) {
     return <Navigate to={`/${artistSlug}`} replace />
   }
 
@@ -192,7 +192,7 @@ export default function GamePage() {
             playedCount={game.playedSongIds.length}
             totalSongs={game.totalPlayableSongs}
             levels={game.levels}
-          levelId={levelId}
+          levelSlug={levelSlug}
           fanbaseName={game.artist?.fanbase_name ?? null}
           revealBehavior={revealBehavior}
           onRevealBehaviorChange={setRevealBehavior}
@@ -356,7 +356,7 @@ export default function GamePage() {
           playedCount={game.playedSongIds.length}
           totalSongs={game.totalPlayableSongs}
           levels={game.levels}
-          levelId={levelId}
+          levelSlug={levelSlug}
           fanbaseName={game.artist?.fanbase_name ?? null}
           revealBehavior={revealBehavior}
           onRevealBehaviorChange={setRevealBehavior}

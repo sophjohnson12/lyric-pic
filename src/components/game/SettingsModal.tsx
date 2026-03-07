@@ -13,7 +13,7 @@ interface SettingsModalProps {
   playedCount: number
   totalSongs: number
   levels: GameLevel[]
-  levelId: number
+  levelSlug: string
   fanbaseName: string | null
   revealBehavior: RevealBehavior
   onRevealBehaviorChange: (behavior: RevealBehavior) => void
@@ -21,7 +21,7 @@ interface SettingsModalProps {
   onClearHistory: () => void
 }
 
-export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelId, fanbaseName, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
+export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, fanbaseName, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,9 +45,9 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     onClose()
   }
 
-  const handleLevelChange = (id: number) => {
-    if (id === levelId) return
-    window.location.href = `/${artistSlug}/${id}`
+  const handleLevelChange = (slug: string) => {
+    if (slug === levelSlug) return
+    window.location.href = `/${artistSlug}/${slug}`
   }
 
   return (
@@ -59,9 +59,9 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         {levels.map((level) => (
           <button
             key={level.id}
-            onClick={() => handleLevelChange(level.id)}
+            onClick={() => handleLevelChange(level.name.toLowerCase())}
             className={`flex-1 h-12 text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
-              level.id === levelId
+              level.name.toLowerCase() === levelSlug
                 ? 'bg-primary text-white'
                 : 'text-primary hover:bg-secondary/50'
             }`}
@@ -115,7 +115,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             onClick={handleClear}
             className="w-full md:w-auto py-2 px-4 h-12 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
           >
-            Clear {levels.find((l) => l.id === levelId)?.name ?? ''} History
+            Clear {levels.find((l) => l.name.toLowerCase() === levelSlug)?.name ?? ''} History
           </button>
         </div>
       )}

@@ -27,13 +27,13 @@ export default function DifficultyPage() {
     load().catch(() => setLoading(false))
   }, [artistSlug, applyArtistTheme])
 
-  function handleSelect(levelId: number) {
+  function handleSelect(level: GameLevel) {
     if (artist?.load_message) {
       localStorage.setItem(LOAD_MESSAGE_KEY, artist.load_message)
     } else {
       localStorage.removeItem(LOAD_MESSAGE_KEY)
     }
-    navigate(`/${artistSlug}/${levelId}`)
+    navigate(`/${artistSlug}/${level.name.toLowerCase()}`)
   }
 
   if (loading) {
@@ -58,7 +58,7 @@ export default function DifficultyPage() {
           {levels.map((level) => (
             <button
               key={level.id}
-              onClick={() => handleSelect(level.id)}
+              onClick={() => handleSelect(level)}
               className="items-center justify-between px-6 py-4 border-primary border text-primary rounded-xl font-semibold hover:bg-secondary/50 transition-opacity cursor-pointer"
             >
               <h2 className="text-xl font-bold">{level.name}</h2>

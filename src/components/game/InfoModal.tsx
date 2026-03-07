@@ -46,7 +46,7 @@ export default function InfoModal({ wordCount, guessCount, songCount, albums, sh
             <span> Play all {songCount} songs!</span>
           </p>
           <ul className="mt-1 space-y-1">
-            <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/> Manage levels and game history</li>
+            <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/> Manage levels, settings, and game history</li>
             <li className="flex items-center"><SkipForward size={15} strokeWidth={3} className="mr-2 text-primary"/>  Skip song</li>
           </ul>
         </div>

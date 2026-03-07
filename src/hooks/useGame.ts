@@ -47,9 +47,9 @@ function selectPuzzleWords(words: WordWithStats[]): WordWithStats[] {
   return selected
 }
 
-export function useGame(artistSlug: string, levelId: number | null) {
+export function useGame(artistSlug: string, levelSlug: string | null) {
   const [playedSongIds, setPlayedSongIds] = useLocalStorage<number[]>(
-    `${LOCAL_STORAGE_KEY_PREFIX}${artistSlug}_level_${levelId}`,
+    `${LOCAL_STORAGE_KEY_PREFIX}${artistSlug}_level_${levelSlug}`,
     []
   )
 
@@ -222,7 +222,7 @@ export function useGame(artistSlug: string, levelId: number | null) {
         const fetchedLevels = await getArtistLevels(artist.id)
         if (cancelled) return
         setLevels(fetchedLevels)
-        const currentLevel = fetchedLevels.find((l) => l.id === levelId)
+        const currentLevel = fetchedLevels.find((l) => l.name.toLowerCase() === levelSlug)
         maxDifficultyRankRef.current = currentLevel?.max_difficulty_rank
         const playableSongIds = await getPlayableSongIds(artist.id, maxDifficultyRankRef.current)
         if (cancelled) return
@@ -244,7 +244,7 @@ export function useGame(artistSlug: string, levelId: number | null) {
     init()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [artistSlug, levelId])
+  }, [artistSlug, levelSlug])
 
   const guessWord = useCallback(
     async (wordIndex: number, guess: string) => {
@@ -476,12 +476,12 @@ export function useGame(artistSlug: string, levelId: number | null) {
     }
   }, [state.artist, setPlayedSongIds, loadNewSong])
 
-  const showAlbumFilters = levels.find((l) => l.id === levelId)?.show_album_filters ?? true
+  const showAlbumFilters = levels.find((l) => l.name.toLowerCase() === levelSlug)?.show_album_filters ?? true
 
   return {
     ...state,
     levels,
-    levelId,
+    levelSlug,
     showAlbumFilters,
     albums,
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,

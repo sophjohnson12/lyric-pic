@@ -8,10 +8,9 @@ export interface GameLevel {
   show_album_filters: boolean
 }
 
-export function parseLevelId(raw: string | undefined): number | null {
+export function parseLevelSlug(raw: string | undefined): string | null {
   if (!raw) return null
-  const n = parseInt(raw, 10)
-  return isNaN(n) ? null : n
+  return raw.toLowerCase()
 }
 
 export interface PuzzleWord {
