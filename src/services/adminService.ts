@@ -2255,9 +2255,9 @@ export async function processSongLyrics(songId: number) {
           if (word.endsWith("'s")) {
             word = word.slice(0, -2)
           }
-          // Strip trailing s'
+          // Strip trailing s' apostrophe
           else if (word.endsWith("s'")) {
-            word = word.slice(0, -2)
+            word = word.slice(0, -1)
           }
           // Replace trailing in' with ing
           else if (word.endsWith("in'")) {
