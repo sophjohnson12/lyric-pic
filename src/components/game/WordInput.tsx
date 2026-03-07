@@ -127,7 +127,7 @@ export default function WordInput({
               <motion.div
                 initial={{ clipPath: "inset(0 100% 0 0)" }}
                 animate={{ clipPath: "inset(0 0% 0 0)" }}
-                className={`absolute inset-0 bg-primary flex items-center justify-center text-white rounded-b-xl border border-secondary pl-3 ${debugMode ? 'pr-10' : 'pr-3'}`}
+                className={`absolute inset-0 bg-primary flex items-center justify-center text-white rounded-b-xl border border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
               >
                 {revealBehavior === 'full_lyric' && puzzleWord.lineText
                   ? <span className="text-sm text-center leading-snug line-clamp-2"><HighlightedLine text={puzzleWord.lineText} word={puzzleWord.word} /></span>
