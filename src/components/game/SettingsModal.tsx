@@ -53,23 +53,6 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-primary mb-4">Settings & Stats</h2>
 
-      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
-      <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
-        {levels.map((level) => (
-          <button
-            key={level.id}
-            onClick={() => handleLevelChange(level.name.toLowerCase())}
-            className={`flex-1 h-12 text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
-              level.name.toLowerCase() === levelSlug
-                ? 'bg-primary text-white'
-                : 'text-primary hover:bg-secondary/50'
-            }`}
-          >
-            {level.name}
-          </button>
-        ))}
-      </div>
-
       <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2 flex items-center gap-1">
         Reveal Behavior
       </h3>
@@ -88,6 +71,23 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
               {value === 'word_only' ? 'Word Only' : 'Full Lyric'}
             </span>
           </label>
+        ))}
+      </div>
+
+      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
+      <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
+        {levels.map((level) => (
+          <button
+            key={level.id}
+            onClick={() => handleLevelChange(level.slug)}
+            className={`flex-1 h-12 text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
+              level.slug === levelSlug
+                ? 'bg-primary text-white'
+                : 'text-primary hover:bg-secondary/50'
+            }`}
+          >
+            {level.name}
+          </button>
         ))}
       </div>
 
@@ -114,7 +114,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             onClick={handleClear}
             className="w-full md:w-auto py-2 px-4 h-12 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
           >
-            Clear {levels.find((l) => l.name.toLowerCase() === levelSlug)?.name ?? ''} History
+            Clear {levels.find((l) => l.slug === levelSlug)?.name ?? ''} History
           </button>
         </div>
       )}

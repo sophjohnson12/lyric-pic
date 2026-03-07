@@ -23,6 +23,7 @@ export default function LevelFormPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
 
   const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [maxDifficultyRank, setMaxDifficultyRank] = useState('')
   const [showAlbumFilters, setShowAlbumFilters] = useState(false)
@@ -44,6 +45,7 @@ export default function LevelFormPage() {
     if (isEdit) {
       getLevelById(Number(id)).then((l) => {
         setName(l.name)
+        setSlug(l.slug)
         setDescription(l.description ?? '')
         setMaxDifficultyRank(l.max_difficulty_rank.toString())
         setShowAlbumFilters(l.show_album_filters)
@@ -58,6 +60,7 @@ export default function LevelFormPage() {
       if (isEdit) {
         await updateLevel(Number(id), {
           name,
+          slug,
           description: description || null,
           max_difficulty_rank: Number(maxDifficultyRank),
           show_album_filters: showAlbumFilters,
@@ -66,6 +69,7 @@ export default function LevelFormPage() {
         await createLevel({
           artist_id: aid,
           name,
+          slug,
           description: description || null,
           max_difficulty_rank: Number(maxDifficultyRank),
           show_album_filters: showAlbumFilters,
@@ -104,6 +108,18 @@ export default function LevelFormPage() {
                 className={inputClass}
               />
             </FormField>
+            <FormField label="Slug" required>
+              <input
+                type="text"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                required
+                className={inputClass}
+                placeholder="e.g. easy"
+              />
+            </FormField>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <FormField label="Max Difficulty Rank" required>
               <input
                 type="number"

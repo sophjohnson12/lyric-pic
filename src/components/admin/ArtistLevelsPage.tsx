@@ -107,6 +107,7 @@ export default function ArtistLevelsPage() {
               </Link>
             ),
           },
+          { header: 'Slug', accessor: (l) => l.slug },
           { header: 'Difficulty Rank', accessor: (l) => '≤' + l.max_difficulty_rank },
           {
             header: 'Songs',

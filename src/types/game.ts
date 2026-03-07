@@ -3,6 +3,7 @@ import type { Artist, Album, Song } from './database'
 export interface GameLevel {
   id: number
   name: string
+  slug: string
   description: string | null
   max_difficulty_rank: number
   show_album_filters: boolean

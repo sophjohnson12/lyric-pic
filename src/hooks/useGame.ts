@@ -224,7 +224,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
         const fetchedLevels = await getArtistLevels(artist.id)
         if (cancelled) return
         setLevels(fetchedLevels)
-        const currentLevel = fetchedLevels.find((l) => l.name.toLowerCase() === levelSlug)
+        const currentLevel = fetchedLevels.find((l) => l.slug === levelSlug)
         maxDifficultyRankRef.current = currentLevel?.max_difficulty_rank
         const [playableSongIds, albumData, allLevelSongs] = await Promise.all([
           getPlayableSongIds(artist.id, maxDifficultyRankRef.current),
@@ -488,7 +488,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
     }
   }, [state.artist, setPlayedSongIds, loadNewSong])
 
-  const showAlbumFilters = levels.find((l) => l.name.toLowerCase() === levelSlug)?.show_album_filters ?? true
+  const showAlbumFilters = levels.find((l) => l.slug === levelSlug)?.show_album_filters ?? true
 
   return {
     ...state,

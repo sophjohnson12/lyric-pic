@@ -33,7 +33,7 @@ export default function DifficultyPage() {
     } else {
       localStorage.removeItem(LOAD_MESSAGE_KEY)
     }
-    navigate(`/${artistSlug}/${level.name.toLowerCase()}`)
+    navigate(`/${artistSlug}/${level.slug}`)
   }
 
   if (loading) {

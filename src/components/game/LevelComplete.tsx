@@ -29,7 +29,7 @@ export default function LevelComplete({
     return () => window.removeEventListener('resize', handler)
   }, [])
 
-  const currentLevel = levels.find((l) => l.name.toLowerCase() === levelSlug)
+  const currentLevel = levels.find((l) => l.slug === levelSlug)
   const currentRank = currentLevel?.max_difficulty_rank ?? -1
   const hasHigherLevel = levels.some((l) => l.max_difficulty_rank > currentRank)
 

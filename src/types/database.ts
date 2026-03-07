@@ -144,8 +144,10 @@ export interface Level {
   id: number
   artist_id: number
   name: string
+  slug: string
   description: string | null
   max_difficulty_rank: number
+  show_album_filters: boolean
   created_at: string
   updated_at: string | null
 }
