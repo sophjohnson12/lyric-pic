@@ -40,13 +40,13 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
         <h2 className="text-xl md:text-2xl font-bold text-primary mb-4 mx-auto">{message}</h2>
         <div className="bg-secondary/25 rounded-xl border-2 border-primary p-4 md:p-6 mb-4 w-11/12">
           <p className="text-md md:text-xl font-semibold text-text">{songDisplay}</p>
-          <p className={"text-xs md:text-sm text-text mb-2 md:mb-4"}>
+          <p className={"text-sm text-text/80 mb-2 md:mb-4 italic"}>
             {album ? album.name : 'Single'}
           </p>
           {lyricsWithLines.length > 0 && (
             <div className="text-center space-y-2 md:space-y-3">
               {lyricsWithLines.map((pw, i) => (
-                <p key={i} className="text-xs md:text-sm text-text/80">
+                <p key={i} className="text-sm md:text-sm text-text">
                   <HighlightedLine text={pw.lineText!} word={pw.word} />
                 </p>
               ))}
