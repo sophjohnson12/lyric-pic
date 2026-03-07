@@ -3,6 +3,7 @@ import { CircleCheck, CircleX } from 'lucide-react'
 import Modal from '../common/Modal'
 import type { Song, Album } from '../../types/database'
 import type { PuzzleWord } from '../../types/game'
+import HighlightedLine from './HighlightedLine'
 
 interface ResultModalProps {
   correct: boolean
@@ -11,20 +12,6 @@ interface ResultModalProps {
   album: Album | null
   puzzleWords: PuzzleWord[]
   onNext: () => void
-}
-
-function HighlightedLine({ text, word }: { text: string; word: string }) {
-  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const alternatives = [escape(word)]
-  if (word.endsWith('ing')) alternatives.push(escape(word.slice(0, -3) + "in'"))
-  const parts = text.split(new RegExp(`(${alternatives.join('|')})`, 'i'))
-  return (
-    <>
-      {parts.map((part, i) =>
-        i % 2 === 1 ? <strong key={i}>{part}</strong> : part
-      )}
-    </>
-  )
 }
 
 export default function ResultModal({ correct, message, song, album, puzzleWords, onNext }: ResultModalProps) {

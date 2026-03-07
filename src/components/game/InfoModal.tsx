@@ -9,10 +9,11 @@ interface InfoModalProps {
   songCount: number
   albums: Album[]
   showAlbumFilters: boolean
+  showFlagIcon: boolean
   onClose: () => void
 }
 
-export default function InfoModal({ wordCount, guessCount, songCount, albums, showAlbumFilters, onClose }: InfoModalProps) {
+export default function InfoModal({ wordCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
@@ -24,7 +25,7 @@ export default function InfoModal({ wordCount, guessCount, songCount, albums, sh
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"><RefreshCw size={15} strokeWidth={3} className="mr-2 text-primary"/> Load new picture</li>
             <li className="flex items-center"><Lock size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
-            <li className="flex items-center"><Flag size={15} strokeWidth={3} className="mr-2 text-primary"/> Flag word for review</li>
+            {showFlagIcon && <li className="flex items-center"><Flag size={15} strokeWidth={3} className="mr-2 text-primary"/> Flag word for review</li>}
           </ul>
         </div>
         {showAlbumFilters && (

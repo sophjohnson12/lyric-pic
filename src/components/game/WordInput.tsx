@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'motion/react'
 import { RefreshCw, Flag, Lock, LockOpen } from 'lucide-react'
 import ImageDisplay from './ImageDisplay'
 import ConfirmPopup from '../common/ConfirmPopup'
+import HighlightedLine from './HighlightedLine'
 import type { PuzzleWord } from '../../types/game'
+import type { RevealBehavior } from './SettingsModal'
 
 interface WordInputProps {
   puzzleWord: PuzzleWord
@@ -17,6 +19,7 @@ interface WordInputProps {
   autoFocus?: boolean
   focusTrigger?: number
   debugMode?: boolean
+  revealBehavior?: RevealBehavior
 }
 
 export default function WordInput({
@@ -30,6 +33,7 @@ export default function WordInput({
   autoFocus = false,
   focusTrigger,
   debugMode = false,
+  revealBehavior = 'word_only',
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
@@ -123,9 +127,12 @@ export default function WordInput({
               <motion.div
                 initial={{ width: "3rem" }}
                 animate={{ width: "100%" }}
-                className="absolute inset-0 bg-primary flex items-center justify-center text-white text-lg rounded-b-xl border border-secondary"
+                className={`absolute inset-0 bg-primary flex items-center justify-center text-white rounded-b-xl border border-secondary pl-3 ${debugMode ? 'pr-10' : 'pr-3'}`}
               >
-                {puzzleWord.word.toLowerCase()}
+                {revealBehavior === 'full_lyric' && puzzleWord.lineText
+                  ? <span className="text-sm text-center leading-snug line-clamp-2"><HighlightedLine text={puzzleWord.lineText} word={puzzleWord.word} /></span>
+                  : <span className="text-lg">{puzzleWord.word.toLowerCase()}</span>
+                }
                 {debugMode && (
                   <button
                     onClick={handleFlag}

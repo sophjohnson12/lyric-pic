@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import { parseLevelId } from '../../types/game'
-import { LOAD_MESSAGE_KEY } from '../../utils/constants'
+import { LOAD_MESSAGE_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
+import { useLocalStorage } from '../../hooks/useLocalStorage'
+import type { RevealBehavior } from './SettingsModal'
 import Header from '../layout/Header'
 import WordInput from './WordInput'
 import AlbumButtons from './AlbumDropdown'
@@ -22,6 +24,8 @@ export default function GamePage() {
   const levelId = parseLevelId(rawDifficulty)
 
   const game = useGame(artistSlug || '', levelId)
+
+  const [revealBehavior, setRevealBehavior] = useLocalStorage<RevealBehavior>(REVEAL_BEHAVIOR_KEY, 'word_only')
 
   const [showInfo, setShowInfo] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -190,6 +194,8 @@ export default function GamePage() {
             levels={game.levels}
           levelId={levelId}
           fanbaseName={game.artist?.fanbase_name ?? null}
+          revealBehavior={revealBehavior}
+          onRevealBehaviorChange={setRevealBehavior}
             onClose={() => setShowHistory(false)}
             onClearHistory={game.clearHistory}
           />
@@ -252,6 +258,7 @@ export default function GamePage() {
                 debugMode={game.enableLyricFlag}
                 autoFocus={isMd && index === deferredFocusIndex}
                 focusTrigger={focusTrigger}
+                revealBehavior={revealBehavior}
               />
             </div>
           ))}
@@ -339,6 +346,7 @@ export default function GamePage() {
           songCount={game.totalPlayableSongs}
           albums={game.albums}
           showAlbumFilters={game.showAlbumFilters}
+          showFlagIcon={game.enableLyricFlag}
           onClose={() => setShowInfo(false)}
         />
       )}
@@ -350,6 +358,8 @@ export default function GamePage() {
           levels={game.levels}
           levelId={levelId}
           fanbaseName={game.artist?.fanbase_name ?? null}
+          revealBehavior={revealBehavior}
+          onRevealBehaviorChange={setRevealBehavior}
           onClose={() => setShowHistory(false)}
           onClearHistory={game.clearHistory}
         />

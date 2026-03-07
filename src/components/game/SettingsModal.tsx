@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+import { Lock } from 'lucide-react'
 import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import { getPlayedSongNames } from '../../services/supabase'
 import type { GameLevel } from '../../types/game'
+
+export type RevealBehavior = 'word_only' | 'full_lyric'
 
 interface SettingsModalProps {
   playedSongIds: number[]
@@ -12,11 +15,13 @@ interface SettingsModalProps {
   levels: GameLevel[]
   levelId: number
   fanbaseName: string | null
+  revealBehavior: RevealBehavior
+  onRevealBehaviorChange: (behavior: RevealBehavior) => void
   onClose: () => void
   onClearHistory: () => void
 }
 
-export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelId, fanbaseName, onClose, onClearHistory }: SettingsModalProps) {
+export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelId, fanbaseName, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -63,6 +68,27 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
           >
             {level.name}
           </button>
+        ))}
+      </div>
+
+      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2 flex items-center gap-1">
+        Reveal Behavior <Lock size={13} />
+      </h3>
+      <div className="flex gap-6 mb-6">
+        {(['word_only', 'full_lyric'] as const).map((value) => (
+          <label key={value} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="revealBehavior"
+              value={value}
+              checked={revealBehavior === value}
+              onChange={() => onRevealBehaviorChange(value)}
+              className="accent-primary cursor-pointer"
+            />
+            <span className="text-sm text-text">
+              {value === 'word_only' ? 'Word Only' : 'Full Lyric'}
+            </span>
+          </label>
         ))}
       </div>
 
