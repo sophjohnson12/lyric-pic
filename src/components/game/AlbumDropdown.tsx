@@ -128,7 +128,7 @@ export default function AlbumButtons({
 
   return (
     <div className="w-full flex items-center justify-center">
-      <div ref={containerRef} className="w-7/8 sm:w-1/2 md:w-full">
+      <div ref={containerRef} className="w-7/8 sm:w-3/5 md:w-full">
         {isMobile ? (
           <div className="flex flex-col gap-y-2">
             {albumRows.map((row, rowIdx) => {

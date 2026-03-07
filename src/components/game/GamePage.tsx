@@ -245,7 +245,7 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
       />
 
-      <main className="sm:max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
+      <main className="max-w-11/12 sm:max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
@@ -289,7 +289,7 @@ export default function GamePage() {
         {(
           <div>
             {game.showAlbumFilters && (
-              <div className="max-w-xxl mb-6 md:mb-12">
+              <div className="md:max-w-md lg:max-w-full mx-auto mb-6 md:mb-12">
                 <AlbumButtons
                   albums={game.albums}
                   incorrectAlbumIds={game.incorrectAlbumIds}
@@ -300,7 +300,7 @@ export default function GamePage() {
                 />
               </div>
             )}
-            <div className="md:max-w-lg mx-auto">
+            <div className="md:max-w-md mx-auto">
               <SongDropdown
                 songs={game.allSongs}
                 incorrectGuesses={game.incorrectSongGuesses}
@@ -309,7 +309,7 @@ export default function GamePage() {
                 isMd={isMd}
               />
             </div>
-            <div className="md:max-w-lg mx-auto">
+            <div className="md:max-w-md mx-auto">
               <GuessCounter
                 guessMessage={game.artist.guess_counter_message}
                 guessCount={game.incorrectSongGuesses.length}
