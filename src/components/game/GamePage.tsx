@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams, useNavigate, Navigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import { parseLevelSlug } from '../../types/game'
 import { LOAD_MESSAGE_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
@@ -21,6 +21,7 @@ import { flagWord, flagImage } from '../../services/supabase'
 export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const loadMessage = localStorage.getItem(LOAD_MESSAGE_KEY)
   const levelSlug = parseLevelSlug(rawDifficulty)
 
@@ -28,7 +29,7 @@ export default function GamePage() {
 
   const [revealBehavior, setRevealBehavior] = useLocalStorage<RevealBehavior>(REVEAL_BEHAVIOR_KEY, 'word_only')
 
-  const [showInfo, setShowInfo] = useState(false)
+  const [showInfo, setShowInfo] = useState(() => !!(location.state as any)?.fromDifficulty)
   const [showHistory, setShowHistory] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
  
