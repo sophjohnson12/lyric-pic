@@ -185,6 +185,17 @@ export default function GamePage() {
             onShowHistory={() => setShowHistory(true)}
           />
         )}
+        {showInfo && (
+          <InfoModal
+            minSongLyricCount={game.minSongLyricCount}
+            guessCount={game.maxGuessCount}
+            songCount={game.totalPlayableSongs}
+            albums={game.albums}
+            showAlbumFilters={game.showAlbumFilters}
+            showFlagIcon={game.enableLyricFlag}
+            onClose={() => setShowInfo(false)}
+          />
+        )}
         {showHistory && (
           <SettingsModal
             playedSongIds={game.playedSongIds}

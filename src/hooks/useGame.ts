@@ -85,6 +85,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState(3)
+  const [minSongLyricCount, setMinSongLyricCount] = useState(3)
 
   const [levels, setLevels] = useState<GameLevel[]>([])
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
@@ -214,6 +215,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
           maxImageCountRef.current = config.max_image_count
           setMaxGuessCount(config.max_guess_count)
           puzzleWordCountRef.current = config.min_song_lyric_count
+          setMinSongLyricCount(config.min_song_lyric_count)
           topDistinctiveCountRef.current = config.top_distinctive_count
           maxDistinctiveValueRef.current = config.max_distinctive_value
         }
@@ -501,6 +503,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
     enableLyricFlag,
     enableImageFlag,
     maxGuessCount,
+    minSongLyricCount,
     songFailed: !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount,
     guessWord,
     revealWord,
