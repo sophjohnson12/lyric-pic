@@ -29,7 +29,14 @@ export default function GamePage() {
 
   const [revealBehavior, setRevealBehavior] = useLocalStorage<RevealBehavior>(REVEAL_BEHAVIOR_KEY, 'word_only')
 
-  const [showInfo, setShowInfo] = useState(() => !!(location.state as any)?.fromDifficulty)
+  const fromDifficulty = !!(location.state as any)?.fromDifficulty
+  const [showInfo, setShowInfo] = useState(fromDifficulty)
+
+  useEffect(() => {
+    if (fromDifficulty) {
+      window.history.replaceState({}, '')
+    }
+  }, [])
   const [showHistory, setShowHistory] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
  
