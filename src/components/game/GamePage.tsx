@@ -146,7 +146,7 @@ export default function GamePage() {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center p-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-primary mb-2 font-[Quicksand]">
+          <h2 className="text-2xl font-bold text-primary mb-2">
             Coming Soon
           </h2>
           <p className="text-text/60">{game.artist.name} isn't available yet. Check back later!</p>
@@ -171,7 +171,7 @@ export default function GamePage() {
         {noSongs ? (
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-primary mb-2 font-[Quicksand]">No songs available yet.</h2>
+              <h2 className="text-2xl font-bold text-primary mb-2">No songs available yet.</h2>
               <p className="text-text/60">Check back later for new songs.</p>
             </div>
           </div>

@@ -18,7 +18,7 @@ export default function LandingPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="text-primary font-[Quicksand] text-xl animate-pulse">Loading...</div>
+        <div className="w-10 h-10 border-4 border-text border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -27,7 +27,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-bg">
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-primary font-[Quicksand] mb-2">
+          <h1 className="text-4xl font-bold text-primary mb-2">
             Lyric Pic
           </h1>
           <p className="text-text/60">Guess songs from images</p>
@@ -44,7 +44,7 @@ export default function LandingPage() {
               }}
             >
               <h2
-                className="text-xl font-bold font-[Quicksand] group-hover:scale-105 transition-transform"
+                className="text-xl font-bold group-hover:scale-105 transition-transform"
                 style={{ color: artist.theme_primary_color }}
               >
                 {artist.name}

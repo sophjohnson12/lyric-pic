@@ -46,7 +46,7 @@ export default function DifficultyPage() {
 
   return (
     <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-4">
-      <h1 className="text-3xl font-bold text-primary mb-2 font-[Quicksand]">Lyric Pic</h1>
+      <h1 className="text-3xl font-bold text-primary mb-2">Lyric Pic</h1>
       {artist?.name && (
         <p className="text-text/60 mb-10 text-sm">{artist.name}</p>
       )}

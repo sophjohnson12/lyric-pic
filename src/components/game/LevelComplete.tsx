@@ -65,7 +65,7 @@ export default function LevelComplete({
         initialVelocityY={{ min: -18, max: -6 }}
       />
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-primary mb-3 font-[Quicksand]">
+        <h2 className="text-2xl font-bold text-primary mb-3">
           {hasHigherLevel
             ? `Congratulations, you've officially graduated from ${levelName}${fanbaseSuffix}!`
             : `Congratulations! You've proven your ${levelName}${fanbaseSuffix} status.`}
