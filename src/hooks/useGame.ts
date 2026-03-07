@@ -6,6 +6,7 @@ import {
   getArtistBySlug,
   getArtistLevels,
   getPlayableSongIds,
+  getPlayableSongCount,
   getRandomSong,
   getSongWords,
   getArtistAlbums,
@@ -88,6 +89,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
   const [minSongLyricCount, setMinSongLyricCount] = useState(3)
 
   const [levels, setLevels] = useState<GameLevel[]>([])
+  const [levelSongCounts, setLevelSongCounts] = useState<Record<number, number>>({})
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
   const songLyricIdsRef = useRef<number[]>([])
   // Key = puzzle word index (0–2), value = Set of all lyric IDs in that word's group
@@ -226,11 +228,16 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
         setLevels(fetchedLevels)
         const currentLevel = fetchedLevels.find((l) => l.slug === levelSlug)
         maxDifficultyRankRef.current = currentLevel?.max_difficulty_rank
-        const [playableSongIds, albumData, allLevelSongs] = await Promise.all([
+        const [playableSongIds, albumData, allLevelSongs, levelSongCountsArr] = await Promise.all([
           getPlayableSongIds(artist.id, maxDifficultyRankRef.current),
           getArtistAlbums(artist.id),
           getArtistSongs(artist.id, [], maxDifficultyRankRef.current),
+          Promise.all(fetchedLevels.map((l) => getPlayableSongCount(artist.id, l.max_difficulty_rank))),
         ])
+        if (!cancelled) {
+          const counts = Object.fromEntries(fetchedLevels.map((l, i) => [l.id, levelSongCountsArr[i]]))
+          setLevelSongCounts(counts)
+        }
         if (cancelled) return
 
         // Reconcile play history: drop any IDs that are no longer in the playable set
@@ -493,6 +500,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
   return {
     ...state,
     levels,
+    levelSongCounts,
     levelSlug,
     showAlbumFilters,
     albums,

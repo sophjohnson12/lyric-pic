@@ -203,6 +203,7 @@ export default function GamePage() {
             totalSongs={game.totalPlayableSongs}
             levels={game.levels}
             levelSlug={levelSlug}
+            levelSongCounts={game.levelSongCounts}
             fanbaseName={game.artist?.fanbase_name ?? null}
             revealBehavior={revealBehavior}
             onRevealBehaviorChange={setRevealBehavior}
@@ -244,7 +245,7 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
       />
 
-      <main className="max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
+      <main className="sm:max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
@@ -368,6 +369,7 @@ export default function GamePage() {
           totalSongs={game.totalPlayableSongs}
           levels={game.levels}
           levelSlug={levelSlug}
+          levelSongCounts={game.levelSongCounts}
           fanbaseName={game.artist?.fanbase_name ?? null}
           revealBehavior={revealBehavior}
           onRevealBehaviorChange={setRevealBehavior}

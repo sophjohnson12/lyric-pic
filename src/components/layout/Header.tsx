@@ -24,7 +24,7 @@ export default function Header({
 
   return (
     <header className="sticky bg-bg top-0 z-50 px-4 py-2">
-      <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <div className="max-w-7/8 mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-primary">
             <Link to={`/${artistSlug}`}>Lyric Pic</Link>

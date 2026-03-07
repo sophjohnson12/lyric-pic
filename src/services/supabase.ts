@@ -36,6 +36,20 @@ export async function getArtistLevels(artistId: number): Promise<GameLevel[]> {
   return data ?? []
 }
 
+export async function getPlayableSongCount(artistId: number, maxDifficultyRank?: number): Promise<number> {
+  let query = supabase
+    .from('playable_song')
+    .select('id, album!inner(is_selectable)', { count: 'exact', head: true })
+    .eq('artist_id', artistId)
+    .eq('album.is_selectable', true)
+  if (maxDifficultyRank != null) {
+    query = query.lte('difficulty_rank', maxDifficultyRank)
+  }
+  const { count, error } = await query
+  if (error) throw error
+  return count ?? 0
+}
+
 export async function getPlayableSongIds(artistId: number, maxDifficultyRank?: number): Promise<number[]> {
   let query = supabase
     .from('playable_song')

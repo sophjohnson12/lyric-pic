@@ -13,6 +13,7 @@ interface SettingsModalProps {
   totalSongs: number
   levels: GameLevel[]
   levelSlug: string
+  levelSongCounts: Record<number, number>
   fanbaseName: string | null
   revealBehavior: RevealBehavior
   onRevealBehaviorChange: (behavior: RevealBehavior) => void
@@ -20,7 +21,7 @@ interface SettingsModalProps {
   onClearHistory: () => void
 }
 
-export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, fanbaseName, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
+export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, levelSongCounts, fanbaseName, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,13 +81,20 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
           <button
             key={level.id}
             onClick={() => handleLevelChange(level.slug)}
-            className={`flex-1 h-12 text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
+            className={`flex-1 py-2 min-h-12 flex flex-col items-center justify-center text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
               level.slug === levelSlug
                 ? 'bg-primary text-white'
                 : 'text-primary hover:bg-secondary/50'
             }`}
           >
             {level.name}
+            {levelSongCounts[level.id] != null && (
+              <span className="text-tiny font-normal opacity-80">
+                {level.id === levels[levels.length - 1]?.id
+                  ? `All Songs`
+                  : `Top ${levelSongCounts[level.id]} Songs`}
+              </span>
+            )}
           </button>
         ))}
       </div>
