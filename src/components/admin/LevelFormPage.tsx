@@ -110,7 +110,7 @@ export default function LevelFormPage() {
                 value={maxDifficultyRank}
                 onChange={(e) => setMaxDifficultyRank(e.target.value)}
                 required
-                min={1}
+                min={0}
                 className={inputClass}
               />
             </FormField>
