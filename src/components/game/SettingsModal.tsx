@@ -58,7 +58,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             className={`flex-1 h-12 text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
               level.id === levelId
                 ? 'bg-primary text-white'
-                : 'text-primary hover:bg-secondary'
+                : 'text-primary hover:bg-secondary/50'
             }`}
           >
             {level.name}

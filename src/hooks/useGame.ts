@@ -35,7 +35,14 @@ function selectPuzzleWords(words: WordWithStats[]): WordWithStats[] {
   const remaining = [...pool]
   while (selected.length < PUZZLE_WORD_COUNT && remaining.length > 0) {
     const index = Math.floor(Math.random() * remaining.length)
-    selected.push(remaining.splice(index, 1)[0])
+    const [picked] = remaining.splice(index, 1)
+    selected.push(picked)
+    // Remove any remaining candidates that share the same line to avoid duplicates
+    if (picked.line_text) {
+      for (let i = remaining.length - 1; i >= 0; i--) {
+        if (remaining[i].line_text === picked.line_text) remaining.splice(i, 1)
+      }
+    }
   }
   return selected
 }
@@ -131,6 +138,7 @@ export function useGame(artistSlug: string, levelId: number | null) {
         lyricId: w.lyric_id,
         word: w.word,
         lyricGroupId: w.lyric_group_id,
+        lineText: w.line_text,
         imageUrls: imageUrls[i],
         currentImageIndex: 0,
         guessed: false,

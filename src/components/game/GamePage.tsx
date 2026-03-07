@@ -308,6 +308,7 @@ export default function GamePage() {
           message={game.currentSong.success_message || game.artist.success_message || "You got it!"}
           song={game.currentSong}
           album={correctAlbumForModal}
+          puzzleWords={game.puzzleWords}
           onNext={game.nextSong}
         />
       )}
@@ -317,6 +318,7 @@ export default function GamePage() {
           message={game.currentSong.failure_message || game.artist.failure_message || "Better luck next time."}
           song={game.currentSong}
           album={correctAlbumForModal}
+          puzzleWords={game.puzzleWords}
           onNext={game.nextSong}
         />
       )}

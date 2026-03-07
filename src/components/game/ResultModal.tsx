@@ -2,16 +2,32 @@ import { useEffect, useRef } from 'react'
 import { CircleCheck, CircleX } from 'lucide-react'
 import Modal from '../common/Modal'
 import type { Song, Album } from '../../types/database'
+import type { PuzzleWord } from '../../types/game'
 
 interface ResultModalProps {
   correct: boolean
   message: string
   song: Song
   album: Album | null
+  puzzleWords: PuzzleWord[]
   onNext: () => void
 }
 
-export default function ResultModal({ correct, message, song, album, onNext }: ResultModalProps) {
+function HighlightedLine({ text, word }: { text: string; word: string }) {
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const alternatives = [escape(word)]
+  if (word.endsWith('ing')) alternatives.push(escape(word.slice(0, -3) + "in'"))
+  const parts = text.split(new RegExp(`(${alternatives.join('|')})`, 'i'))
+  return (
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+      )}
+    </>
+  )
+}
+
+export default function ResultModal({ correct, message, song, album, puzzleWords, onNext }: ResultModalProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -22,6 +38,8 @@ export default function ResultModal({ correct, message, song, album, onNext }: R
   const songDisplay = song.featured_artists?.length
     ? `${song.name} ft. ${song.featured_artists.join(', ')}`
     : song.name
+
+  const lyricsWithLines = puzzleWords.filter(pw => pw.lineText)
 
   return (
     <Modal showClose={false}>
@@ -34,7 +52,18 @@ export default function ResultModal({ correct, message, song, album, onNext }: R
           }
         </div>
         <p className="text-lg font-semibold text-text mb-1">{songDisplay}</p>
-        <p className="text-sm text-text/60 mb-6">{album ? album.name : 'Single'}</p>
+        <p className={`text-sm text-text/60 ${lyricsWithLines.length > 0 ? 'mb-4' : 'mb-6'}`}>
+          {album ? album.name : 'Single'}
+        </p>
+        {lyricsWithLines.length > 0 && (
+          <div className="text-center mb-6 space-y-2">
+            {lyricsWithLines.map((pw, i) => (
+              <p key={i} className="text-sm text-text/70">
+                <HighlightedLine text={pw.lineText!} word={pw.word} />
+              </p>
+            ))}
+          </div>
+        )}
         <button
           ref={buttonRef}
           onClick={onNext}

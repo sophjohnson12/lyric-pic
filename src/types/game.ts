@@ -18,6 +18,7 @@ export interface PuzzleWord {
   lyricId: number
   word: string
   lyricGroupId: number | null
+  lineText: string | null
   imageUrls: string[]
   currentImageIndex: number
   guessed: boolean
@@ -29,6 +30,7 @@ export interface WordWithStats {
   word: string
   song_count: number | null
   lyric_group_id: number | null
+  line_text: string | null
 }
 
 export interface GameState {

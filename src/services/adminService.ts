@@ -2197,69 +2197,106 @@ export async function processSongLyrics(songId: number) {
   }
 
   try {
-    // Delete existing song_lyric rows (re-process case)
+    // Delete existing rows (re-process case) in FK-safe order
+    await supabase.from('song_lyric_line').delete().eq('song_id', songId)
     await supabase.from('song_lyric').delete().eq('song_id', songId)
+    await supabase.from('song_line').delete().eq('song_id', songId)
 
-    // Parse lyrics — strip [Section Header] lines, then split into words
-    const text = song.lyrics_full_text
-      .replace(/\[.*?\]/g, '')
-      .split('\n')
-      .join(' ')
-    const rawWords = text.split(/\s+/)
+    // Parse lyrics line by line, skipping section headers and empty lines
+    const songNameLower = song.name.replace(/[(\[][^)\]]*[)\]]/g, '').trim().toLowerCase()
+    const rawLines = song.lyrics_full_text.split('\n')
 
+    type LineRecord = { line_index: number; text: string; has_title: boolean }
+    const lineRecords: LineRecord[] = []
+    const wordToLines = new Map<string, Set<number>>() // word → set of line indices
     const wordCounts = new Map<string, number>()
     const filteredWords = new Set<string>() // blocked words that appear in this song
 
-    for (const raw of rawWords) {
-      // Clean: keep only letters, apostrophes, hyphens
-      const cleaned = raw.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
-      if (!cleaned) continue
+    let lineIndex = 0
+    for (const rawLine of rawLines) {
+      // Skip section headers (e.g. [Verse 1])
+      if (/\[.*?\]/.test(rawLine)) continue
+      const trimmed = rawLine.trim()
+      // Skip empty lines
+      if (!trimmed) continue
 
-      // Split hyphenated words
-      const parts = cleaned.includes('-') ? cleaned.split('-') : [cleaned]
+      const currentLineIndex = lineIndex
+      lineRecords.push({
+        line_index: currentLineIndex,
+        text: trimmed,
+        has_title: trimmed.toLowerCase().includes(songNameLower),
+      })
+      lineIndex++
 
-      for (let word of parts) {
-        if (!word) continue
+      const rawWords = trimmed.split(/\s+/)
+      for (const raw of rawWords) {
+        // Clean: keep only letters, apostrophes, hyphens
+        const cleaned = raw.replace(/[^a-zA-Z'-]/g, '').toLowerCase()
+        if (!cleaned) continue
 
-        // Stage 1: skip contractions before quote processing
-        if (contractionBlocklist.has(word)) {
-          filteredWords.add(word)
-          continue
+        // Split hyphenated words
+        const parts = cleaned.includes('-') ? cleaned.split('-') : [cleaned]
+
+        for (let word of parts) {
+          if (!word) continue
+
+          // Stage 1: skip contractions before quote processing
+          if (contractionBlocklist.has(word)) {
+            filteredWords.add(word)
+            continue
+          }
+
+          // Strip wrapping single quotes
+          if (word.startsWith("'") && word.endsWith("'")) {
+            word = word.replace(/^'+|'+$/g, '')
+          }
+
+          // Strip trailing 's
+          if (word.endsWith("'s")) {
+            word = word.slice(0, -2)
+          }
+          // Strip trailing s'
+          else if (word.endsWith("s'")) {
+            word = word.slice(0, -2)
+          }
+          // Replace trailing in' with ing
+          else if (word.endsWith("in'")) {
+            word = word.slice(0, -3) + 'ing'
+          }
+
+          // Stage 2: skip common_word, pronoun, vocalization after quote processing
+          if (postProcessBlocklist.has(word)) {
+            filteredWords.add(word)
+            continue
+          }
+
+          // Skip single characters
+          if (word.length <= 1) continue
+
+          wordCounts.set(word, (wordCounts.get(word) ?? 0) + 1)
+
+          // Track which line this word occurrence came from
+          if (!wordToLines.has(word)) wordToLines.set(word, new Set())
+          wordToLines.get(word)!.add(currentLineIndex)
         }
-
-        // Strip wrapping single quotes
-        if (word.startsWith("'") && word.endsWith("'")) {
-          word = word.replace(/^'+|'+$/g, '')
-        }
-
-        // Strip trailing 's
-        if (word.endsWith("'s")) {
-          word = word.slice(0, -2)
-        }
-        // Strip trailing s'
-        else if (word.endsWith("s'")) {
-          word = word.slice(0, -2)
-        }
-        // Replace trailing in' with ing
-        else if (word.endsWith("in'")) {
-          word = word.slice(0, -3) + 'ing'
-        }
-
-        // Stage 2: skip common_word, pronoun, vocalization after quote processing
-        if (postProcessBlocklist.has(word)) {
-          filteredWords.add(word)
-          continue
-        }
-
-        // Skip single characters
-        if (word.length <= 1) continue
-
-        wordCounts.set(word, (wordCounts.get(word) ?? 0) + 1)
       }
     }
 
-    // Build song_lyric records
-    const songNameLower = song.name.toLowerCase()
+    // Insert song_line records and build lineIndexToId map
+    const { data: insertedLines, error: lineError } = await supabase
+      .from('song_line')
+      .insert(lineRecords.map(lr => ({
+        song_id: songId,
+        line_index: lr.line_index,
+        text: lr.text,
+        has_title: lr.has_title,
+      })))
+      .select('id, line_index')
+    if (lineError) throw lineError
+
+    const lineIndexToId = new Map<number, number>(
+      (insertedLines ?? []).map((l: { id: number; line_index: number }) => [l.line_index, l.id])
+    )
 
     // Blocklist reasons that should disable is_selectable
     const disableReasons = new Set(['unknown_word', 'explicit', 'no_images'])
@@ -2452,6 +2489,23 @@ export async function processSongLyrics(songId: number) {
       if (slError) throw slError
     }
 
+    // Build and insert song_lyric_line records
+    const songLyricLineInserts: { song_id: number; lyric_id: number; song_line_id: number }[] = []
+    for (const [word] of wordCounts) {
+      const lyric = lyricCache.get(word)!
+      const lineIndices = wordToLines.get(word) ?? new Set()
+      for (const idx of lineIndices) {
+        const songLineId = lineIndexToId.get(idx)
+        if (songLineId !== undefined) {
+          songLyricLineInserts.push({ song_id: songId, lyric_id: lyric.id, song_line_id: songLineId })
+        }
+      }
+    }
+    if (songLyricLineInserts.length > 0) {
+      const { error: sllError } = await supabase.from('song_lyric_line').insert(songLyricLineInserts)
+      if (sllError) throw sllError
+    }
+
     // Update song status to completed
     const now = new Date().toISOString()
     await supabase
@@ -2463,8 +2517,10 @@ export async function processSongLyrics(songId: number) {
       })
       .eq('id', songId)
   } catch (err) {
-    // Cleanup on failure
+    // Cleanup on failure in FK-safe order
+    await supabase.from('song_lyric_line').delete().eq('song_id', songId)
     await supabase.from('song_lyric').delete().eq('song_id', songId)
+    await supabase.from('song_line').delete().eq('song_id', songId)
     if (failedStatus) {
       await supabase
         .from('song')
@@ -2476,7 +2532,9 @@ export async function processSongLyrics(songId: number) {
 }
 
 export async function clearSongLyrics(songId: number) {
+  await supabase.from('song_lyric_line').delete().eq('song_id', songId)
   await supabase.from('song_lyric').delete().eq('song_id', songId)
+  await supabase.from('song_line').delete().eq('song_id', songId)
 
   const loadStatuses = await getLoadStatuses()
   const loadedStatus = loadStatuses.find((s) => s.status.toLowerCase() === 'reset')

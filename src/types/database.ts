@@ -98,6 +98,21 @@ export interface SongLyric {
   is_in_title: boolean
 }
 
+export interface SongLine {
+  id: number
+  song_id: number
+  line_index: number
+  text: string
+  has_title: boolean
+  created_at: string
+}
+
+export interface SongLyricLine {
+  song_id: number
+  lyric_id: number
+  song_line_id: number
+}
+
 export interface BlocklistReason {
   id: number
   reason: string
