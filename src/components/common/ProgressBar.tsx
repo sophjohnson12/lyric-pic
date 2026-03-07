@@ -14,7 +14,7 @@ export default function ProgressBar({ playedCount, totalSongs }: ProgressBarProp
         />
       </div>
       <div className="text-xs text-text/60 text-center font-medium">
-        {playedCount} / {totalSongs} songs
+        {playedCount} / {totalSongs} {totalSongs === 1 ? 'song' : 'songs'}
       </div>
     </div>
   )
