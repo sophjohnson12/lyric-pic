@@ -186,7 +186,7 @@ export default function WordInput({
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    className="w-full h-full px-4 text-gray-800 placeholder-gray-400 text-base rounded-br-xl border border-secondary"
+                    className="w-full h-full px-2 text-gray-800 placeholder-gray-400 text-base rounded-br-xl border border-secondary"
                     placeholder="Guess the word..."
                   />
                 </form>

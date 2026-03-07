@@ -23,8 +23,8 @@ export default function Header({
   const { artistSlug } = useParams<{ artistSlug: string }>()
 
   return (
-    <header className="sticky bg-bg top-0 z-50 px-4 py-2">
-      <div className="max-w-7/8 mx-auto flex items-center justify-between">
+    <header className="sticky bg-bg top-0 z-50 px-4 py-2 min-w-2xs">
+      <div className="sm:max-w-7/8 mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-primary">
             <Link to={`/${artistSlug}`}>Lyric Pic</Link>
