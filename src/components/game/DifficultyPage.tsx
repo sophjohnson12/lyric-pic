@@ -50,7 +50,7 @@ export default function DifficultyPage() {
       {artist?.name && (
         <p className="text-text/60 mb-10 text-sm">{artist.name}</p>
       )}
-      <h2 className="text-lg font-semibold text-text mb-6">Pick Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</h2>
+      <h2 className="text-lg font-semibold text-text mb-6">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</h2>
       {levels.length === 0 ? (
         <p className="text-text/60 text-sm">No levels available yet.</p>
       ) : (
