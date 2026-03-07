@@ -30,31 +30,33 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
 
   return (
     <Modal showClose={false}>
-      <div className="text-center py-4">
-        <h2 className="text-2xl font-bold text-primary mb-4">{message}</h2>
-        <div className="flex justify-center mb-4">
+      <div className="flex flex-col text-center justify-center items-center">
+        <div className="flex justify-center mb-2">
           {correct
-            ? <CircleCheck size={56} className="text-green-600 drop-shadow-md" />
-            : <CircleX size={56} className="text-red-600 drop-shadow-md" />
+            ? <CircleCheck size={60} className="text-green-600 drop-shadow-md" />
+            : <CircleX size={60} className="text-red-600 drop-shadow-md" />
           }
         </div>
-        <p className="text-lg font-semibold text-text mb-1">{songDisplay}</p>
-        <p className={`text-sm text-text/60 ${lyricsWithLines.length > 0 ? 'mb-4' : 'mb-6'}`}>
-          {album ? album.name : 'Single'}
-        </p>
-        {lyricsWithLines.length > 0 && (
-          <div className="text-center mb-6 space-y-2">
-            {lyricsWithLines.map((pw, i) => (
-              <p key={i} className="text-sm text-text/70">
-                <HighlightedLine text={pw.lineText!} word={pw.word} />
-              </p>
-            ))}
-          </div>
-        )}
+        <h2 className="text-xl md:text-2xl font-bold text-primary mb-4 mx-auto">{message}</h2>
+        <div className="bg-secondary/25 rounded-xl border-2 border-primary p-4 md:p-6 mb-4 w-11/12">
+          <p className="text-md md:text-xl font-semibold text-text">{songDisplay}</p>
+          <p className={"text-xs md:text-sm text-text mb-2 md:mb-4"}>
+            {album ? album.name : 'Single'}
+          </p>
+          {lyricsWithLines.length > 0 && (
+            <div className="text-center space-y-2 md:space-y-3">
+              {lyricsWithLines.map((pw, i) => (
+                <p key={i} className="text-xs md:text-sm text-text/80">
+                  <HighlightedLine text={pw.lineText!} word={pw.word} />
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           ref={buttonRef}
           onClick={onNext}
-          className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+          className="h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-medium hover:opacity-90 cursor-pointer"
         >
           Next Song
         </button>

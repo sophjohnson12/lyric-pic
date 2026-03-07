@@ -120,7 +120,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         <div className="flex items-center justify-center ">
           <button
             onClick={handleClear}
-            className="w-full md:w-auto py-2 px-4 h-12 text-sm text-red-500 border border-red-300 rounded-lg hover:bg-red-50 cursor-pointer"
+            className="w-full md:w-auto py-2 px-4 h-12 text-sm text-red-600 border border-red-600/50 rounded-lg hover:bg-red-50 cursor-pointer"
           >
             Clear {levels.find((l) => l.slug === levelSlug)?.name ?? ''} History
           </button>
