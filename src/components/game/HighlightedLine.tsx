@@ -87,7 +87,7 @@ export default function HighlightedLine({ text, word }: HighlightedLineProps) {
       {parts.map((part, i) =>
         i % 2 === 1 ? 
         <span className="font-bold underline" key={i}>{part}</span> : 
-        <span>{part}</span>
+        <span key={i}>{part}</span>
       )}
     </span>
   )
