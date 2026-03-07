@@ -17,23 +17,27 @@ import {
   getLyricGroupMemberIds,
   getAppConfig,
   getCachedImages,
-  saveLyricImages,
 } from '../services/supabase'
-import { searchImages, setImagesEnabled } from '../services/pexels'
+import { setImagesEnabled } from '../services/pexels'
 import { useLocalStorage } from './useLocalStorage'
 import { useTheme } from './useTheme'
-import { LOCAL_STORAGE_KEY_PREFIX, IMAGES_TO_CACHE, PUZZLE_WORD_COUNT, TOP_DISTINCTIVE_WORDS } from '../utils/constants'
+import { LOCAL_STORAGE_KEY_PREFIX } from '../utils/constants'
 
 // DB already filters title words and enforces image counts — just rank by distinctiveness and sample.
 // Words with null song_count are missing from artist_lyric (data issue) and are excluded.
-function selectPuzzleWords(words: WordWithStats[]): WordWithStats[] {
+function selectPuzzleWords(words: WordWithStats[], puzzleWordCount: number, topDistinctiveCount: number, maxDistinctiveValue: number): WordWithStats[] {
   const ranked = words.filter((w) => w.song_count !== null)
-  if (ranked.length <= PUZZLE_WORD_COUNT) return ranked
+  if (ranked.length <= puzzleWordCount) return ranked
   const sorted = [...ranked].sort((a, b) => a.song_count! - b.song_count!)
-  const pool = sorted.slice(0, Math.min(TOP_DISTINCTIVE_WORDS, sorted.length))
+  // Base pool: top N most distinctive words
+  const topN = sorted.slice(0, Math.min(topDistinctiveCount, sorted.length))
+  const topNIds = new Set(topN.map((w) => w.lyric_id))
+  // Extend pool with any word whose song_count is within the distinctive threshold
+  const extras = sorted.filter((w) => w.song_count! <= maxDistinctiveValue && !topNIds.has(w.lyric_id))
+  const pool = [...topN, ...extras]
   const selected: WordWithStats[] = []
   const remaining = [...pool]
-  while (selected.length < PUZZLE_WORD_COUNT && remaining.length > 0) {
+  while (selected.length < puzzleWordCount && remaining.length > 0) {
     const index = Math.floor(Math.random() * remaining.length)
     const [picked] = remaining.splice(index, 1)
     selected.push(picked)
@@ -88,6 +92,9 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
   const currentAlbumRef = useRef<Album | null>(null)
   const maxImageCountRef = useRef<number | undefined>(undefined)
   const maxDifficultyRankRef = useRef<number | undefined>(undefined)
+  const puzzleWordCountRef = useRef<number>(3)
+  const topDistinctiveCountRef = useRef<number>(5)
+  const maxDistinctiveValueRef = useRef<number>(0)
 
   // Keep state.playedSongIds in sync
   useEffect(() => {
@@ -111,27 +118,16 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
         }
 
         const wordVariations = await getSongWords(song.id)
-        const selected = selectPuzzleWords(wordVariations)
+        const selected = selectPuzzleWords(wordVariations, puzzleWordCountRef.current, topDistinctiveCountRef.current, maxDistinctiveValueRef.current)
 
-        if (selected.length < PUZZLE_WORD_COUNT) {
+        if (selected.length < puzzleWordCountRef.current) {
           const newExclude = [...excludeIds, song.id]
           await loadNewSong(artist, newExclude, difficultyRank)
           return
         }
 
-      // Cache-first image loading
       const imageUrls = await Promise.all(
-        selected.map(async (w) => {
-          const cached = await getCachedImages(w.lyric_id, maxImageCountRef.current)
-          if (cached.length > 0) return cached
-
-          const fetched = await searchImages(w.word, IMAGES_TO_CACHE)
-          if (fetched.length > 0) {
-            await saveLyricImages(w.lyric_id, fetched)
-            return getCachedImages(w.lyric_id, maxImageCountRef.current)
-          }
-          return []
-        })
+        selected.map((w) => getCachedImages(w.lyric_id, maxImageCountRef.current))
       )
 
       const puzzleWords: PuzzleWord[] = selected.map((w, i) => ({
@@ -216,6 +212,9 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
           setEnableImageFlag(config.enable_image_flag)
           maxImageCountRef.current = config.max_image_count
           setMaxGuessCount(config.max_guess_count)
+          puzzleWordCountRef.current = config.min_song_lyric_count
+          topDistinctiveCountRef.current = config.top_distinctive_count
+          maxDistinctiveValueRef.current = config.max_distinctive_value
         }
 
         applyArtistTheme(artist)

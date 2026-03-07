@@ -24,6 +24,8 @@ export default function SettingsPage() {
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState('')
   const [minSongLyricCount, setMinSongLyricCount] = useState('')
+  const [topDistinctiveCount, setTopDistinctiveCount] = useState('')
+  const [maxDistinctiveValue, setMaxDistinctiveValue] = useState('')
   const [minImageCount, setMinImageCount] = useState('')
   const [maxImageCount, setMaxImageCount] = useState('')
   const [loading, setLoading] = useState(true)
@@ -46,6 +48,8 @@ export default function SettingsPage() {
         setEnableImageFlag(config.enable_image_flag)
         setMaxGuessCount(String(config.max_guess_count))
         setMinSongLyricCount(String(config.min_song_lyric_count))
+        setTopDistinctiveCount(String(config.top_distinctive_count))
+        setMaxDistinctiveValue(String(config.max_distinctive_value))
         setMinImageCount(String(config.min_image_count))
         setMaxImageCount(String(config.max_image_count))
         applyDefaultTheme(config.theme_primary_color, config.theme_secondary_color, config.theme_background_color)
@@ -98,9 +102,11 @@ export default function SettingsPage() {
     e.preventDefault()
     const maxGuess = parseInt(maxGuessCount, 10)
     const minSongLyric = parseInt(minSongLyricCount, 10)
+    const topDistinctive = parseInt(topDistinctiveCount, 10)
+    const maxDistinctive = parseInt(maxDistinctiveValue, 10)
     const min = parseInt(minImageCount, 10)
     const max = parseInt(maxImageCount, 10)
-    if (isNaN(maxGuess) || isNaN(minSongLyric) || isNaN(min) || isNaN(max)) {
+    if (isNaN(maxGuess) || isNaN(minSongLyric) || isNaN(topDistinctive) || isNaN(maxDistinctive) || isNaN(min) || isNaN(max)) {
       showToast('Counts must be valid numbers')
       return
     }
@@ -116,6 +122,8 @@ export default function SettingsPage() {
         theme_background_color: backgroundColor,
         max_guess_count: maxGuess,
         min_song_lyric_count: minSongLyric,
+        top_distinctive_count: topDistinctive,
+        max_distinctive_value: maxDistinctive,
         min_image_count: min,
         max_image_count: max,
       })
@@ -176,6 +184,28 @@ export default function SettingsPage() {
                     className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
                   />
                 </FormField>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Top Distinctive Count" required>
+                  <input
+                    type="number"
+                    min={1}
+                    value={topDistinctiveCount}
+                    onChange={e => setTopDistinctiveCount(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                  />
+                </FormField>
+                <FormField label="Max Distinctive Value" required>
+                  <input
+                    type="number"
+                    min={1}
+                    value={maxDistinctiveValue}
+                    onChange={e => setMaxDistinctiveValue(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                  />
+                </FormField>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Min Image Count" required>
                   <input

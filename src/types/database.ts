@@ -161,6 +161,8 @@ export interface AppConfig {
   max_guess_count: number
   min_image_count: number
   min_song_lyric_count: number
+  top_distinctive_count: number
+  max_distinctive_value: number
   max_image_count: number
   updated_at: string
 }

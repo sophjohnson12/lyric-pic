@@ -2559,7 +2559,7 @@ export async function getAppConfig(): Promise<AppConfig> {
 }
 
 export async function updateAppConfig(
-  updates: Partial<Pick<AppConfig, 'theme_primary_color' | 'theme_secondary_color' | 'theme_background_color' | 'enable_images' | 'enable_lyric_flag' | 'enable_image_flag' | 'min_image_count' | 'max_image_count' | 'max_guess_count' | 'min_song_lyric_count'>>
+  updates: Partial<Pick<AppConfig, 'theme_primary_color' | 'theme_secondary_color' | 'theme_background_color' | 'enable_images' | 'enable_lyric_flag' | 'enable_image_flag' | 'min_image_count' | 'max_image_count' | 'max_guess_count' | 'min_song_lyric_count' | 'top_distinctive_count' | 'max_distinctive_value'>>
 ): Promise<void> {
   const { error } = await supabase
     .from('app_config')
