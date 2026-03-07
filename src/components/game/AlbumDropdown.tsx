@@ -5,6 +5,7 @@ import AlbumIcon from '../common/AlbumIcon'
 interface AlbumButtonsProps {
   albums: Album[]
   incorrectAlbumIds?: number[]
+  depletedAlbumIds?: number[]
   albumGuessed?: boolean
   correctAlbumId?: number | null
   onGuess?: (albumId: number | null, albumName: string) => string
@@ -22,32 +23,34 @@ function getInitials(name: string): string {
     .slice(0, 3)
 }
 
-function AlbumButton({ album, isDisabled, isCorrect, readonly, onGuess }: {
+function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, onGuess }: {
   album: Album
   isDisabled: boolean
   isCorrect: boolean
+  isDepletedOnly: boolean
   readonly: boolean
   onGuess?: (albumId: number | null, albumName: string) => string
 }) {
   const [isHovering, setIsHovering] = useState(false)
+  const isGrayed = !readonly && ((isDisabled && !isCorrect) || isDepletedOnly)
   return (
     <button
       onClick={readonly || !onGuess ? undefined : () => onGuess(album.id, album.name)}
-      disabled={!readonly && isDisabled}
+      disabled={!readonly && (isDisabled || isDepletedOnly)}
       title={album.name}
       onMouseEnter={readonly ? undefined : () => setIsHovering(true)}
       onMouseLeave={readonly ? undefined : () => setIsHovering(false)}
       className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`}
       style={{
-        backgroundColor: !readonly && isDisabled && !isCorrect
+        backgroundColor: isGrayed
           ? '#9ca3af'
           : album.theme_primary_color || '#6b7280',
         border: 'solid',
         borderWidth: '1px',
-        borderColor: !readonly && isDisabled && !isCorrect
+        borderColor: isGrayed
           ? '#cad0da'
           : album.theme_secondary_color || '#9ca3af',
-        opacity: !readonly && isDisabled && !isCorrect
+        opacity: isGrayed
           ? 0.5
           : (!readonly && isHovering ? 0.8 : 1),
       }}
@@ -65,6 +68,7 @@ const ITEM_SIZE = 48 // w-12
 export default function AlbumButtons({
   albums,
   incorrectAlbumIds = [],
+  depletedAlbumIds = [],
   albumGuessed = false,
   correctAlbumId = null,
   onGuess,
@@ -73,11 +77,13 @@ export default function AlbumButtons({
 }: AlbumButtonsProps) {
   useEffect(() => {
     if (!onGuess || albumGuessed || readonly) return
-    const remaining = albums.filter((a) => !incorrectAlbumIds.includes(a.id))
+    const remaining = albums.filter(
+      (a) => !incorrectAlbumIds.includes(a.id) && !depletedAlbumIds.includes(a.id)
+    )
     if (remaining.length === 1) {
       onGuess(remaining[0].id, remaining[0].name)
     }
-  }, [incorrectAlbumIds.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [incorrectAlbumIds.length, depletedAlbumIds.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -142,6 +148,7 @@ export default function AlbumButtons({
                       album={album}
                       isDisabled={albumGuessed || incorrectAlbumIds.includes(album.id)}
                       isCorrect={albumGuessed && correctAlbumId === album.id}
+                      isDepletedOnly={!albumGuessed && !incorrectAlbumIds.includes(album.id) && depletedAlbumIds.includes(album.id)}
                       readonly={readonly}
                       onGuess={onGuess}
                     />
@@ -158,6 +165,7 @@ export default function AlbumButtons({
                 album={album}
                 isDisabled={albumGuessed || incorrectAlbumIds.includes(album.id)}
                 isCorrect={albumGuessed && correctAlbumId === album.id}
+                isDepletedOnly={!albumGuessed && !incorrectAlbumIds.includes(album.id) && depletedAlbumIds.includes(album.id)}
                 readonly={readonly}
                 onGuess={onGuess}
               />

@@ -13,6 +13,7 @@ import GuessCounter from './GuessCounter'
 import ResultModal from './ResultModal'
 import InfoModal from './InfoModal'
 import SettingsModal from './SettingsModal'
+import LevelComplete from './LevelComplete'
 import Toast from '../common/Toast'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { flagWord, flagImage } from '../../services/supabase'
@@ -156,7 +157,7 @@ export default function GamePage() {
   if (game.allSongsPlayed) {
     const noSongs = game.totalPlayableSongs === 0
     return (
-      <div className="min-h-screen bg-bg">
+      <div className="min-h-screen bg-bg flex flex-col">
         <Header
           artistName={game.artist?.name || null}
           playedCount={game.playedSongIds.length}
@@ -166,36 +167,34 @@ export default function GamePage() {
           onSkip={() => {}}
           onChangeDifficulty={() => navigate(`/${artistSlug}`)}
         />
-        <div className="flex items-center justify-center p-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-primary mb-2 font-[Quicksand]">
-              {noSongs ? 'No songs available yet.' : "You've played all the songs!"}
-            </h2>
-            {noSongs ? (
+        {noSongs ? (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-primary mb-2 font-[Quicksand]">No songs available yet.</h2>
               <p className="text-text/60">Check back later for new songs.</p>
-            ) : (
-              <>
-                <p className="text-text/60 mb-4">Clear your history to play again.</p>
-                <button
-                  onClick={() => setShowHistory(true)}
-                  className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
-                >
-                  View History
-                </button>
-              </>
-            )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <LevelComplete
+            levels={game.levels}
+            levelSlug={levelSlug}
+            fanbaseName={game.artist?.fanbase_name ?? null}
+            totalPlayableSongs={game.totalPlayableSongs}
+            confettiColors={game.albums.map((a) => a.theme_primary_color).filter((c): c is string => !!c)}
+            onChooseLevel={() => navigate(`/${artistSlug}`)}
+            onShowHistory={() => setShowHistory(true)}
+          />
+        )}
         {showHistory && (
           <SettingsModal
             playedSongIds={game.playedSongIds}
             playedCount={game.playedSongIds.length}
             totalSongs={game.totalPlayableSongs}
             levels={game.levels}
-          levelSlug={levelSlug}
-          fanbaseName={game.artist?.fanbase_name ?? null}
-          revealBehavior={revealBehavior}
-          onRevealBehaviorChange={setRevealBehavior}
+            levelSlug={levelSlug}
+            fanbaseName={game.artist?.fanbase_name ?? null}
+            revealBehavior={revealBehavior}
+            onRevealBehaviorChange={setRevealBehavior}
             onClose={() => setShowHistory(false)}
             onClearHistory={game.clearHistory}
           />
@@ -282,6 +281,7 @@ export default function GamePage() {
                 <AlbumButtons
                   albums={game.albums}
                   incorrectAlbumIds={game.incorrectAlbumIds}
+                  depletedAlbumIds={game.depletedAlbumIds}
                   albumGuessed={game.albumGuessed}
                   correctAlbumId={game.correctAlbum?.id || null}
                   onGuess={game.guessAlbum}

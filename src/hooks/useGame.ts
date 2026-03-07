@@ -76,6 +76,8 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
   })
 
   const [albums, setAlbums] = useState<Album[]>([])
+  const allLevelAlbumsRef = useRef<Album[]>([])
+  const [depletedAlbumIds, setDepletedAlbumIds] = useState<number[]>([])
   const [allSongs, setAllSongs] = useState<Song[]>([])
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([])
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -159,14 +161,13 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
       // Get the display album for this song (direct FK now)
       currentAlbumRef.current = song.album_id ? await getAlbumById(song.album_id) : null
 
-      // Load albums and songs; derive valid albums from difficulty-filtered songs
-      const [albumData, songData] = await Promise.all([
-        getArtistAlbums(artist.id),
-        getArtistSongs(artist.id, excludeIds, difficultyRank),
-      ])
-      const validAlbumIds = new Set(songData.map((s) => s.album_id).filter(Boolean))
-      const filteredAlbums = albumData.filter((a) => validAlbumIds.has(a.id))
-      setAlbums(filteredAlbums)
+      // Load remaining songs and compute which albums are now depleted
+      const songData = await getArtistSongs(artist.id, excludeIds, difficultyRank)
+      const unplayedAlbumIds = new Set(songData.map((s) => s.album_id).filter(Boolean))
+      const depleted = allLevelAlbumsRef.current
+        .filter((a) => !unplayedAlbumIds.has(a.id))
+        .map((a) => a.id)
+      setDepletedAlbumIds(depleted)
       setAllSongs(songData)
       setFilteredSongs(songData)
 
@@ -223,7 +224,11 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
         setLevels(fetchedLevels)
         const currentLevel = fetchedLevels.find((l) => l.name.toLowerCase() === levelSlug)
         maxDifficultyRankRef.current = currentLevel?.max_difficulty_rank
-        const playableSongIds = await getPlayableSongIds(artist.id, maxDifficultyRankRef.current)
+        const [playableSongIds, albumData, allLevelSongs] = await Promise.all([
+          getPlayableSongIds(artist.id, maxDifficultyRankRef.current),
+          getArtistAlbums(artist.id),
+          getArtistSongs(artist.id, [], maxDifficultyRankRef.current),
+        ])
         if (cancelled) return
 
         // Reconcile play history: drop any IDs that are no longer in the playable set
@@ -233,7 +238,13 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
           setPlayedSongIds(validPlayedIds)
         }
 
+        // Establish stable album list for this level
+        const levelAlbumIds = new Set(allLevelSongs.map((s) => s.album_id).filter(Boolean))
+        allLevelAlbumsRef.current = albumData.filter((a) => levelAlbumIds.has(a.id))
+        setAlbums(allLevelAlbumsRef.current)
+
         setState((prev) => ({ ...prev, artist, totalPlayableSongs: playableSongIds.length }))
+        if (cancelled) return
         await loadNewSong(artist, validPlayedIds, maxDifficultyRankRef.current)
       } catch (err) {
         console.error('Failed to initialize game:', err)
@@ -483,6 +494,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
     levelSlug,
     showAlbumFilters,
     albums,
+    depletedAlbumIds,
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,
     toastMessage,
     enableImages,
