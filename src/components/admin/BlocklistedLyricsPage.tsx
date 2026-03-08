@@ -211,7 +211,7 @@ export default function BlocklistedLyricsPage() {
                 return prev
               }, { replace: true })
             }}
-            className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+            className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
           >
             <option value="">All Reasons</option>
             {reasons.map((r) => (
@@ -298,7 +298,7 @@ export default function BlocklistedLyricsPage() {
           <select
             value={editReasonValue}
             onChange={(e) => setEditReasonValue(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -308,7 +308,7 @@ export default function BlocklistedLyricsPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setEditReasonModal(null); setEditReasonValue('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>
@@ -326,14 +326,14 @@ export default function BlocklistedLyricsPage() {
       {bulkEditModal && (
         <Modal onClose={() => { setBulkEditModal(false); setBulkEditReason('') }}>
           <h2 className="text-lg font-bold mb-2">Edit Blocklist Reason</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             Update blocklist reason for all selected lyrics ({selectedIds.size}).
           </p>
           <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
           <select
             value={bulkEditReason}
             onChange={(e) => setBulkEditReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -343,7 +343,7 @@ export default function BlocklistedLyricsPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setBulkEditModal(false); setBulkEditReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>

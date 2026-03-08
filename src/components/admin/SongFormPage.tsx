@@ -143,7 +143,7 @@ export default function SongFormPage() {
     }
   }
 
-  const inputClass = 'w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm'
+  const inputClass = 'w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm'
 
   return (
     <>
@@ -157,7 +157,7 @@ export default function SongFormPage() {
       )}
       <AdminFormPage title={isEdit ? 'Edit Song' : 'Add Song'} onSubmit={handleSubmit} onCancel={() => navigate(songsUrl, { state: locationState?.backState ?? undefined })} loading={saving} backUrl={songsUrl} backState={locationState?.backState}>
         <div className="space-y-5">
-          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
+          <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">General</h2>
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Name" required>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
@@ -206,7 +206,7 @@ export default function SongFormPage() {
               className={inputClass}
             />
           </FormField>
-          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
+          <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Game Behavior</h2>
           <FormField label="Success Message">
             <input
               type="text"

@@ -7,10 +7,9 @@ import ToggleSwitch from './ToggleSwitch'
 import Toast from '../common/Toast'
 import { getAppConfig, updateAppConfig } from '../../services/adminService'
 
-function applyDefaultTheme(primary: string, secondary: string, background: string) {
+function applyDefaultTheme(primary: string, secondary: string) {
   document.documentElement.style.setProperty('--color-theme-primary', primary)
   document.documentElement.style.setProperty('--color-theme-secondary', secondary)
-  document.documentElement.style.setProperty('--color-theme-bg', background)
 }
 
 export default function SettingsPage() {
@@ -18,7 +17,6 @@ export default function SettingsPage() {
 
   const [primaryColor, setPrimaryColor] = useState('')
   const [secondaryColor, setSecondaryColor] = useState('')
-  const [backgroundColor, setBackgroundColor] = useState('')
   const [enableImages, setEnableImages] = useState(true)
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
@@ -42,7 +40,6 @@ export default function SettingsPage() {
         const config = await getAppConfig()
         setPrimaryColor(config.theme_primary_color)
         setSecondaryColor(config.theme_secondary_color)
-        setBackgroundColor(config.theme_background_color)
         setEnableImages(config.enable_images)
         setEnableLyricFlag(config.enable_lyric_flag)
         setEnableImageFlag(config.enable_image_flag)
@@ -52,7 +49,7 @@ export default function SettingsPage() {
         setMaxDistinctiveValue(String(config.max_distinctive_value))
         setMinImageCount(String(config.min_image_count))
         setMaxImageCount(String(config.max_image_count))
-        applyDefaultTheme(config.theme_primary_color, config.theme_secondary_color, config.theme_background_color)
+        applyDefaultTheme(config.theme_primary_color, config.theme_secondary_color)
       } catch (err) {
         console.error('Failed to load app config:', err)
       } finally {
@@ -119,7 +116,6 @@ export default function SettingsPage() {
       await updateAppConfig({
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
-        theme_background_color: backgroundColor,
         max_guess_count: maxGuess,
         min_song_lyric_count: minSongLyric,
         top_distinctive_count: topDistinctive,
@@ -127,7 +123,7 @@ export default function SettingsPage() {
         min_image_count: min,
         max_image_count: max,
       })
-      applyDefaultTheme(primaryColor, secondaryColor, backgroundColor)
+      applyDefaultTheme(primaryColor, secondaryColor)
       showToast('Settings saved')
     } catch (err) {
       console.error('Failed to save:', err)
@@ -142,13 +138,13 @@ export default function SettingsPage() {
     setTimeout(() => setToast(null), 5000)
   }
 
-  if (loading) return <div className="text-text/60">Loading...</div>
+  if (loading) return <div className="text-neutral-500">Loading...</div>
 
   return (
     <>
       <AdminFormPage title="Settings" onSubmit={handleSubmit} loading={saving}>
         <div className="space-y-6">
-          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Default Themes</h2>
+          <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Default Themes</h2>
           <div className="grid grid-cols-2 gap-4 space-y-5">
             <FormField label="Primary Color">
               <ColorField value={primaryColor} onChange={setPrimaryColor} />
@@ -156,13 +152,10 @@ export default function SettingsPage() {
             <FormField label="Secondary Color">
               <ColorField value={secondaryColor} onChange={setSecondaryColor} />
             </FormField>
-            <FormField label="Background Color">
-              <ColorField value={backgroundColor} onChange={setBackgroundColor} />
-            </FormField>
           </div>
 
           <div>
-            <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
+            <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Game Behavior</h2>
             <div className="space-y-4">
                 <FormField label="Max Guess Count" required>
                   <input
@@ -171,7 +164,7 @@ export default function SettingsPage() {
                     value={maxGuessCount}
                     onChange={e => setMaxGuessCount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
                   />
                 </FormField>
                 <FormField label="Min Song Lyric Count" required>
@@ -181,7 +174,7 @@ export default function SettingsPage() {
                     value={minSongLyricCount}
                     onChange={e => setMinSongLyricCount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
                   />
                 </FormField>
               <div className="grid grid-cols-2 gap-4">
@@ -192,7 +185,7 @@ export default function SettingsPage() {
                     value={topDistinctiveCount}
                     onChange={e => setTopDistinctiveCount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
                   />
                 </FormField>
                 <FormField label="Max Distinctive Value" required>
@@ -202,7 +195,7 @@ export default function SettingsPage() {
                     value={maxDistinctiveValue}
                     onChange={e => setMaxDistinctiveValue(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
                   />
                 </FormField>
               </div>
@@ -214,7 +207,7 @@ export default function SettingsPage() {
                     value={minImageCount}
                     onChange={e => setMinImageCount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
                   />
                 </FormField>
                 <FormField label="Max Image Count" required>
@@ -224,28 +217,28 @@ export default function SettingsPage() {
                     value={maxImageCount}
                     onChange={e => setMaxImageCount(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+                    className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
                   />
                 </FormField>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium">Show Images</div>
-                  <div className="text-xs text-text/60">Players see images for puzzle words</div>
+                  <div className="text-xs text-neutral-500">Players see images for puzzle words</div>
                 </div>
                 <ToggleSwitch checked={enableImages} onChange={handleToggleImages} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium">Enable Lyric Flagging</div>
-                  <div className="text-xs text-text/60">Players can flag puzzle words for review</div>
+                  <div className="text-xs text-neutral-500">Players can flag puzzle words for review</div>
                 </div>
                 <ToggleSwitch checked={enableLyricFlag} onChange={handleToggleLyricFlag} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-medium">Enable Image Flagging</div>
-                  <div className="text-xs text-text/60">Players can flag puzzle images for review</div>
+                  <div className="text-xs text-neutral-500">Players can flag puzzle images for review</div>
                 </div>
                 <ToggleSwitch checked={enableImageFlag} onChange={handleToggleImageFlag} />
               </div>

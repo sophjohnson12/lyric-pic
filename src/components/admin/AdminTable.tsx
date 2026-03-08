@@ -100,7 +100,7 @@ export default function AdminTable<T>({
             {columns.map((col, i) => (
               <th
                 key={i}
-                className="text-left px-4 py-2.5 font-semibold border-b border-primary/20 text-text"
+                className="text-left px-4 py-2.5 font-semibold border-b border-primary/20 text-neutral-800"
               >
                 {col.header}
               </th>
@@ -110,7 +110,7 @@ export default function AdminTable<T>({
         <tbody>
           {displayData.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + (selection ? 1 : 0)} className="text-center py-8 text-text/50">
+              <td colSpan={columns.length + (selection ? 1 : 0)} className="text-center py-8 text-neutral-500">
                 No data found
               </td>
             </tr>
@@ -139,7 +139,7 @@ export default function AdminTable<T>({
       </table>
 
       {total > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 text-sm text-text/70 border-t border-primary/20">
+        <div className="flex items-center justify-between px-4 py-3 text-sm text-neutral-600 border-t border-primary/20">
           <span>
             Showing {from}–{to} of {total}
           </span>
@@ -147,7 +147,7 @@ export default function AdminTable<T>({
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="border border-primary/30 rounded px-2 py-1 bg-bg text-text text-sm"
+              className="border border-primary/30 rounded px-2 py-1 bg-neutral-50 text-neutral-800 text-sm"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>

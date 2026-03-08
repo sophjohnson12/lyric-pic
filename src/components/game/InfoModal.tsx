@@ -17,9 +17,9 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
   return (
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
-      <div className="space-y-4 text-sm text-text/80">
+      <div className="space-y-4 text-sm text-neutral-600">
         <div>
-          <p className="font-semibold text-text">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</p>
+          <p className="font-semibold text-neutral-800">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</p>
           <p className="hidden md:inline"> {minSongLyricCount === 1 ? 'The picture represents' : 'Each picture represents'} a word from the song. Type a word and press Enter. You have unlimited attempts.</p>
           <p className="inline md:hidden"> {minSongLyricCount === 1 ? 'The picture shows' : 'Each picture shows'} a word from the song. Type and press Enter for unlimited attempts.</p>
           <ul className="mt-1 space-y-1">
@@ -30,7 +30,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         </div>
         {showAlbumFilters && (
           <div>
-            <p className="font-semibold text-text">2. Guess the Album</p>
+            <p className="font-semibold text-neutral-800">2. Guess the Album</p>
             <p className="hidden md:inline">Click the buttons to guess the album.</p>
             <p className="inline md:hidden">Tap the buttons to guess the album.</p>
             <div className="mt-1">
@@ -39,7 +39,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
           </div>
         )}
         <div>
-          <p className="font-semibold text-text">{showAlbumFilters ? '3' : '2'}. Guess the Song</p>
+          <p className="font-semibold text-neutral-800">{showAlbumFilters ? '3' : '2'}. Guess the Song</p>
           <p>
             <span className="hidden md:inline">You have {guessCount} chances to select a song from the dropdown and click Submit.</span>
             <span className="inline md:hidden">You have {guessCount} chances to select a song and press Submit.</span>

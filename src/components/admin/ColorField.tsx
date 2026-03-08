@@ -11,7 +11,7 @@ export default function ColorField({ value, onChange }: ColorFieldProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="#000000"
-        className="flex-1 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+        className="flex-1 px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
       />
       <input
         type="color"

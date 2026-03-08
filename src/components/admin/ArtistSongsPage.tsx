@@ -443,7 +443,7 @@ export default function ArtistSongsPage() {
           placeholder="Search songs..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="w-full sm:w-64 px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mr-4"
+          className="w-full sm:w-64 px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mr-4"
         />
         <label className="text-sm font-medium mr-2">Album:</label>
         <select
@@ -459,7 +459,7 @@ export default function ArtistSongsPage() {
             }
             setSearchParams(params)
           }}
-          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
         >
           <option value="">All Albums</option>
           <option value="none">No Album</option>
@@ -471,7 +471,7 @@ export default function ArtistSongsPage() {
         <select
           value={playableFilter}
           onChange={(e) => handleFilterChange(e.target.value as 'all' | 'yes' | 'no')}
-          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
         >
           <option value="all">All</option>
           <option value="yes">Yes</option>
@@ -576,7 +576,7 @@ export default function ArtistSongsPage() {
       {pasteModal && (
         <Modal onClose={() => { setPasteModal(null); setPastedLyrics('') }}>
           <h2 className="text-lg font-bold mb-2">Paste Lyrics</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             Copy the lyrics from the Genius page and paste them below for <strong>{pasteModal.songName}</strong>.
           </p>
           <textarea
@@ -588,7 +588,7 @@ export default function ArtistSongsPage() {
           <div className="flex justify-end gap-3 mt-4">
             <button
               onClick={() => { setPasteModal(null); setPastedLyrics('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>
@@ -619,14 +619,14 @@ export default function ArtistSongsPage() {
       {bulkEditAlbumModal && (
         <Modal onClose={() => { setBulkEditAlbumModal(false); setBulkAlbumValue('') }}>
           <h2 className="text-lg font-bold mb-2">Edit Album</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             Update album for all selected songs ({selectedIds.size}).
           </p>
           <label className="block text-sm font-semibold mb-1">Album</label>
           <select
             value={bulkAlbumValue}
             onChange={(e) => setBulkAlbumValue(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mb-6"
           >
             <option value="">None</option>
             {albums.map((a) => (
@@ -636,7 +636,7 @@ export default function ArtistSongsPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setBulkEditAlbumModal(false); setBulkAlbumValue('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>

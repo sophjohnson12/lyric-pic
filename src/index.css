@@ -3,8 +3,8 @@
 @theme {
   --color-primary: var(--color-theme-primary, #823549);
   --color-secondary: var(--color-theme-secondary, #f4cb8d);
-  --color-bg: var(--color-theme-bg, #fffbf0);
-  --color-text: var(--color-theme-text, #1f2937);
+  --color-success: #15803d;
+  --color-error: #b91c1c;
   --font-heading: 'Quicksand', 'Nunito', sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --text-tiny: 0.625rem;
@@ -13,24 +13,19 @@
 :root {
   --color-theme-primary: #454b82;
   --color-theme-secondary: #c9e3ee;
-  --color-theme-bg: #ffffff;
-  --color-theme-text: #1f2937;
 }
 
 .theme-transitioning,
 .theme-transitioning * {
-  transition: background-color 0.75s ease-in-out,
-              border-color 0.75s ease-in-out,
-              color 0.75s ease-in-out !important;
+  transition: border-color 0.75s ease-in-out !important;
 }
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: #fafafa;
+  color: #1f2937;
   margin: 0;
   min-height: 100vh;
-  transition: background-color 0.75s ease-in-out, color 0.75s ease-in-out;
 }
 
 h1, h2, h3, h4, h5, h6 {

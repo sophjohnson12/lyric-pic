@@ -77,14 +77,14 @@ export default function ImagesPage() {
           placeholder="Search images..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm"
+          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm"
         />
         <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
           Blocklisted:
           <select
             value={blocklistedFilter}
             onChange={(e) => handleFilterChange(e.target.value as 'all' | 'yes' | 'no')}
-            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
           >
             <option value="all">All</option>
             <option value="yes">Yes</option>
@@ -98,7 +98,7 @@ export default function ImagesPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : data.length === 0 ? (
-        <p className="text-center py-8 text-text/50">No images found</p>
+        <p className="text-center py-8 text-neutral-500">No images found</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-4">
           {data.map((img) => (
@@ -119,13 +119,13 @@ export default function ImagesPage() {
       )}
 
       {total > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 text-sm text-text/70 border-t border-primary/20">
+        <div className="flex items-center justify-between px-4 py-3 text-sm text-neutral-600 border-t border-primary/20">
           <span>Showing {from}–{to} of {total}</span>
           <div className="flex items-center gap-3">
             <select
               value={pageSize}
               onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="border border-primary/30 rounded px-2 py-1 bg-bg text-text text-sm"
+              className="border border-primary/30 rounded px-2 py-1 bg-neutral-50 text-neutral-800 text-sm"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>

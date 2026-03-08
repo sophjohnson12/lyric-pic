@@ -23,7 +23,7 @@ export default function AdminFormPage({ title, onSubmit, onCancel, loading = fal
         )}
         <h1 className="text-2xl font-bold">{title}</h1>
       </div>
-      <p className="text-sm text-text/50 mb-6">* required</p>
+      <p className="text-sm text-neutral-500 mb-6">* required</p>
       <form onSubmit={onSubmit} className="space-y-5">
         {children}
         <div className="flex gap-3">
@@ -31,7 +31,7 @@ export default function AdminFormPage({ title, onSubmit, onCancel, loading = fal
             <button
               type="button"
               onClick={onCancel}
-              className="bg-gray-200 text-text px-6 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-6 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>

@@ -33,10 +33,10 @@ const sidebarLinks: SidebarLink[] = [
 
 function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const linkClass = (isActive: boolean) =>
-    `block pl-8 pr-4 py-1.5 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-text hover:bg-primary/10'}`
+    `block pl-8 pr-4 py-1.5 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-neutral-800 hover:bg-primary/10'}`
 
   const topLinkClass = (isActive: boolean) =>
-    `block px-4 py-2 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-text hover:bg-primary/10'}`
+    `block px-4 py-2 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-neutral-800 hover:bg-primary/10'}`
 
   return (
     <>
@@ -49,7 +49,7 @@ function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       )}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-48 bg-bg border-r border-primary/20 transition-transform duration-200
+          fixed inset-y-0 left-0 z-40 w-48 bg-neutral-50 border-r border-primary/20 transition-transform duration-200
           md:static md:translate-x-0 md:z-auto md:shrink-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
@@ -59,7 +59,7 @@ function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
             if ('children' in link) {
               return (
                 <div key={link.label}>
-                  <span className="block px-4 py-1 text-xs font-semibold uppercase tracking-wide text-text/50">
+                  <span className="block px-4 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
                     {link.label}
                   </span>
                   {link.children.map((child) => (
@@ -132,16 +132,16 @@ function Breadcrumbs() {
   if (breadcrumbs.length === 0) return null
 
   return (
-    <nav className="border-b border-primary/20 px-6 py-2 text-sm flex items-center gap-1.5 text-text">
+    <nav className="border-b border-primary/20 px-6 py-2 text-sm flex items-center gap-1.5 text-neutral-800">
       {breadcrumbs.map((crumb, i) => (
         <span key={i} className="flex items-center gap-1.5">
-          {i > 0 && <span className="text-text/40">/</span>}
+          {i > 0 && <span className="text-neutral-400">/</span>}
           {crumb.to ? (
             <Link to={crumb.to} className="text-primary hover:underline">
               {crumb.label}
             </Link>
           ) : (
-            <span className="text-text/70">{crumb.label}</span>
+            <span className="text-neutral-600">{crumb.label}</span>
           )}
         </span>
       ))}
@@ -156,13 +156,12 @@ export default function AdminLayout() {
     getAppConfig().then((config) => {
       document.documentElement.style.setProperty('--color-theme-primary', config.theme_primary_color)
       document.documentElement.style.setProperty('--color-theme-secondary', config.theme_secondary_color)
-      document.documentElement.style.setProperty('--color-theme-bg', config.theme_background_color)
     }).catch(() => {/* silent — fallback to CSS defaults */})
   }, [])
 
   return (
     <AdminBreadcrumbProvider>
-      <div className="h-screen flex flex-col bg-bg text-text">
+      <div className="h-screen flex flex-col bg-neutral-50 text-neutral-800">
         <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} />
         <div className="flex flex-1 overflow-hidden">
           <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />

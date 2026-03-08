@@ -7,7 +7,7 @@ export default function ImageDisplay({ imageUrls, currentIndex }: ImageDisplayPr
   if (imageUrls.length === 0) {
     return (
       <div className="w-full aspect-square bg-primary/10 rounded-xl flex items-center justify-center">
-        <span className="text-text/40 text-sm">no image</span>
+        <span className="text-neutral-400 text-sm">no image</span>
       </div>
     )
   }

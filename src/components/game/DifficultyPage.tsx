@@ -38,21 +38,21 @@ export default function DifficultyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-4">
       <h1 className="text-3xl font-bold text-primary mb-2">Lyric Pic</h1>
       {artist?.name && (
-        <p className="text-text/60 mb-10 text-sm">{artist.name}</p>
+        <p className="text-neutral-500 mb-10 text-sm">{artist.name}</p>
       )}
-      <h2 className="text-lg font-semibold text-text mb-6">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</h2>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-6">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</h2>
       {levels.length === 0 ? (
-        <p className="text-text/60 text-sm">No levels available yet.</p>
+        <p className="text-neutral-500 text-sm">No levels available yet.</p>
       ) : (
         <div className="flex flex-col gap-4 w-full max-w-sm">
           {levels.map((level) => (
@@ -63,7 +63,7 @@ export default function DifficultyPage() {
             >
               <h2 className="text-xl font-bold">{level.name}</h2>
               {level.description && (
-                <p className="text-sm font-normal opacity-75 text-text">{level.description}</p>
+                <p className="text-sm font-normal opacity-75 text-neutral-800">{level.description}</p>
               )}
             </button>
           ))}

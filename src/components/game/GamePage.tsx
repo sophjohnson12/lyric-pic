@@ -140,10 +140,10 @@ export default function GamePage() {
 
   if (game.loading) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         {loadMessage && (
-          <p className="text-text/60 font-medium text-center max-w-xs px-4">{loadMessage}</p>
+          <p className="text-neutral-500 font-medium text-center max-w-xs px-4">{loadMessage}</p>
         )}
       </div>
     )
@@ -151,12 +151,12 @@ export default function GamePage() {
 
   if (game.artist && !game.artist.is_selectable) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center p-8">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-primary mb-2">
             Coming Soon
           </h2>
-          <p className="text-text/60">{game.artist.name} isn't available yet. Check back later!</p>
+          <p className="text-neutral-500">{game.artist.name} isn't available yet. Check back later!</p>
         </div>
       </div>
     )
@@ -165,7 +165,7 @@ export default function GamePage() {
   if (game.allSongsPlayed) {
     const noSongs = game.totalPlayableSongs === 0
     return (
-      <div className="min-h-screen bg-bg flex flex-col">
+      <div className="min-h-screen bg-neutral-50 flex flex-col">
         <Header
           artistName={game.artist?.name || null}
           playedCount={game.playedSongIds.length}
@@ -179,7 +179,7 @@ export default function GamePage() {
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-primary mb-2">No songs available yet.</h2>
-              <p className="text-text/60">Check back later for new songs.</p>
+              <p className="text-neutral-500">Check back later for new songs.</p>
             </div>
           </div>
         ) : (
@@ -225,9 +225,9 @@ export default function GamePage() {
 
   if (!game.currentSong || !game.artist) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-text/60 mb-4">Something went wrong loading a song.</div>
+          <div className="text-neutral-500 mb-4">Something went wrong loading a song.</div>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
@@ -243,7 +243,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="h-dvh md:h-auto flex flex-col bg-bg">
+    <div className="h-dvh md:h-auto flex flex-col bg-neutral-50">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}

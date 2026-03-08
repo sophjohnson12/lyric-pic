@@ -188,11 +188,11 @@ export default function ImagePage() {
           </Link>
           <h1 className="text-2xl font-bold">Image</h1>
           {reviewQueue.length > 0 && (
-            <span className="hidden sm:inline text-sm text-text/50">{reviewQueue.length} remaining</span>
+            <span className="hidden sm:inline text-sm text-neutral-500">{reviewQueue.length} remaining</span>
           )}
         </div>
         {reviewQueue.length > 0 && (
-          <span className="sm:hidden w-full text-sm text-text/50">{reviewQueue.length} remaining</span>
+          <span className="sm:hidden w-full text-sm text-neutral-500">{reviewQueue.length} remaining</span>
         )}
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <div className="grid grid-cols-2 sm:contents gap-2">
@@ -235,7 +235,7 @@ export default function ImagePage() {
                 className="w-5/6 h-5/6 object-cover rounded mb-2"
               />
               <div>
-                <span className="text-sm font-medium text-text/60">Image ID: </span>
+                <span className="text-sm font-medium text-neutral-500">Image ID: </span>
                 <span className="font-mono text-sm">{image.image_id}</span>
               </div>
             </div>
@@ -288,14 +288,14 @@ export default function ImagePage() {
       {showBlockModal && (
         <Modal onClose={() => setShowBlockModal(false)}>
           <h2 className="text-lg font-bold mb-2">Block Image</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             This will mark the image as blocked and disable it for all lyrics.
           </p>
           <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
           <select
             value={selectedReason}
             onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -305,7 +305,7 @@ export default function ImagePage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setShowBlockModal(false)}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>
@@ -328,7 +328,7 @@ export default function ImagePage() {
             placeholder="Search lyrics..."
             value={lyricSearch}
             onChange={(e) => setLyricSearch(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
             autoFocus
           />
           {lyricSearch.trim() && (
@@ -338,7 +338,7 @@ export default function ImagePage() {
                   l.root_word.toLowerCase().includes(lyricSearch.trim().toLowerCase()) &&
                   !lyrics.some((existing) => existing.lyric_id === l.id)
                 ).slice(0, 50)
-                if (filtered.length === 0) return <li className="px-3 py-2 text-text/50">No results</li>
+                if (filtered.length === 0) return <li className="px-3 py-2 text-neutral-500">No results</li>
                 return filtered.map((l) => {
                   const selected = selectedLyricIds.has(l.id)
                   return (
@@ -353,7 +353,7 @@ export default function ImagePage() {
                     >
                       <span className={selected ? 'font-semibold' : ''}>{l.root_word}</span>
                       <div className="flex items-center gap-2">
-                        {l.is_blocklisted && <span className="text-xs text-text/50">blocklisted</span>}
+                        {l.is_blocklisted && <span className="text-xs text-neutral-500">blocklisted</span>}
                         {selected && <Check size={14} className="text-primary" />}
                       </div>
                     </li>
@@ -364,12 +364,12 @@ export default function ImagePage() {
           )}
           <div className="mt-2">
             {selectedLyricIds.size > 0 && (
-              <span className="text-sm text-text/50 block mb-2">{selectedLyricIds.size} selected</span>
+              <span className="text-sm text-neutral-500 block mb-2">{selectedLyricIds.size} selected</span>
             )}
             <div className="grid grid-cols-2 sm:flex sm:justify-end gap-3">
               <button
                 onClick={() => setShowAddLyricModal(false)}
-                className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+                className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
               >
                 Cancel
               </button>

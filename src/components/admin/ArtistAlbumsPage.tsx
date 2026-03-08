@@ -102,7 +102,7 @@ export default function ArtistAlbumsPage() {
               return prev
             }, { replace: true })
           }}
-          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+          className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
         >
           <option value="all">All</option>
           <option value="yes">Yes</option>

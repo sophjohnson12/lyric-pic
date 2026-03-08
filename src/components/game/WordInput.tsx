@@ -109,8 +109,8 @@ export default function WordInput({
   }
 
   const lockBgClass =
-    lockState === 'flash-incorrect' ? 'bg-red-700 text-white' :
-    lockState === 'unlocking' || lockState === 'unlocked' ? 'bg-green-700 text-white' :
+    lockState === 'flash-incorrect' ? 'bg-error text-white' :
+    lockState === 'unlocking' || lockState === 'unlocked' ? 'bg-success text-white' :
     'bg-primary hover:bg-primary/80 text-neutral-100 hover:text-white'
 
   return (
@@ -129,7 +129,7 @@ export default function WordInput({
               {puzzleWord.imageUrls.length > 1 && (
                 <button
                   onClick={() => onRefresh(wordIndex)}
-                  className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 hover:text-text hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
+                  className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
                   title="Get different image"
                 >
                   <RefreshCw size={24} className="drop-shadow-md" />
@@ -143,7 +143,7 @@ export default function WordInput({
                 <button
                   onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
                   disabled={currentImageFlagged}
-                  className={`w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 hover:text-text hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                  className={`w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
                   title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
                 >
                   <Flag size={24} className="drop-shadow-md" />
@@ -163,7 +163,7 @@ export default function WordInput({
               <motion.div
                 initial={{ clipPath: "inset(0 100% 0 0)" }}
                 animate={{ clipPath: "inset(0 0% 0 0)" }}
-                className={`absolute inset-0 bg-green-700 flex items-center justify-center text-white rounded-b-xl border border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
+                className={`absolute inset-0 bg-success flex items-center justify-center text-white rounded-b-xl border border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
               >
                 {revealBehavior === 'full_lyric' && puzzleWord.lineText
                   ? <span className="text-sm text-center leading-snug line-clamp-2"><HighlightedLine text={puzzleWord.lineText} word={puzzleWord.word} /></span>
@@ -219,13 +219,13 @@ export default function WordInput({
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    className="w-full h-full px-2 text-text placeholder-neutral-400 text-base rounded-br-xl border border-secondary"
+                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border border-secondary"
                     placeholder="Guess the word..."
                   />
                 </form>
                 <button
                   onClick={() => onReveal(wordIndex)}
-                  className="absolute bottom-1.5 right-1.5 p-2 text-text/60 bg-white/60 hover:text-text/80 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
+                  className="absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
                   title="Reveal answer"
                   type="button"
                 >

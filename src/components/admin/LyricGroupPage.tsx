@@ -189,7 +189,7 @@ export default function LyricGroupPage() {
   }
 
   if (!group) {
-    return <div className="text-center py-12 text-text/50">Group not found</div>
+    return <div className="text-center py-12 text-neutral-500">Group not found</div>
   }
 
   async function handleToggleCell(lyricId: number, imageId: number, value: boolean) {
@@ -302,7 +302,7 @@ export default function LyricGroupPage() {
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : uniqueImages.length === 0 ? (
-          <p className="text-sm text-text/50 py-4">No images yet</p>
+          <p className="text-sm text-neutral-500 py-4">No images yet</p>
         ) : (
           <div className="space-y-6">
             {Array.from({ length: Math.ceil(uniqueImages.length / 3) }, (_, i) => {
@@ -326,7 +326,7 @@ export default function LyricGroupPage() {
                 </thead>
                 <tbody>
                   <tr className="border-b border-primary/10 bg-primary/5">
-                    <td className="px-3 py-2.5 font-semibold text-text/70 whitespace-nowrap">
+                    <td className="px-3 py-2.5 font-semibold text-neutral-600 whitespace-nowrap">
                       All Lyrics
                     </td>
                     {chunk.map((img, colIdx) => (
@@ -364,7 +364,7 @@ export default function LyricGroupPage() {
                               <button
                                 onClick={() => handleCreateCell(member.id, img.image_id)}
                                 disabled={creatingCell === key}
-                                className="text-text/30 hover:text-primary disabled:opacity-30 cursor-pointer"
+                                className="text-neutral-800/30 hover:text-primary disabled:opacity-30 cursor-pointer"
                                 title="Add lyric_image record"
                               >
                                 <Plus size={16} />
@@ -398,7 +398,7 @@ export default function LyricGroupPage() {
             placeholder="Search lyrics..."
             value={lyricSearch}
             onChange={(e) => setLyricSearch(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
             autoFocus
           />
           {lyricSearch.trim() && (
@@ -410,7 +410,7 @@ export default function LyricGroupPage() {
                     !memberIds.has(l.id)
                   )
                   .slice(0, 50)
-                if (filtered.length === 0) return <li className="px-3 py-2 text-text/50">No results</li>
+                if (filtered.length === 0) return <li className="px-3 py-2 text-neutral-500">No results</li>
                 return filtered.map((l) => {
                   const selected = selectedLyricIds.has(l.id)
                   return (
@@ -425,7 +425,7 @@ export default function LyricGroupPage() {
                     >
                       <span className={selected ? 'font-semibold' : ''}>{l.root_word}</span>
                       <div className="flex items-center gap-2">
-                        {l.is_blocklisted && <span className="text-xs text-text/50">blocklisted</span>}
+                        {l.is_blocklisted && <span className="text-xs text-neutral-500">blocklisted</span>}
                         {selected && <Check size={14} className="text-primary" />}
                       </div>
                     </li>
@@ -436,12 +436,12 @@ export default function LyricGroupPage() {
           )}
           <div className="mt-2">
             {selectedLyricIds.size > 0 && (
-              <span className="text-sm text-text/50 block mb-2">{selectedLyricIds.size} selected</span>
+              <span className="text-sm text-neutral-500 block mb-2">{selectedLyricIds.size} selected</span>
             )}
             <div className="grid grid-cols-2 sm:flex sm:justify-end gap-3">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+                className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
               >
                 Cancel
               </button>

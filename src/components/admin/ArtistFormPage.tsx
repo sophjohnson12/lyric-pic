@@ -25,7 +25,6 @@ export default function ArtistFormPage() {
   const [geniusArtistId, setGeniusArtistId] = useState('')
   const [primaryColor, setPrimaryColor] = useState('#722F37')
   const [secondaryColor, setSecondaryColor] = useState('#5C2028')
-  const [bgColor, setBgColor] = useState('#FFF8F0')
   const [textColor, setTextColor] = useState('#2D1F2D')
   const [font, setFont] = useState('')
   const [saving, setSaving] = useState(false)
@@ -53,7 +52,6 @@ export default function ArtistFormPage() {
         setGeniusArtistId(a.genius_artist_id?.toString() ?? '')
         setPrimaryColor(a.theme_primary_color)
         setSecondaryColor(a.theme_secondary_color)
-        setBgColor(a.theme_background_color)
         setTextColor(a.theme_text_color)
         setFont(a.theme_font_heading)
       })
@@ -91,7 +89,6 @@ export default function ArtistFormPage() {
         genius_artist_id: geniusArtistId ? Number(geniusArtistId) : null,
         theme_primary_color: primaryColor,
         theme_secondary_color: secondaryColor,
-        theme_background_color: bgColor,
         theme_text_color: textColor,
         theme_font_heading: font,
       }
@@ -111,14 +108,14 @@ export default function ArtistFormPage() {
 
   const canSubmit = !!(name.trim() && slug.trim() && successMessage.trim() && failureMessage.trim() && geniusArtistId)
 
-  const inputClass = 'w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm'
+  const inputClass = 'w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm'
 
   return (
     <>
       <Toast message={toast} />
       <AdminFormPage title={isEdit ? 'Edit Artist' : 'Add Artist'} onSubmit={handleSubmit} onCancel={() => navigate(backUrl)} loading={saving} canSubmit={canSubmit} backUrl={backUrl}>
       <div>
-        <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">General</h2>
+        <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">General</h2>
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Name" required>
@@ -145,7 +142,7 @@ export default function ArtistFormPage() {
               <input type="text" value={fanbaseName} onChange={(e) => setFanbaseName(e.target.value)} className={inputClass} />
             </FormField>
           </div>
-          <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Game Behavior</h2>
+          <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Game Behavior</h2>
            <FormField label="Load Message">
             <input type="text" value={loadMessage} onChange={(e) => setLoadMessage(e.target.value)} className={inputClass} />
           </FormField>
@@ -161,7 +158,7 @@ export default function ArtistFormPage() {
         </div>
       </div>
       <div>
-        <h2 className="text-base font-semibold mb-3 text-text/70 uppercase tracking-wide text-xs">Themes</h2>
+        <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Themes</h2>
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Primary Color">
@@ -172,9 +169,6 @@ export default function ArtistFormPage() {
             </FormField>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Background Color">
-              <ColorField value={bgColor} onChange={setBgColor} />
-            </FormField>
             <FormField label="Text Color">
               <ColorField value={textColor} onChange={setTextColor} />
             </FormField>

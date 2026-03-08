@@ -41,7 +41,7 @@ export default function SongDropdown({
             readOnly
             placeholder="Guess the song..."
             onClick={() => setShowModal(true)}
-            className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm  text-text placeholder-neutral-400 text-base cursor-pointer border border-secondary"
+            className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm  text-neutral-800 placeholder-neutral-400 text-base cursor-pointer border border-secondary"
           />
         </div>
         {showModal && (
@@ -61,7 +61,7 @@ export default function SongDropdown({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="h-12 flex-1 px-4 py-2 rounded-lg border border-neutral-200 text-text text-base font-medium hover:bg-black/10 transition-colors cursor-pointer"
+                  className="h-12 flex-1 px-4 py-2 rounded-lg border border-neutral-200 text-neutral-800 text-base font-medium hover:bg-black/10 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

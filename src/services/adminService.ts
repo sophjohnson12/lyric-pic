@@ -197,7 +197,7 @@ export interface ArtistFormData {
   genius_artist_id: number | null
   theme_primary_color: string
   theme_secondary_color: string
-  theme_background_color: string
+  theme_background_color?: string
   theme_text_color: string
   theme_font_heading: string
 }
@@ -311,7 +311,7 @@ export interface AlbumFormData {
   release_year: number | null
   theme_primary_color: string | null
   theme_secondary_color: string | null
-  theme_background_color: string | null
+  theme_background_color?: string | null
   image_url: string | null
 }
 

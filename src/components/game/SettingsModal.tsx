@@ -54,7 +54,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     <Modal onClose={onClose}>
       <h2 className="text-xl font-bold text-primary mb-4">Settings & Stats</h2>
 
-      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2 flex items-center gap-1">
+      <h3 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-2 flex items-center gap-1">
         Reveal Behavior
       </h3>
       <div className="flex gap-6 mb-6">
@@ -68,14 +68,14 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
               onChange={() => onRevealBehaviorChange(value)}
               className="accent-primary cursor-pointer"
             />
-            <span className="text-sm text-text">
+            <span className="text-sm text-neutral-800">
               {value === 'word_only' ? 'Word Only' : 'Full Lyric'}
             </span>
           </label>
         ))}
       </div>
 
-      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
+      <h3 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
       <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
         {levels.map((level) => (
           <button
@@ -99,7 +99,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         ))}
       </div>
 
-      <h3 className="text-sm font-semibold text-text/60 uppercase tracking-wide mb-2">Game History</h3>
+      <h3 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-2">Game History</h3>
       <div className="mb-2">
         <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
       </div>
@@ -107,10 +107,10 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         <ul className="space-y-1 mb-4">
           {loading
             ? playedSongIds.map((id) => (
-                <li key={id} className="text-sm h-5 w-full rounded bg-text/1 animate-pulse" />
+                <li key={id} className="text-sm h-5 w-full rounded bg-neutral-200 animate-pulse" />
               ))
             : songNames.map((name) => (
-                <li key={name} className="text-sm text-text">
+                <li key={name} className="text-sm text-neutral-800">
                   {name}
                 </li>
               ))}

@@ -221,7 +221,7 @@ export default function LyricsPage() {
           placeholder="Search lyrics..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm"
+          className="w-full sm:w-72 px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm"
         />
         <label className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
           Blocklisted:
@@ -236,7 +236,7 @@ export default function LyricsPage() {
               }, { replace: true })
               setPage(1)
             }}
-            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
           >
             <option value="all">All</option>
             <option value="yes">Yes</option>
@@ -256,7 +256,7 @@ export default function LyricsPage() {
               }, { replace: true })
               setPage(1)
             }}
-            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm"
+            className="px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
           >
             <option value="all">All</option>
             <option value="yes">Yes</option>
@@ -342,7 +342,7 @@ export default function LyricsPage() {
       {blocklistModal && (
         <Modal onClose={() => { setBlocklistModal(null); setSelectedReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Word</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             Are you sure? This lyric will be disabled for existing songs.
           </p>
           <p className="text-sm font-semibold mb-3">
@@ -352,7 +352,7 @@ export default function LyricsPage() {
           <select
             value={selectedReason}
             onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -362,7 +362,7 @@ export default function LyricsPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setBlocklistModal(null); setSelectedReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               No
             </button>
@@ -380,14 +380,14 @@ export default function LyricsPage() {
       {bulkBlockModal && (
         <Modal onClose={() => { setBulkBlockModal(false); setBulkBlockReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Words</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             Blocklist all selected lyrics ({selectedIds.size}). This will disable them for existing songs.
           </p>
           <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
           <select
             value={bulkBlockReason}
             onChange={(e) => setBulkBlockReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -397,7 +397,7 @@ export default function LyricsPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setBulkBlockModal(false); setBulkBlockReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>

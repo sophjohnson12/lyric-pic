@@ -26,7 +26,19 @@ Lyric Pic is a music lyric guessing game. Players are shown images representing 
 
 **Admin Service** (`src/services/adminService.ts`): Large service file (~800+ lines) containing all admin CRUD operations against Supabase. Uses PostgREST client methods.
 
-**Theme System**: Artist/album-specific colors applied via CSS custom properties (`--color-theme-*`) in `src/hooks/useTheme.ts` and consumed by Tailwind (`bg-primary`, `text-primary`, etc.).
+**Theme System**: Artist/album-specific colors applied via CSS custom properties (`--color-theme-primary`, `--color-theme-secondary`) in `src/hooks/useTheme.ts` and consumed by Tailwind (`bg-primary`, `text-primary`, `bg-secondary`, etc.).
+
+**Color palette** — only these classes are allowed:
+- `primary` / `secondary` — dynamic, artist/album-specific (opacity variants ok)
+- `neutral` — Tailwind built-in, fixed (e.g. `bg-neutral-50`, `text-neutral-800`). Opacity only on `bg-white/60` and `bg-white/80` (icon buttons in WordInput).
+- `white` — Tailwind built-in (opacity ok)
+- `success` — fixed `#15803d` (green-700 equivalent); use `text-success` / `bg-success`
+- `error` — fixed `#b91c1c` (red-700 equivalent); use `text-error` / `bg-error`
+
+**Neutral mapping** (text hierarchy):
+`text-neutral-800` (body) → `text-neutral-700` → `text-neutral-600` (secondary) → `text-neutral-500` (muted) → `text-neutral-400` (placeholder/disabled)
+
+**Do not use**: `bg-bg`, `text-text`, `border-text`, `--color-theme-bg`, `--color-theme-text`, `text-green-700`, `bg-green-700`, `text-red-700`, `bg-red-700`.
 
 **Edge Functions** (`supabase/functions/`): Deno-based functions that proxy Genius API calls (search, artist songs, song lyrics). Config in `supabase/config.toml` with `verify_jwt = false`.
 

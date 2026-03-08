@@ -60,7 +60,7 @@ export default function Dropdown({ options, placeholder, onSelect, onEnterSelect
         onFocus={() => setIsOpen(true)}
         placeholder={placeholder}
         disabled={disabled}
-        className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm border border-secondary text-text placeholder-neutral-400 disabled:opacity-50 text-base focus:border-primary focus:outline-none"
+        className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm border border-secondary text-neutral-800 placeholder-neutral-400 disabled:opacity-50 text-base focus:border-primary focus:outline-none"
       />
       {isOpen && filteredOptions.length > 0 && (
         <ul className="absolute z-30 w-full bg-white border border-secondary rounded-lg shadow-lg max-h-36 overflow-y-auto">
@@ -75,7 +75,7 @@ export default function Dropdown({ options, placeholder, onSelect, onEnterSelect
                   onEnterSelect?.(opt.id, opt.label)
                 }
               }}
-              className="h-12 px-3 flex items-center hover:bg-primary/10 focus:bg-primary/10 focus:outline-none cursor-pointer text-sm text-text"
+              className="h-12 px-3 flex items-center hover:bg-primary/10 focus:bg-primary/10 focus:outline-none cursor-pointer text-sm text-neutral-800"
             >
               {opt.label}
             </li>

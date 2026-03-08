@@ -273,11 +273,11 @@ export default function LyricPage() {
           </Link>
           <h1 className="text-2xl font-bold">Lyric</h1>
           {reviewQueue.length > 0 && (
-            <span className="hidden sm:inline text-sm text-text/50">{reviewQueue.length} remaining</span>
+            <span className="hidden sm:inline text-sm text-neutral-500">{reviewQueue.length} remaining</span>
           )}
         </div>
         {reviewQueue.length > 0 && (
-          <span className="sm:hidden w-full text-sm text-text/50">{reviewQueue.length} remaining</span>
+          <span className="sm:hidden w-full text-sm text-neutral-500">{reviewQueue.length} remaining</span>
         )}
         {state?.reviewQueue !== undefined && (
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -315,17 +315,17 @@ export default function LyricPage() {
         <div>
           <div>{lyric && (
             <div className="mt-2 mb-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm items-center">
-              <span className="font-semibold text-text/60">Playable?</span>
+              <span className="font-semibold text-neutral-500">Playable?</span>
               {minImageCount !== null ? (
                 images.filter((img) => img.is_selectable).length >= minImageCount
                   ? <CircleCheck size={20} className="text-green-500" />
                   : <CircleX size={20} className="text-red-500" />
               ) : null}
-              <span className="font-semibold text-text/60">ID</span>
+              <span className="font-semibold text-neutral-500">ID</span>
               <span>{lyric.id}</span>
-              <span className="font-semibold text-text/60">Stem</span>
+              <span className="font-semibold text-neutral-500">Stem</span>
               <span>{lyric.stem ?? '—'}</span>
-              <span className="font-semibold text-text/60">Lyric Group</span>
+              <span className="font-semibold text-neutral-500">Lyric Group</span>
               <span>
                 {lyric.lyric_group_id ? (
                   <Link
@@ -337,19 +337,19 @@ export default function LyricPage() {
                   </Link>
                 ) : '—'}
               </span>
-              <span className="font-semibold text-text/60">Flagged?</span>
+              <span className="font-semibold text-neutral-500">Flagged?</span>
               <ToggleSwitch
                 checked={lyric.is_flagged}
                 onChange={handleFlag}
                 disabled={flagging || loading}
               />
-              <span className="font-semibold text-text/60">Blocklisted?</span>
+              <span className="font-semibold text-neutral-500">Blocklisted?</span>
               <ToggleSwitch
                 checked={lyric.is_blocklisted}
                 onChange={handleBlocklistToggle}
                 disabled={blocklisting || loading}
               />
-              <span className="font-semibold text-text/60">Blocklist Reason</span>
+              <span className="font-semibold text-neutral-500">Blocklist Reason</span>
               <span>
                 {lyric.blocklist_reason ? (
                   <button
@@ -426,7 +426,7 @@ export default function LyricPage() {
             {blocklistModalMode === 'change_reason' ? 'Change Blocklist Reason' : 'Blocklist Word'}
           </h2>
           {blocklistModalMode === 'block' && (
-            <p className="text-sm text-text/70 mb-4">
+            <p className="text-sm text-neutral-600 mb-4">
               Are you sure? This lyric will be disabled for existing songs.
             </p>
           )}
@@ -439,7 +439,7 @@ export default function LyricPage() {
           <select
             value={selectedReason}
             onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -449,7 +449,7 @@ export default function LyricPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setShowBlocklistModal(false); setSelectedReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               {blocklistModalMode === 'change_reason' ? 'Cancel' : 'No'}
             </button>
@@ -472,7 +472,7 @@ export default function LyricPage() {
             placeholder="Search groups..."
             value={groupSearch}
             onChange={(e) => setGroupSearch(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm mb-2"
             autoFocus
           />
           <ul className="max-h-64 overflow-y-auto border border-primary/20 rounded-lg mb-4 text-base sm:text-sm">
@@ -480,7 +480,7 @@ export default function LyricPage() {
               const filtered = allGroups.filter((g) =>
                 g.name.toLowerCase().includes(groupSearch.trim().toLowerCase())
               ).slice(0, 50)
-              if (filtered.length === 0) return <li className="px-3 py-2 text-text/50">No results</li>
+              if (filtered.length === 0) return <li className="px-3 py-2 text-neutral-500">No results</li>
               return filtered.map((g) => {
                 const selected = selectedGroupId === g.id
                 return (
@@ -499,7 +499,7 @@ export default function LyricPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setShowGroupModal(false)}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>

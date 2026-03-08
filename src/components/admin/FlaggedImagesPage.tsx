@@ -257,7 +257,7 @@ export default function FlaggedImagesPage() {
       {blocklistModal && (
         <Modal onClose={() => { setBlocklistModal(null); setSelectedReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Image</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             Are you sure? This image will be hidden from the game.
           </p>
           <div className="flex items-center gap-3 mb-4">
@@ -267,7 +267,7 @@ export default function FlaggedImagesPage() {
           <select
             value={selectedReason}
             onChange={(e) => setSelectedReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -277,7 +277,7 @@ export default function FlaggedImagesPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setBlocklistModal(null); setSelectedReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               No
             </button>
@@ -295,14 +295,14 @@ export default function FlaggedImagesPage() {
       {bulkBlockModal && (
         <Modal onClose={() => { setBulkBlockModal(false); setBulkBlockReason('') }}>
           <h2 className="text-lg font-bold mb-2">Blocklist Images</h2>
-          <p className="text-sm text-text/70 mb-4">
+          <p className="text-sm text-neutral-600 mb-4">
             Blocklist all selected images ({flaggedSelectedIds.size}). They will be hidden from the game.
           </p>
           <label className="block text-sm font-semibold mb-1">Blocklist Reason *</label>
           <select
             value={bulkBlockReason}
             onChange={(e) => setBulkBlockReason(e.target.value)}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-bg text-text focus:outline-none focus:border-primary text-sm mb-6"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm mb-6"
           >
             <option value="" disabled>Select a reason...</option>
             {reasons.map((r) => (
@@ -312,7 +312,7 @@ export default function FlaggedImagesPage() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setBulkBlockModal(false); setBulkBlockReason('') }}
-              className="bg-gray-200 text-text px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
             >
               Cancel
             </button>

@@ -96,7 +96,7 @@ export default function AlbumButtons({
     return (
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {albums.map((album) => (
-          <div key={album.id} className="flex items-center gap-2 text-tiny sm:text-xs text-text/80">
+          <div key={album.id} className="flex items-center gap-2 text-tiny sm:text-xs text-neutral-600">
             <AlbumIcon album={album} />
             <span>{album.name}</span>
           </div>

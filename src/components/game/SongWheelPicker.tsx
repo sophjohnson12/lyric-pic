@@ -84,8 +84,8 @@ export default function SongWheelPicker({
   const getItemClass = (index: number) => {
     const diff = Math.abs(index - effectiveIndex)
     if (diff === 0) return 'opacity-100 font-medium text-primary'
-    if (diff === 1) return 'opacity-50 text-text'
-    return 'opacity-20 text-text'
+    if (diff === 1) return 'opacity-50 text-neutral-800'
+    return 'opacity-20 text-neutral-800'
   }
 
   return (
