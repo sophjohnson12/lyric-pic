@@ -187,8 +187,8 @@ export default function WordInput({
                 <motion.button
                   ref={lockScope}
                   type="button"
-                  onClick={submitGuess}
-                  onPointerDown={(e) => e.preventDefault()}
+                  onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
+                  onClick={async () => { await submitGuess(); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
                   className={`h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border-y border-l border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
