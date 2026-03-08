@@ -142,6 +142,7 @@ export default function WordInput({
               {onFlagImage && currentImageUrl && (
                 <button
                   onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
+                  onPointerDown={(e) => e.preventDefault()}
                   disabled={currentImageFlagged}
                   className={`w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
                   title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
@@ -232,6 +233,7 @@ export default function WordInput({
                     { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
                   )}
                   onClick={() => onReveal(wordIndex)}
+                  onPointerDown={(e) => e.preventDefault()}
                   className="absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
                   title="Reveal answer"
                   type="button"
