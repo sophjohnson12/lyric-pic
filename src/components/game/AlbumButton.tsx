@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { motion } from 'motion/react'
 import type { Album } from '../../types/database'
 import AlbumIcon from '../common/AlbumIcon'
 
@@ -33,10 +34,11 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
 }) {
   const isGrayed = !readonly && ((isDisabled && !isCorrect) || isDepletedOnly)
   return (
-    <button
+    <motion.button
       onClick={readonly || !onGuess ? undefined : () => onGuess(album.id, album.name)}
       disabled={!readonly && (isDisabled || isDepletedOnly)}
       title={album.name}
+      whileTap={readonly ? undefined : { scale: 1.05 }}
       className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 border
         ${isGrayed
           ? 'bg-neutral-400 border-neutral-300 opacity-50'
@@ -53,7 +55,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
         ? <img src={album.image_url} alt={album.name} className="w-8 h-8" />
         : getInitials(album.name)
       }
-    </button>
+    </motion.button>
   )
 }
 
