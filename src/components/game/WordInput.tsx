@@ -44,6 +44,7 @@ export default function WordInput({
   const [flaggedImageUrls, setFlaggedImageUrls] = useState<Set<string>>(new Set())
   const [lockState, setLockState] = useState<LockState>('locked')
   const [lockScope, animateLock] = useAnimate()
+  const inputWasFocused = useRef(false)
 
   const currentImageUrl = puzzleWord.imageUrls[puzzleWord.currentImageIndex] ?? ''
   const currentImageFlagged = flaggedImageUrls.has(currentImageUrl)
@@ -127,8 +128,8 @@ export default function WordInput({
              <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
               {puzzleWord.imageUrls.length > 1 && (
                 <button
-                  onClick={() => onRefresh(wordIndex)}
-                  onPointerDown={(e) => e.preventDefault()}
+                  onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
+                  onClick={() => { onRefresh(wordIndex); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
                   className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
                   title="Get different image"
                 >
@@ -187,6 +188,7 @@ export default function WordInput({
                   ref={lockScope}
                   type="button"
                   onClick={submitGuess}
+                  onPointerDown={(e) => e.preventDefault()}
                   className={`h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border-y border-l border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
