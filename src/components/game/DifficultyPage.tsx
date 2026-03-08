@@ -39,7 +39,7 @@ export default function DifficultyPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-gray-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }

@@ -3,9 +3,9 @@ import { useParams } from 'react-router-dom'
 import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import { getPlayedSongNames } from '../../services/supabase'
-import type { GameLevel } from '../../types/game'
+import type { GameLevel, RevealBehavior } from '../../types/game'
 
-export type RevealBehavior = 'word_only' | 'full_lyric'
+export type { RevealBehavior }
 
 interface SettingsModalProps {
   playedSongIds: number[]

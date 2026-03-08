@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { stem } from '../utils/stem'
 import type { Artist, Album, Song } from '../types/database'
-import type { PuzzleWord, GameState, WordWithStats, GameLevel } from '../types/game'
+import type { PuzzleWord, GameState, WordWithStats, GameLevel, RevealBehavior } from '../types/game'
 import {
   getArtistBySlug,
   getArtistLevels,
@@ -24,35 +24,78 @@ import { useLocalStorage } from './useLocalStorage'
 import { useTheme } from './useTheme'
 import { LOCAL_STORAGE_KEY_PREFIX } from '../utils/constants'
 
-// DB already filters title words and enforces image counts — just rank by distinctiveness and sample.
-// Words with null song_count are missing from artist_lyric (data issue) and are excluded.
-function selectPuzzleWords(words: WordWithStats[], puzzleWordCount: number, topDistinctiveCount: number, maxDistinctiveValue: number): WordWithStats[] {
-  const ranked = words.filter((w) => w.song_count !== null)
-  if (ranked.length <= puzzleWordCount) return ranked
-  const sorted = [...ranked].sort((a, b) => a.song_count! - b.song_count!)
-  // Base pool: top N most distinctive words
+// Build a ranked pool from a set of words using distinctiveness ordering.
+// Words with null song_count sort to the end; extras threshold only applies to non-null counts.
+function buildDistinctivePool(words: WordWithStats[], topDistinctiveCount: number, maxDistinctiveValue: number): WordWithStats[] {
+  if (words.length === 0) return []
+  const sorted = [...words].sort((a, b) => {
+    if (a.song_count === null) return 1
+    if (b.song_count === null) return -1
+    return a.song_count - b.song_count
+  })
   const topN = sorted.slice(0, Math.min(topDistinctiveCount, sorted.length))
   const topNIds = new Set(topN.map((w) => w.lyric_id))
-  // Extend pool with any word whose song_count is within the distinctive threshold
-  const extras = sorted.filter((w) => w.song_count! <= maxDistinctiveValue && !topNIds.has(w.lyric_id))
-  const pool = [...topN, ...extras]
-  const selected: WordWithStats[] = []
-  const remaining = [...pool]
-  while (selected.length < puzzleWordCount && remaining.length > 0) {
+  const extras = sorted.filter((w) => w.song_count !== null && w.song_count <= maxDistinctiveValue && !topNIds.has(w.lyric_id))
+  return [...topN, ...extras]
+}
+
+// Randomly sample up to `needed` words from a pool, respecting already-used line texts.
+function sampleFromPool(pool: WordWithStats[], needed: number, usedLineTexts: Set<string>): WordWithStats[] {
+  const remaining = pool.filter((w) => !w.line_text || !usedLineTexts.has(w.line_text))
+  const picked: WordWithStats[] = []
+  while (picked.length < needed && remaining.length > 0) {
     const index = Math.floor(Math.random() * remaining.length)
-    const [picked] = remaining.splice(index, 1)
-    selected.push(picked)
-    // Remove any remaining candidates that share the same line to avoid duplicates
-    if (picked.line_text) {
+    const [word] = remaining.splice(index, 1)
+    picked.push(word)
+    if (word.line_text) {
+      usedLineTexts.add(word.line_text)
       for (let i = remaining.length - 1; i >= 0; i--) {
-        if (remaining[i].line_text === picked.line_text) remaining.splice(i, 1)
+        if (remaining[i].line_text === word.line_text) remaining.splice(i, 1)
       }
     }
+  }
+  return picked
+}
+
+// DB already filters title words and enforces image counts — just rank by distinctiveness and sample.
+// Words are selected in preference tiers:
+//   full_lyric mode: prefer non-title lines → fall back to title lines → fall back to null-count words
+//   word_only mode:  prefer words with song_count → fall back to null-count words
+function selectPuzzleWords(
+  words: WordWithStats[],
+  puzzleWordCount: number,
+  topDistinctiveCount: number,
+  maxDistinctiveValue: number,
+  revealBehavior: RevealBehavior,
+): WordWithStats[] {
+  const withCount = words.filter((w) => w.song_count !== null)
+  const nullCount = words.filter((w) => w.song_count === null)
+
+  let tiers: WordWithStats[][]
+  if (revealBehavior === 'full_lyric') {
+    tiers = [
+      withCount.filter((w) => !w.line_has_title),  // preferred: non-title lines with count
+      withCount.filter((w) => w.line_has_title),    // fallback: title lines with count
+      nullCount,                                     // last resort: missing artist count
+    ]
+  } else {
+    tiers = [
+      withCount,   // preferred: all words with count
+      nullCount,   // fallback: missing artist count
+    ]
+  }
+
+  const usedLineTexts = new Set<string>()
+  const selected: WordWithStats[] = []
+  for (const tier of tiers) {
+    if (selected.length >= puzzleWordCount) break
+    const pool = buildDistinctivePool(tier, topDistinctiveCount, maxDistinctiveValue)
+    selected.push(...sampleFromPool(pool, puzzleWordCount - selected.length, usedLineTexts))
   }
   return selected
 }
 
-export function useGame(artistSlug: string, levelSlug: string | null) {
+export function useGame(artistSlug: string, levelSlug: string | null, revealBehavior: RevealBehavior = 'full_lyric') {
   const [playedSongIds, setPlayedSongIds] = useLocalStorage<number[]>(
     `${LOCAL_STORAGE_KEY_PREFIX}${artistSlug}_level_${levelSlug}`,
     []
@@ -100,6 +143,8 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
   const puzzleWordCountRef = useRef<number>(3)
   const topDistinctiveCountRef = useRef<number>(5)
   const maxDistinctiveValueRef = useRef<number>(0)
+  const revealBehaviorRef = useRef<RevealBehavior>(revealBehavior)
+  useEffect(() => { revealBehaviorRef.current = revealBehavior }, [revealBehavior])
 
   // Keep state.playedSongIds in sync
   useEffect(() => {
@@ -123,7 +168,7 @@ export function useGame(artistSlug: string, levelSlug: string | null) {
         }
 
         const wordVariations = await getSongWords(song.id)
-        const selected = selectPuzzleWords(wordVariations, puzzleWordCountRef.current, topDistinctiveCountRef.current, maxDistinctiveValueRef.current)
+        const selected = selectPuzzleWords(wordVariations, puzzleWordCountRef.current, topDistinctiveCountRef.current, maxDistinctiveValueRef.current, revealBehaviorRef.current)
 
         if (selected.length < puzzleWordCountRef.current) {
           const newExclude = [...excludeIds, song.id]

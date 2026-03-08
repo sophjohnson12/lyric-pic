@@ -1,5 +1,7 @@
 import type { Artist, Album, Song } from './database'
 
+export type RevealBehavior = 'word_only' | 'full_lyric'
+
 export interface GameLevel {
   id: number
   name: string
@@ -31,6 +33,7 @@ export interface WordWithStats {
   song_count: number | null
   lyric_group_id: number | null
   line_text: string | null
+  line_has_title: boolean | null
 }
 
 export interface GameState {

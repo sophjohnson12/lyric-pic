@@ -111,14 +111,14 @@ export default function WordInput({
   const lockBgClass =
     lockState === 'flash-incorrect' ? 'bg-red-700 text-white' :
     lockState === 'unlocking' || lockState === 'unlocked' ? 'bg-green-700 text-white' :
-    'bg-primary hover:bg-primary/80 text-white/80 hover:text-white'
+    'bg-primary hover:bg-primary/80 text-neutral-100 hover:text-white'
 
   return (
     <div className="min-w-full snap-center mx-auto">
       <div className="pb-0 w-7/8 sm:w-3/5 md:w-full mx-auto">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white">
           {/* Image Container */}
-          <div className="relative flex-1 w-full overflow-hidden bg-gray-100 rounded-t-xl border-x border-t border-secondary">
+          <div className="relative flex-1 w-full overflow-hidden bg-neutral-300 rounded-t-xl border-x border-t border-secondary">
             <ImageDisplay
               imageUrls={puzzleWord.imageUrls}
               currentIndex={puzzleWord.currentImageIndex}
@@ -219,7 +219,7 @@ export default function WordInput({
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    className="w-full h-full px-2 text-gray-800 placeholder-gray-400 text-base rounded-br-xl border border-secondary"
+                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border border-secondary"
                     placeholder="Guess the word..."
                   />
                 </form>

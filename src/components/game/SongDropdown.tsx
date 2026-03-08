@@ -61,7 +61,7 @@ export default function SongDropdown({
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="h-12 flex-1 px-4 py-2 rounded-lg border border-gray-200 text-text text-base font-medium hover:bg-black/10 transition-colors cursor-pointer"
+                  className="h-12 flex-1 px-4 py-2 rounded-lg border border-neutral-200 text-text text-base font-medium hover:bg-black/10 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

@@ -25,9 +25,9 @@ export default function GamePage() {
   const loadMessage = localStorage.getItem(LOAD_MESSAGE_KEY)
   const levelSlug = parseLevelSlug(rawDifficulty)
 
-  const game = useGame(artistSlug || '', levelSlug)
-
   const [revealBehavior, setRevealBehavior] = useLocalStorage<RevealBehavior>(REVEAL_BEHAVIOR_KEY, 'full_lyric')
+
+  const game = useGame(artistSlug || '', levelSlug, revealBehavior)
 
   const fromDifficulty = !!(location.state as any)?.fromDifficulty
   const [showInfo, setShowInfo] = useState(fromDifficulty)
@@ -141,7 +141,7 @@ export default function GamePage() {
   if (game.loading) {
     return (
       <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
-        <div className="w-10 h-10 border-4 border-text border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         {loadMessage && (
           <p className="text-text/60 font-medium text-center max-w-xs px-4">{loadMessage}</p>
         )}
@@ -288,7 +288,7 @@ export default function GamePage() {
             <button
               key={index}
               onClick={() => scrollToSlide(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-secondary hover:bg-gray-400'}`}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-secondary hover:bg-primary/40'}`}
               aria-label={`Go to image ${index + 1}`}
             />
           ))}
