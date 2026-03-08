@@ -38,7 +38,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
           }
         </div>
         <h2 className="text-xl md:text-2xl font-bold text-primary mb-4 mx-auto">{message}</h2>
-        <div className="bg-secondary/25 rounded-xl border border-primary p-4 md:p-6 mb-4 w-full">
+        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
           <p className="text-md md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
           <p className={"text-sm text-neutral-600 mb-2 md:mb-4 italic"}>
             {album ? album.name : 'Single'}
