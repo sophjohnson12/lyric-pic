@@ -228,12 +228,14 @@ export default function WordInput({
                   />
                 </form>
                 <button
-                  onPointerDown={(e) => e.currentTarget.animate(
-                    [{ transform: 'scale(1)' }, { transform: 'scale(0.75)' }, { transform: 'scale(1)' }],
-                    { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
-                  )}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    e.currentTarget.animate(
+                      [{ transform: 'scale(1)' }, { transform: 'scale(0.75)' }, { transform: 'scale(1)' }],
+                      { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
+                    )
+                  }}
                   onClick={() => onReveal(wordIndex)}
-                  onPointerDown={(e) => e.preventDefault()}
                   className="absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer hover:scale-110"
                   title="Reveal answer"
                   type="button"
