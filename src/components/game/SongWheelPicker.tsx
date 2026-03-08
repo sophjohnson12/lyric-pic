@@ -5,6 +5,7 @@ interface SongWheelPickerProps {
   songs: Song[]
   incorrectGuesses: string[]
   onSelectionChange?: (songId: number | null, songName: string) => void
+  onSubmit?: () => void
   itemHeight?: number
   visibleCount?: number
   /** Fraction of window.innerHeight available to this picker's container (e.g. 0.8 for max-h-[80vh]) */
@@ -17,6 +18,7 @@ export default function SongWheelPicker({
   songs,
   incorrectGuesses,
   onSelectionChange,
+  onSubmit,
   itemHeight = 48,
   visibleCount = 3,
   containerFraction = 1,
@@ -115,13 +117,27 @@ export default function SongWheelPicker({
         >
           <div style={{ paddingTop: padding, paddingBottom: padding }}>
             {items.map((item, index) => (
-              <div
+              <button
                 key={item.id ?? 'placeholder'}
-                className={`flex items-center justify-center text-center px-4 transition-opacity duration-150 ${getItemClass(index)}`}
+                type="button"
+                className={`w-full flex items-center justify-center text-center px-4 transition-opacity duration-150 focus:outline-none ${getItemClass(index)}`}
                 style={{ height: itemHeight, scrollSnapAlign: 'center' }}
+                onFocus={() => {
+                  if (containerRef.current) {
+                    containerRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' })
+                  }
+                  setSelectedIndex(index)
+                  onSelectionChange?.(item.id, item.name)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    onSubmit?.()
+                  }
+                }}
               >
                 <span className="truncate max-w-full text-sm">{item.name}</span>
-              </div>
+              </button>
             ))}
           </div>
         </div>

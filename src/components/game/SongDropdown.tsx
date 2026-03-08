@@ -41,6 +41,7 @@ export default function SongDropdown({
             readOnly
             placeholder="Guess the song..."
             onClick={() => setShowModal(true)}
+            onKeyDown={(e) => { if (e.key === 'Enter') setShowModal(true) }}
             className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm  text-neutral-800 placeholder-neutral-400 text-base cursor-pointer border border-secondary"
           />
         </div>
@@ -56,6 +57,7 @@ export default function SongDropdown({
                 onSelectionChange={(id, name) =>
                   setModalSelection(id !== null ? { id, name } : null)
                 }
+                onSubmit={handleModalGuess}
               />
               <div className="flex gap-3 mt-4">
                 <button
@@ -67,7 +69,6 @@ export default function SongDropdown({
                 </button>
                 <button
                   type="submit"
-                  autoFocus
                   disabled={!modalSelection}
                   className="h-12 flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default border border-secondary"
                 >
