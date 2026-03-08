@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
-import { RefreshCw, Flag, Lock, LockOpen } from 'lucide-react'
+import { motion, AnimatePresence, useAnimate } from 'motion/react'
+import { RefreshCw, Flag, Lock, LockOpen, KeyRound } from 'lucide-react'
 import ImageDisplay from './ImageDisplay'
 import ConfirmPopup from '../common/ConfirmPopup'
 import HighlightedLine from './HighlightedLine'
 import type { PuzzleWord } from '../../types/game'
 import type { RevealBehavior } from './SettingsModal'
+
+type LockState = 'locked' | 'flash-incorrect' | 'unlocking' | 'unlocked'
 
 interface WordInputProps {
   puzzleWord: PuzzleWord
@@ -40,7 +42,8 @@ export default function WordInput({
   const [showFlagConfirm, setShowFlagConfirm] = useState(false)
   const [showImageFlagConfirm, setShowImageFlagConfirm] = useState(false)
   const [flaggedImageUrls, setFlaggedImageUrls] = useState<Set<string>>(new Set())
-  const [isHoveringLock, setIsHoveringLock] = useState(false)
+  const [lockState, setLockState] = useState<LockState>('locked')
+  const [lockScope, animateLock] = useAnimate()
 
   const currentImageUrl = puzzleWord.imageUrls[puzzleWord.currentImageIndex] ?? ''
   const currentImageFlagged = flaggedImageUrls.has(currentImageUrl)
@@ -54,20 +57,44 @@ export default function WordInput({
 
   const isGuessed = puzzleWord.guessed || puzzleWord.revealed
 
+  // Track when a word transitions from unguessed → guessed to play the unlock animation
+  const prevIsGuessedRef = useRef(isGuessed)
+  const [revealReady, setRevealReady] = useState(isGuessed)
+
+  useEffect(() => {
+    if (isGuessed && !prevIsGuessedRef.current) {
+      setLockState('unlocking')
+      const t1 = setTimeout(() => setLockState('unlocked'), 350)
+      const t2 = setTimeout(() => setRevealReady(true), 700)
+      prevIsGuessedRef.current = true
+      return () => { clearTimeout(t1); clearTimeout(t2) }
+    }
+    prevIsGuessedRef.current = isGuessed
+  }, [isGuessed])
+
   useEffect(() => {
     if (autoFocus && !isGuessed && inputRef.current) {
       inputRef.current.focus()
     }
   }, [autoFocus, focusTrigger])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitGuess = async () => {
     if (!inputValue.trim()) return
 
     const result = await onGuess(wordIndex, inputValue)
     if (result === 'correct' || result === 'incorrect' || result === 'invalid' || result === 'already_guessed') {
       setInputValue('')
     }
+    if ((result === 'incorrect' || result === 'invalid' || result === 'already_guessed') && lockScope.current) {
+      setLockState('flash-incorrect')
+      await animateLock(lockScope.current, { x: [0, -8, 8, -6, 6, -3, 3, 0] }, { duration: 0.4 })
+      setLockState('locked')
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await submitGuess()
   }
 
   const handleFlag = () => {
@@ -81,6 +108,11 @@ export default function WordInput({
     onFlag?.(puzzleWord.lyricId)
   }
 
+  const lockBgClass =
+    lockState === 'flash-incorrect' ? 'bg-red-700 text-white' :
+    lockState === 'unlocking' || lockState === 'unlocked' ? 'bg-green-700 text-white' :
+    'bg-primary hover:bg-primary/80 text-white/80 hover:text-white'
+
   return (
     <div className="min-w-full snap-center mx-auto">
       <div className="pb-0 w-7/8 sm:w-3/5 md:w-full mx-auto">
@@ -92,28 +124,40 @@ export default function WordInput({
               currentIndex={puzzleWord.currentImageIndex}
             />
 
-            {/* Refresh Icon */}
+            {/* Refresh button (top-right) */}
             {puzzleWord.imageUrls.length > 1 && (
               <button
                 onClick={() => onRefresh(wordIndex)}
-                className="absolute top-2 right-2 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-white/80 bg-primary border border-secondary hover:text-white transition-colors z-10 hover:bg-primary/80 rounded-full hover:cursor-pointer"
+                className="absolute top-2 right-2 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 border border-text/50 hover:text-text hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
                 title="Get different image"
               >
                 <RefreshCw size={24} className="drop-shadow-md" />
               </button>
             )}
 
-            {/* Flag Image Icon */}
-            {onFlagImage && currentImageUrl && (
-              <button
-                onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
-                disabled={currentImageFlagged}
-                className={`absolute top-2 left-2 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
-                title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
-              >
-                <Flag size={20} className="drop-shadow-md" />
-              </button>
-            )}
+            {/* Key + Flag buttons (top-left) */}
+            <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
+              {!isGuessed && (
+                <button
+                  onClick={() => onReveal(wordIndex)}
+                  className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 border border-text/50 hover:text-text hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
+                  title="Reveal answer"
+                  type="button"
+                >
+                  <KeyRound size={24} className="drop-shadow-md" />
+                </button>
+              )}
+              {onFlagImage && currentImageUrl && (
+                <button
+                  onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
+                  disabled={currentImageFlagged}
+                  className={`w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 border border-text/50 hover:text-text hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                  title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
+                >
+                  <Flag size={24} className="drop-shadow-md" />
+                </button>
+              )}
+            </div>
 
             {/* Overlay when solved */}
             {isGuessed && (
@@ -123,11 +167,11 @@ export default function WordInput({
 
           {/* Input Container */}
           <div className="relative h-12 bg-white flex items-center shrink-0">
-            {isGuessed ? (
+            {revealReady ? (
               <motion.div
                 initial={{ clipPath: "inset(0 100% 0 0)" }}
                 animate={{ clipPath: "inset(0 0% 0 0)" }}
-                className={`absolute inset-0 bg-primary flex items-center justify-center text-white rounded-b-xl border border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
+                className={`absolute inset-0 bg-green-700 flex items-center justify-center text-white rounded-b-xl border border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
               >
                 {revealBehavior === 'full_lyric' && puzzleWord.lineText
                   ? <span className="text-sm text-center leading-snug line-clamp-2"><HighlightedLine text={puzzleWord.lineText} word={puzzleWord.word} /></span>
@@ -147,16 +191,14 @@ export default function WordInput({
             ) : (
               <>
                 <motion.button
-                  className="h-full flex items-center justify-center z-10 px-3 bg-primary text-white/80 hover:text-white rounded-bl-xl cursor-pointer border border-secondary"
-                  onHoverStart={() => setIsHoveringLock(true)}
-                  onHoverEnd={() => setIsHoveringLock(false)}
-                  onClick={() => onReveal(wordIndex)}
-                  title="Reveal answer"
-                  whileTap={{ scale: 0.95 }}
+                  ref={lockScope}
                   type="button"
+                  onClick={submitGuess}
+                  whileTap={{ scale: 0.95 }}
+                  className={`h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
-                    {isHoveringLock ? (
+                    {lockState === 'unlocking' || lockState === 'unlocked' ? (
                       <motion.div
                         key="unlocked"
                         initial={{ scale: 0.8, opacity: 0, rotate: -20 }}
@@ -169,10 +211,9 @@ export default function WordInput({
                     ) : (
                       <motion.div
                         key="locked"
-                        initial={{ scale: 0.8, opacity: 0, rotate: 20 }}
+                        initial={false}
                         animate={{ scale: 1, opacity: 1, rotate: 0 }}
                         exit={{ scale: 0.8, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
                       >
                         <Lock size={24} />
                       </motion.div>

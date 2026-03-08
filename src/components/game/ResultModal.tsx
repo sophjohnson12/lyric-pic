@@ -33,8 +33,8 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
       <div className="flex flex-col text-center justify-center items-center md:w-11/12 mx-auto">
         <div className="flex justify-center mb-2">
           {correct
-            ? <CircleCheck size={60} className="text-green-600 drop-shadow-md" />
-            : <CircleX size={60} className="text-red-600 drop-shadow-md" />
+            ? <CircleCheck size={60} className="text-green-700 drop-shadow-md" />
+            : <CircleX size={60} className="text-red-700 drop-shadow-md" />
           }
         </div>
         <h2 className="text-xl md:text-2xl font-bold text-primary mb-4 mx-auto">{message}</h2>
