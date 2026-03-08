@@ -120,7 +120,8 @@ export default function SongWheelPicker({
               <button
                 key={item.id ?? 'placeholder'}
                 type="button"
-                className={`w-full flex items-center justify-center text-center px-4 transition-opacity duration-150 focus:outline-none ${getItemClass(index)}`}
+                autoFocus={index === 0}
+                className={`w-full flex items-center justify-center text-center px-4 transition-opacity duration-150 max-sm:focus:outline-none ${getItemClass(index)}`}
                 style={{ height: itemHeight, scrollSnapAlign: 'center' }}
                 onFocus={() => {
                   if (containerRef.current) {
