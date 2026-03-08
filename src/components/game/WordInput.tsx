@@ -174,7 +174,7 @@ export default function WordInput({
                   <button
                     onClick={handleFlag}
                     disabled={flagged}
-                    className={`absolute bottom-1.5 right-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 hover:bg-black/10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
+                    className={`absolute bottom-1.5 right-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
                     title={flagged ? 'Flagged' : 'Flag this word'}
                   >
                     <Flag size={20} className="drop-shadow-md" />
@@ -234,7 +234,7 @@ export default function WordInput({
                   )}
                   onClick={() => onReveal(wordIndex)}
                   onPointerDown={(e) => e.preventDefault()}
-                  className="absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
+                  className="absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer hover:scale-110"
                   title="Reveal answer"
                   type="button"
                 >
