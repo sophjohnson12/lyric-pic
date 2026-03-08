@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
 interface ModalProps {
@@ -8,6 +8,15 @@ interface ModalProps {
 }
 
 export default function Modal({ children, onClose, showClose = true }: ModalProps) {
+  useEffect(() => {
+    if (!onClose) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
     <div
       className="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
