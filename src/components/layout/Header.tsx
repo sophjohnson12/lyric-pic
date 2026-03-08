@@ -43,23 +43,23 @@ export default function Header({
         <div className="flex items-center md:gap-2 text-neutral-600">
           <button
             onClick={onInfo}
-            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
+            className="group h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
             title="How to play"
           >
-            <Info size={20} />
+            <Info size={20} className="transition-transform group-hover:scale-110" />
           </button>
           <button
             onClick={onHistory}
-            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
+            className="group h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
             title="Song history"
           >
-            <Sliders size={20} />
+            <Sliders size={20} className="transition-transform group-hover:scale-110" />
           </button>
           <button
             onClick={onSkip}
-            className="h-12 w-14 md:w-auto md:h-auto py-2 px-3 text-neutral-100 hover:text-white flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
+            className="group h-12 w-14 md:w-auto md:h-auto py-2 px-3 text-neutral-100 hover:text-white flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
           >
-            <SkipForward size={24}/>
+            <SkipForward size={24} className="transition-transform group-hover:scale-110" />
           </button>
         </div>
       </div>

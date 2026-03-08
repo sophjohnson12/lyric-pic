@@ -130,10 +130,10 @@ export default function WordInput({
                 <button
                   onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
                   onClick={() => { onRefresh(wordIndex); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
-                  className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
+                  className="group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
                   title="Get different image"
                 >
-                  <RefreshCw size={24} className="drop-shadow-md" />
+                  <RefreshCw size={24} className="drop-shadow-md transition-transform group-hover:scale-110" />
                 </button>
               )}
             </div>
@@ -145,10 +145,10 @@ export default function WordInput({
                   onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
                   onPointerDown={(e) => e.preventDefault()}
                   disabled={currentImageFlagged}
-                  className={`w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                  className={`group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
                   title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
                 >
-                  <Flag size={24} className="drop-shadow-md" />
+                  <Flag size={24} className={`drop-shadow-md transition-transform ${currentImageFlagged ? '' : 'group-hover:scale-110'}`} />
                 </button>
               )}
             </div>
@@ -175,10 +175,10 @@ export default function WordInput({
                   <button
                     onClick={handleFlag}
                     disabled={flagged}
-                    className={`absolute bottom-1.5 right-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : 'hover:scale-110'}`}
+                    className={`group absolute bottom-1.5 right-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : ''}`}
                     title={flagged ? 'Flagged' : 'Flag this word'}
                   >
-                    <Flag size={20} className="drop-shadow-md" />
+                    <Flag size={20} className={`drop-shadow-md transition-transform ${flagged ? '' : 'group-hover:scale-110'}`} />
                   </button>
                 )}
               </motion.div>
@@ -189,7 +189,7 @@ export default function WordInput({
                   type="button"
                   onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
                   onClick={async () => { await submitGuess(); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
-                  className={`h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border-y border-l border-secondary transition-colors cursor-pointer ${lockBgClass}`}
+                  className={`group h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border-y border-l border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
                     {lockState === 'unlocking' || lockState === 'unlocked' ? (
@@ -200,7 +200,7 @@ export default function WordInput({
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <LockOpen size={24} />
+                        <LockOpen size={24} className="transition-transform group-hover:scale-110" />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -209,7 +209,7 @@ export default function WordInput({
                           animate={{ scale: 1, opacity: 1, rotate: 0 }}
                           exit={{ scale: 0.8, opacity: 0 }}
                         >
-                          <Lock size={24} />
+                          <Lock size={24} className="transition-transform group-hover:scale-110" />
                         </motion.div>
                     )}
                   </AnimatePresence>
@@ -238,11 +238,11 @@ export default function WordInput({
                     )
                   }}
                   onClick={() => onReveal(wordIndex)}
-                  className="absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer hover:scale-110"
+                  className="group absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
                   title="Reveal answer"
                   type="button"
                 >
-                  <KeyRound size={20} className="drop-shadow-md" />
+                  <KeyRound size={20} className="drop-shadow-md transition-transform group-hover:scale-110" />
                 </button>
               </>
             )}
