@@ -74,7 +74,7 @@ export default function WordInput({
 
   useEffect(() => {
     if (autoFocus && !isGuessed && inputRef.current) {
-      inputRef.current.focus()
+      inputRef.current.focus({ preventScroll: true })
     }
   }, [autoFocus, focusTrigger])
 
