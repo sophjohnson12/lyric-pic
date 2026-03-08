@@ -2,7 +2,7 @@ import Modal from './Modal'
 
 interface ConfirmPopupProps {
   title?: string
-  message: string
+  message?: string
   onConfirm: () => void
   onCancel: () => void
   confirmLabel?: string
@@ -20,7 +20,7 @@ export default function ConfirmPopup({
   return (
     <Modal onClose={onCancel} showClose={false}>
       {title && <h2 className="text-lg font-bold text-primary mb-2">{title}</h2>}
-      <p className="text-sm mb-6">{message}</p>
+      {message && <p className="text-sm mb-6">{message}</p>}
       <div className="flex gap-3 md:justify-end">
         <button
           onClick={onCancel}

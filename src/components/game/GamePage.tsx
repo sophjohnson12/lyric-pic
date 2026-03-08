@@ -27,7 +27,7 @@ export default function GamePage() {
 
   const game = useGame(artistSlug || '', levelSlug)
 
-  const [revealBehavior, setRevealBehavior] = useLocalStorage<RevealBehavior>(REVEAL_BEHAVIOR_KEY, 'word_only')
+  const [revealBehavior, setRevealBehavior] = useLocalStorage<RevealBehavior>(REVEAL_BEHAVIOR_KEY, 'full_lyric')
 
   const fromDifficulty = !!(location.state as any)?.fromDifficulty
   const [showInfo, setShowInfo] = useState(fromDifficulty)

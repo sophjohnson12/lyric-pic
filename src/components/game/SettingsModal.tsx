@@ -58,7 +58,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         Reveal Behavior
       </h3>
       <div className="flex gap-6 mb-6">
-        {(['word_only', 'full_lyric'] as const).map((value) => (
+        {(['full_lyric', 'word_only'] as const).map((value) => (
           <label key={value} className="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"

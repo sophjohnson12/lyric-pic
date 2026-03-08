@@ -40,17 +40,17 @@ export default function Header({
           <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
         </div>
 
-        <div className="flex items-center md:gap-2 text-gray-600">
+        <div className="flex items-center md:gap-2 text-text/80">
           <button
             onClick={onInfo}
-            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
+            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 rounded-full transition-colors cursor-pointer hover:text-text"
             title="How to play"
           >
             <Info size={20} />
           </button>
           <button
             onClick={onHistory}
-            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 hover:bg-black/10 rounded-full transition-colors cursor-pointer"
+            className="h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-text"
             title="Song history"
           >
             <Sliders size={20} />

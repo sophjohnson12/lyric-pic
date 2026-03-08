@@ -125,33 +125,25 @@ export default function WordInput({
             />
 
             {/* Refresh button (top-right) */}
-            {puzzleWord.imageUrls.length > 1 && (
-              <button
-                onClick={() => onRefresh(wordIndex)}
-                className="absolute top-2 right-2 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 border border-text/50 hover:text-text hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
-                title="Get different image"
-              >
-                <RefreshCw size={24} className="drop-shadow-md" />
-              </button>
-            )}
-
-            {/* Key + Flag buttons (top-left) */}
-            <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
-              {!isGuessed && (
+             <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
+              {puzzleWord.imageUrls.length > 1 && (
                 <button
-                  onClick={() => onReveal(wordIndex)}
-                  className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 border border-text/50 hover:text-text hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
-                  title="Reveal answer"
-                  type="button"
+                  onClick={() => onRefresh(wordIndex)}
+                  className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 hover:text-text hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
+                  title="Get different image"
                 >
-                  <KeyRound size={24} className="drop-shadow-md" />
+                  <RefreshCw size={24} className="drop-shadow-md" />
                 </button>
               )}
+            </div>
+
+            {/* Flag button (top-left) */}
+            <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
               {onFlagImage && currentImageUrl && (
                 <button
                   onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
                   disabled={currentImageFlagged}
-                  className={`w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 border border-text/50 hover:text-text hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                  className={`w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-text/90 bg-white/60 hover:text-text hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
                   title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
                 >
                   <Flag size={24} className="drop-shadow-md" />
@@ -194,7 +186,7 @@ export default function WordInput({
                   ref={lockScope}
                   type="button"
                   onClick={submitGuess}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.98 }}
                   className={`h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
@@ -210,13 +202,13 @@ export default function WordInput({
                       </motion.div>
                     ) : (
                       <motion.div
-                        key="locked"
-                        initial={false}
-                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                        exit={{ scale: 0.8, opacity: 0 }}
-                      >
-                        <Lock size={24} />
-                      </motion.div>
+                          key="locked"
+                          initial={false}
+                          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
+                        >
+                          <Lock size={24} />
+                        </motion.div>
                     )}
                   </AnimatePresence>
                 </motion.button>
@@ -231,6 +223,14 @@ export default function WordInput({
                     placeholder="Guess the word..."
                   />
                 </form>
+                <button
+                  onClick={() => onReveal(wordIndex)}
+                  className="absolute bottom-1.5 right-1.5 p-2 text-text/60 bg-white/60 hover:text-text/80 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer"
+                  title="Reveal answer"
+                  type="button"
+                >
+                  <KeyRound size={20} className="drop-shadow-md" />
+                </button>
               </>
             )}
           </div>
@@ -256,6 +256,7 @@ export default function WordInput({
           onCancel={() => setShowImageFlagConfirm(false)}
         />
       )}
+
     </div>
   )
 }
