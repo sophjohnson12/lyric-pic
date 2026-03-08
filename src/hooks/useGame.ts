@@ -313,7 +313,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
   const guessWord = useCallback(
     async (wordIndex: number, guess: string) => {
       const trimmed = guess.trim().toLowerCase()
-      if (!trimmed) return
+      if (!trimmed) return 'invalid'
 
       const puzzleWord = state.puzzleWords[wordIndex]
       if (!puzzleWord || puzzleWord.guessed || puzzleWord.revealed) return

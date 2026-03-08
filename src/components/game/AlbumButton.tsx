@@ -1,5 +1,4 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
-import { motion } from 'motion/react'
 import type { Album } from '../../types/database'
 import AlbumIcon from '../common/AlbumIcon'
 
@@ -32,17 +31,37 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
   readonly: boolean
   onGuess?: (albumId: number | null, albumName: string) => string
 }) {
-  const isGrayed = !readonly && ((isDisabled && !isCorrect) || isDepletedOnly)
+  const [recentlyClicked, setRecentlyClicked] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  const handlePointerDown = () => {
+    if (readonly || !onGuess || recentlyClicked || isDisabled || isDepletedOnly) return
+    buttonRef.current?.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }],
+      { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
+    )
+  }
+
+  const handleClick = () => {
+    if (!onGuess || recentlyClicked) return
+    setRecentlyClicked(true)
+    onGuess(album.id, album.name)
+    setTimeout(() => setRecentlyClicked(false), 200)
+  }
+
+  const isGrayed = !readonly && !recentlyClicked && ((isDisabled && !isCorrect) || isDepletedOnly)
+
   return (
-    <motion.button
-      onClick={readonly || !onGuess ? undefined : () => onGuess(album.id, album.name)}
-      disabled={!readonly && (isDisabled || isDepletedOnly)}
+    <button
+      ref={buttonRef}
+      onPointerDown={handlePointerDown}
+      onClick={readonly || !onGuess ? undefined : handleClick}
+      disabled={!readonly && !recentlyClicked && (isDisabled || isDepletedOnly)}
       title={album.name}
-      whileTap={readonly ? undefined : { scale: 1.05 }}
-      className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 border
+      className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border
         ${isGrayed
           ? 'bg-neutral-400 border-neutral-300 opacity-50'
-          : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} hover:opacity-80`
+          : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-80' : ''}`
         }
         ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`
       }
@@ -55,7 +74,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
         ? <img src={album.image_url} alt={album.name} className="w-8 h-8" />
         : getInitials(album.name)
       }
-    </motion.button>
+    </button>
   )
 }
 

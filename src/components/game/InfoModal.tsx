@@ -1,5 +1,5 @@
 import Modal from '../common/Modal'
-import { Lock, Sliders, SkipForward, RefreshCw, Flag } from 'lucide-react';
+import { KeyRound, Sliders, SkipForward, RefreshCw, Flag } from 'lucide-react';
 import type { Album } from '../../types/database'
 import AlbumButtons from './AlbumButton'
 
@@ -24,7 +24,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
           <p className="inline md:hidden"> {minSongLyricCount === 1 ? 'The picture shows' : 'Each picture shows'} a word from the song. Type and press Enter for unlimited attempts.</p>
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"><RefreshCw size={15} strokeWidth={3} className="mr-2 text-primary"/> Load new picture</li>
-            <li className="flex items-center"><Lock size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
+            <li className="flex items-center"><KeyRound size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
             {showFlagIcon && <li className="flex items-center"><Flag size={15} strokeWidth={3} className="mr-2 text-primary"/> Flag word for review</li>}
           </ul>
         </div>

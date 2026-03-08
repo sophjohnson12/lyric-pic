@@ -17,7 +17,9 @@
 
 .theme-transitioning,
 .theme-transitioning * {
-  transition: border-color 0.75s ease-in-out !important;
+  transition: background-color 0.75s ease-in-out,
+              border-color 0.75s ease-in-out,
+              color 0.75s ease-in-out !important;
 }
 
 body {
