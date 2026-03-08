@@ -21,7 +21,7 @@ export default function Modal({ children, onClose, showClose = true }: ModalProp
           <button
             onClick={onClose}
             autoFocus
-            className="absolute top-2 right-2 h-12 w-12 md:h-auto md:w-auto md:p-2 flex items-center justify-center text-neutral-500 hover:text-neutral-800 rounded-full transition-colors hover:text-neutral-800 text-xl leading-none cursor-pointer focus:outline-none sm:focus:outline"
+            className="absolute top-2 right-2 h-12 w-12 md:h-auto md:w-auto md:p-2 flex items-center justify-center text-neutral-500 hover:text-neutral-800 rounded-full transition-colors hover:text-neutral-800 text-xl leading-none cursor-pointer max-sm:focus:outline-none"
           >
             <X size={20} className="drop-shadow-md" ></X>
           </button>
