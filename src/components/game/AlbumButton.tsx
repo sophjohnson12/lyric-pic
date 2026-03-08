@@ -31,32 +31,26 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
   readonly: boolean
   onGuess?: (albumId: number | null, albumName: string) => string
 }) {
-  const [isHovering, setIsHovering] = useState(false)
   const isGrayed = !readonly && ((isDisabled && !isCorrect) || isDepletedOnly)
   return (
     <button
       onClick={readonly || !onGuess ? undefined : () => onGuess(album.id, album.name)}
       disabled={!readonly && (isDisabled || isDepletedOnly)}
       title={album.name}
-      onMouseEnter={readonly ? undefined : () => setIsHovering(true)}
-      onMouseLeave={readonly ? undefined : () => setIsHovering(false)}
-      className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`}
+      className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-all duration-300 shrink-0 border
+        ${isGrayed
+          ? 'bg-neutral-400 border-neutral-300 opacity-50'
+          : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} hover:opacity-80`
+        }
+        ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`
+      }
       style={{
-        backgroundColor: isGrayed
-          ? '#9ca3af'
-          : album.theme_primary_color || '#6b7280',
-        border: 'solid',
-        borderWidth: '1px',
-        borderColor: isGrayed
-          ? '#cad0da'
-          : album.theme_secondary_color || '#9ca3af',
-        opacity: isGrayed
-          ? 0.5
-          : (!readonly && isHovering ? 0.8 : 1),
+        ...(!isGrayed && album.theme_primary_color ? { backgroundColor: album.theme_primary_color } : {}),
+        ...(!isGrayed && album.theme_secondary_color ? { borderColor: album.theme_secondary_color } : {}),
       }}
     >
       {album.image_url !== null
-        ? <img src={album.image_url} alt={album.name} style={{ width: '30px', height: '30px' }} />
+        ? <img src={album.image_url} alt={album.name} className="w-8 h-8" />
         : getInitials(album.name)
       }
     </button>

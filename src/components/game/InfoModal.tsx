@@ -1,7 +1,7 @@
 import Modal from '../common/Modal'
 import { Lock, Sliders, SkipForward, RefreshCw, Flag } from 'lucide-react';
 import type { Album } from '../../types/database'
-import AlbumButtons from './AlbumDropdown'
+import AlbumButtons from './AlbumButton'
 
 interface InfoModalProps {
   minSongLyricCount: number
