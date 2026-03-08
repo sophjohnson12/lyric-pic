@@ -31,11 +31,10 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
   readonly: boolean
   onGuess?: (albumId: number | null, albumName: string) => string
 }) {
-  const [recentlyClicked, setRecentlyClicked] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   const handlePointerDown = () => {
-    if (readonly || !onGuess || recentlyClicked || isDisabled || isDepletedOnly) return
+    if (readonly || !onGuess || isDisabled || isDepletedOnly) return
     buttonRef.current?.animate(
       [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }],
       { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
@@ -43,20 +42,18 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
   }
 
   const handleClick = () => {
-    if (!onGuess || recentlyClicked) return
-    setRecentlyClicked(true)
+    if (!onGuess) return
     onGuess(album.id, album.name)
-    setTimeout(() => setRecentlyClicked(false), 200)
   }
 
-  const isGrayed = !readonly && !recentlyClicked && ((isDisabled && !isCorrect) || isDepletedOnly)
+  const isGrayed = !readonly && ((isDisabled && !isCorrect) || isDepletedOnly)
 
   return (
     <button
       ref={buttonRef}
       onPointerDown={handlePointerDown}
       onClick={readonly || !onGuess ? undefined : handleClick}
-      disabled={!readonly && !recentlyClicked && (isDisabled || isDepletedOnly)}
+      disabled={!readonly && (isDisabled || isDepletedOnly)}
       title={album.name}
       className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border
         ${isGrayed
