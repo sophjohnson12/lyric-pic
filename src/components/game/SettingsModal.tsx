@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
+import ConfirmPopup from '../common/ConfirmPopup'
 import { getPlayedSongNames } from '../../services/supabase'
 import type { GameLevel, RevealBehavior } from '../../types/game'
 
@@ -25,6 +26,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -44,6 +46,8 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     onClearHistory()
     onClose()
   }
+
+  const currentLevelName = levels.find((l) => l.slug === levelSlug)?.name ?? ''
 
   const handleLevelChange = (slug: string) => {
     if (slug === levelSlug) return
@@ -119,12 +123,22 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
         <div className="flex items-center justify-center ">
           <button
-            onClick={handleClear}
-            className="w-full md:w-auto py-2 px-4 h-12 text-sm text-red-600 border border-red-600/50 rounded-lg hover:bg-red-50 cursor-pointer"
+            onClick={() => setShowConfirm(true)}
+            className="w-full md:w-auto py-2 px-4 h-12 text-sm text-error border border-error/50 rounded-lg hover:bg-error/5 cursor-pointer"
           >
-            Clear {levels.find((l) => l.slug === levelSlug)?.name ?? ''} History
+            Clear {currentLevelName} History
           </button>
         </div>
+      )}
+      {showConfirm && (
+        <ConfirmPopup
+          title={`Clear ${currentLevelName} History?`}
+          message={`Are you sure you want to clear your played songs for this level? This action cannot be undone.`}
+          confirmLabel="Clear"
+          cancelLabel="Cancel"
+          onConfirm={handleClear}
+          onCancel={() => setShowConfirm(false)}
+        />
       )}
     </Modal>
   )
