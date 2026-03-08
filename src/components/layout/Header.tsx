@@ -57,7 +57,7 @@ export default function Header({
           </button>
           <button
             onClick={onSkip}
-            className="h-12 w-14 md:w-auto md:h-auto py-2 px-3 text-white/80 hover:text-white flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
+            className="h-12 w-14 md:w-auto md:h-auto py-2 px-3 text-neutral-100 hover:text-white flex items-center justify-center bg-primary hover:bg-primary/80 rounded-full transition-colors cursor-pointer border border-secondary"
           >
             <SkipForward size={24}/>
           </button>

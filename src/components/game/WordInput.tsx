@@ -186,7 +186,7 @@ export default function WordInput({
                   ref={lockScope}
                   type="button"
                   onClick={submitGuess}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.95 }}
                   className={`h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
@@ -219,7 +219,7 @@ export default function WordInput({
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border border-secondary"
+                    className="w-full h-full px-2 text-text placeholder-neutral-400 text-base rounded-br-xl border border-secondary"
                     placeholder="Guess the word..."
                   />
                 </form>
