@@ -37,7 +37,8 @@ export default function LevelComplete({
   const fanbaseSuffix = fanbaseName ? ` ${fanbaseName}` : ''
   const songPhrase = totalPlayableSongs === 1 ? 'the only song' : `all ${totalPlayableSongs} songs`
 
-  const cannonY = dimensions.height * 0.5
+  const isSmall = dimensions.width < 640
+  const cannonY = dimensions.height * (isSmall ? 0.33 : 0.5)
   const confettiProps = {
     width: dimensions.width,
     height: dimensions.height,
@@ -54,15 +55,15 @@ export default function LevelComplete({
       <Confetti
         {...confettiProps}
         confettiSource={{ x: 0, y: cannonY, w: 0, h: 0 }}
-        initialVelocityX={{ min: 6, max: 16 }}
-        initialVelocityY={{ min: -18, max: -6 }}
+        initialVelocityX={{ min: isSmall ? 3 : 6, max: isSmall ? 8 : 16 }}
+        initialVelocityY={{ min: isSmall ? -10 : -18, max: isSmall ? -3 : -6 }}
       />
       {/* Right cannon */}
       <Confetti
         {...confettiProps}
         confettiSource={{ x: dimensions.width, y: cannonY, w: 0, h: 0 }}
-        initialVelocityX={{ min: -16, max: -6 }}
-        initialVelocityY={{ min: -18, max: -6 }}
+        initialVelocityX={{ min: isSmall ? -8 : -16, max: isSmall ? -3 : -6 }}
+        initialVelocityY={{ min: isSmall ? -10 : -18, max: isSmall ? -3 : -6 }}
       />
       <div className="text-center">
         <h2 className="text-2xl font-bold text-primary mb-3">
