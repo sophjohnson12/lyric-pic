@@ -128,6 +128,7 @@ export default function WordInput({
               {puzzleWord.imageUrls.length > 1 && (
                 <button
                   onClick={() => onRefresh(wordIndex)}
+                  onPointerDown={(e) => e.preventDefault()}
                   className="w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
                   title="Get different image"
                 >
