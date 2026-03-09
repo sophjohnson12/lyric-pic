@@ -189,7 +189,7 @@ export default function WordInput({
                   type="button"
                   onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
                   onClick={async () => { await submitGuess(); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
-                  className={`group h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border-y border-l border-secondary transition-colors cursor-pointer ${lockBgClass}`}
+                  className={`group h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
                     {lockState === 'unlocking' || lockState === 'unlocked' ? (
@@ -225,7 +225,7 @@ export default function WordInput({
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })
                     }}
-                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border border-secondary max-sm:focus:outline-none"
+                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border-y border-r border-secondary max-sm:focus:outline-none"
                     placeholder="Guess the word..."
                   />
                 </form>
