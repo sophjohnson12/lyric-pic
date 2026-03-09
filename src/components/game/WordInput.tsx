@@ -116,7 +116,7 @@ export default function WordInput({
   return (
     <div className="min-w-full snap-center mx-auto">
       <div className="pb-0 w-7/8 sm:w-3/5 md:w-full mx-auto">
-        <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white">
+        <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white border-b border-secondary">
           {/* Image Container */}
           <div className="relative flex-1 w-full overflow-hidden bg-neutral-300 rounded-t-xl border-x border-t border-secondary">
             <ImageDisplay
@@ -165,7 +165,7 @@ export default function WordInput({
               <motion.div
                 initial={{ clipPath: "inset(0 100% 0 0)" }}
                 animate={{ clipPath: "inset(0 0% 0 0)" }}
-                className={`absolute inset-0 bg-success flex items-center justify-center text-white rounded-b-xl border border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
+                className={`absolute inset-0 bg-success flex items-center justify-center text-white rounded-b-xl border-t border-x border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
               >
                 {revealBehavior === 'full_lyric' && puzzleWord.lineText
                   ? <span className="text-sm text-center leading-snug line-clamp-2"><HighlightedLine text={puzzleWord.lineText} word={puzzleWord.word} /></span>
@@ -189,7 +189,7 @@ export default function WordInput({
                   type="button"
                   onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
                   onClick={async () => { await submitGuess(); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
-                  className={`group h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border border-secondary transition-colors cursor-pointer ${lockBgClass}`}
+                  className={`group h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border-t border-x border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
                     {lockState === 'unlocking' || lockState === 'unlocked' ? (
@@ -225,7 +225,7 @@ export default function WordInput({
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })
                     }}
-                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border-y border-r border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
+                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border-t border-r border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
                     placeholder="Guess the word..."
                   />
                 </form>
