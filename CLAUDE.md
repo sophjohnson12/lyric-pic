@@ -81,7 +81,8 @@ Each level requires `is_selectable = true` plus a content requirement. The **`pl
 - `.neq('column', true)` excludes NULL values in PostgREST — use `.or('column.eq.false,column.is.null')` instead
 - Edge functions need `/// <reference types="..." />` directives, not `import` statements for type hints (import causes boot errors)
 - CREATE POLICY must be run in the SQL Editor for new tables to allow UPDATE/INSERT/DELETE from the admin app. Otherwise, actions fail silently.
-- **PostgREST default row limit is 1000.** Any query that fetches all rows from a table (no `.in()` scoping, no `.single()`) is silently truncated at 1000. This causes subtle bugs — e.g. aggregate counts computed client-side from truncated results will be wrong. Fix by using a DB-level aggregate function (RPC) instead of fetching raw rows and counting in TypeScript.
+- **PostgREST default row limit is 1000 — and it applies to RPCs too.** Any query that fetches all rows from a table or view is silently truncated at 1000. RPC calls (`supabase.rpc(...)`) are also capped before the rows reach the client, even when the SQL function itself has no LIMIT and even with SECURITY DEFINER. Window functions like `COUNT(*) OVER ()` run inside Postgres before the cap so they return correct totals, but the row data is still truncated. Fix table aggregates by using a DB-level aggregate RPC. Fix "show all" RPC patterns by paginating through the RPC in batches client-side (e.g. 500-row batches) rather than passing a large or zero limit.
+- **Do not pass `.not('id', 'in', '(…long list…)')` for large ID sets.** This builds a URL query string; with thousands of IDs it silently overflows and returns incorrect results. Move the filter into the DB function instead.
 
 ## Admin UI Conventions
 
