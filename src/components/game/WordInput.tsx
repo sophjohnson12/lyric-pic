@@ -232,7 +232,7 @@ export default function WordInput({
                 <button
                   onPointerDown={(e) => {
                     e.preventDefault()
-                    e.currentTarget.animate(
+                    e.currentTarget.querySelector('svg')?.animate(
                       [{ transform: 'scale(1)' }, { transform: 'scale(0.75)' }, { transform: 'scale(1)' }],
                       { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
                     )
