@@ -180,6 +180,18 @@ export default function LyricPage() {
     }
   }
 
+  async function handleMarkReviewed() {
+    if (!lyricId) return
+    setFlagging(true)
+    try {
+      await unflagLyric(Number(lyricId))
+      navigateNext()
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to unflag'}`)
+      setFlagging(false)
+    }
+  }
+
   async function handleToggleSelectable(imageId: number, value: boolean) {
     if (!lyricId) return
     setToggling(imageId)
@@ -280,13 +292,21 @@ export default function LyricPage() {
           <span className="sm:hidden w-full text-sm text-neutral-500">{reviewQueue.length} remaining</span>
         )}
         {state?.reviewQueue !== undefined && (
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="flex flex-row gap-2 w-full sm:w-auto">
             <button
               onClick={navigateNext}
-              disabled={loading}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              disabled={loading || flagging}
+              className="flex-1 bg-secondary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
-              Next Lyric
+              Skip
+            </button>
+            <button
+              onClick={handleMarkReviewed}
+              disabled={loading || flagging}
+              className="flex-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            >
+              {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Mark Reviewed
             </button>
           </div>
         )}
@@ -294,18 +314,18 @@ export default function LyricPage() {
       <div className="items-center gap-4 mb-4 col-span-1">
         <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
           <h2 className="text-4xl font-bold">{lyric?.root_word ?? 'Lyric Not Found'}</h2>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex gap-2 w-full sm:w-auto">
             <button
               onClick={openGroupModal}
               disabled={loading}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="flex-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               Add to Group
             </button>
             <button
               onClick={() => setShowFetchModal(true)}
               disabled={fetchingImages || loading}
-              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="flex-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {fetchingImages && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
               Fetch Images
@@ -386,6 +406,25 @@ export default function LyricPage() {
           </div>
         </div>
       </div>
+      {state?.reviewQueue !== undefined && (
+        <div className="sm:hidden flex flex-row gap-2 my-4 w-full">
+          <button
+            onClick={navigateNext}
+            disabled={loading || flagging}
+            className="flex-1 bg-secondary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            Skip
+          </button>
+          <button
+            onClick={handleMarkReviewed}
+            disabled={loading || flagging}
+            className="flex-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {flagging && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+            Mark Reviewed
+          </button>
+        </div>
+      )}
       <h2 className="text-lg font-semibold mb-2">Songs</h2>
       <div>
         <AdminTable

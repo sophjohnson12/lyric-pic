@@ -699,11 +699,15 @@ export async function flagLyric(lyricId: number) {
 }
 
 export async function bulkFlagLyrics(lyricIds: number[]) {
-  const { error } = await supabase
-    .from('lyric')
-    .update({ is_flagged: true, flagged_by: 'ADMIN' })
-    .in('id', lyricIds)
-  if (error) throw error
+  // PostgREST applies max-rows (1000) to PATCH internally, so chunk to stay under the limit.
+  const batchSize = 500
+  for (let i = 0; i < lyricIds.length; i += batchSize) {
+    const { error } = await supabase
+      .from('lyric')
+      .update({ is_flagged: true, flagged_by: 'ADMIN' })
+      .in('id', lyricIds.slice(i, i + batchSize))
+    if (error) throw error
+  }
 }
 
 // ─── Lyrics Management ──────────────────────────────────
@@ -931,17 +935,22 @@ export async function updateBlocklistReason(lyricId: number, reasonId: number) {
 }
 
 export async function bulkBlocklistLyrics(lyricIds: number[], reasonId: number) {
-  const { error } = await supabase
-    .from('lyric')
-    .update({ is_blocklisted: true, blocklist_reason: reasonId, is_flagged: false, flagged_by: null })
-    .in('id', lyricIds)
-  if (error) throw error
+  // PostgREST applies max-rows (1000) to PATCH internally, so chunk to stay under the limit.
+  const batchSize = 500
+  for (let i = 0; i < lyricIds.length; i += batchSize) {
+    const batch = lyricIds.slice(i, i + batchSize)
+    const { error } = await supabase
+      .from('lyric')
+      .update({ is_blocklisted: true, blocklist_reason: reasonId, is_flagged: false, flagged_by: null })
+      .in('id', batch)
+    if (error) throw error
 
-  const { error: slError } = await supabase
-    .from('song_lyric')
-    .update({ is_selectable: false })
-    .in('lyric_id', lyricIds)
-  if (slError) throw slError
+    const { error: slError } = await supabase
+      .from('song_lyric')
+      .update({ is_selectable: false })
+      .in('lyric_id', batch)
+    if (slError) throw slError
+  }
 }
 
 export async function unblocklistLyric(lyricId: number) {
