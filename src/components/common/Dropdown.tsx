@@ -20,6 +20,7 @@ export default function Dropdown({ options, placeholder, onSelect, onEnterSelect
   const [selectedLabel, setSelectedLabel] = useState('')
   const wrapperRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const skipNextOpen = useRef(false)
 
   const filteredOptions = options.filter(
     (opt) =>
@@ -42,6 +43,8 @@ export default function Dropdown({ options, placeholder, onSelect, onEnterSelect
     setSearch('')
     setIsOpen(false)
     onSelect(opt.id, opt.label)
+    skipNextOpen.current = true
+    inputRef.current?.focus()
   }
 
   const handleInputChange = (value: string) => {
@@ -57,7 +60,10 @@ export default function Dropdown({ options, placeholder, onSelect, onEnterSelect
         type="text"
         value={selectedLabel || search}
         onChange={(e) => handleInputChange(e.target.value)}
-        onFocus={() => setIsOpen(true)}
+        onFocus={() => {
+          if (skipNextOpen.current) { skipNextOpen.current = false; return }
+          setIsOpen(true)
+        }}
         placeholder={placeholder}
         disabled={disabled}
         className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm border border-secondary text-neutral-800 placeholder-neutral-400 disabled:opacity-50 text-base"

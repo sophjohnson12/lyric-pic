@@ -36,7 +36,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
   const handlePointerDown = () => {
     if (readonly || !onGuess || isDisabled || isDepletedOnly) return
     buttonRef.current?.animate(
-      [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }],
+      [{ transform: 'scale(1)' }, { transform: 'scale(0.9)' }, { transform: 'scale(1)' }],
       { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
     )
   }

@@ -173,6 +173,7 @@ export default function GamePage() {
           onInfo={() => setShowInfo(true)}
           onHistory={() => setShowHistory(true)}
           onSkip={() => {}}
+          skipDisabled={true}
           onChangeDifficulty={() => navigate(`/${artistSlug}`)}
         />
         {noSongs ? (
