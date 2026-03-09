@@ -296,7 +296,7 @@ export default function LyricPage() {
             <button
               onClick={navigateNext}
               disabled={loading || flagging}
-              className="flex-1 bg-secondary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="flex-1 bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               Skip
             </button>
@@ -411,7 +411,7 @@ export default function LyricPage() {
           <button
             onClick={navigateNext}
             disabled={loading || flagging}
-            className="flex-1 bg-secondary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+            className="flex-1 bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
           >
             Skip
           </button>
