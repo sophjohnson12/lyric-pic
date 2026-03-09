@@ -755,15 +755,11 @@ export async function getAllLyrics(
   //      produced an incomplete map and wrong counts/playability for an arbitrary subset.
   //   2. Passing thousands of IDs via .not('id','in','(...)') overflows the PostgREST URL
   //      length limit and returns incorrect results silently.
-  const offset = pageSize === 0 ? 0 : (page - 1) * pageSize
-  const { data, error } = await supabase.rpc('get_admin_lyrics_paged', {
-    p_offset:      offset,
-    p_limit:       pageSize,        // 0 → NULLIF(0,0) = NULL → no LIMIT in SQL
-    p_search:      search || null,
-    p_blocklisted: blocklistedFilter,
-    p_playable:    playableFilter,
-  })
-  if (error) throw error
+  //
+  // IMPORTANT: even for RPC calls, PostgREST applies its max-rows cap to the rows it sends
+  // back. Passing p_limit=0 (→ SQL LIMIT NULL = no SQL limit) still gets truncated by
+  // PostgREST before the rows reach the client. When pageSize===0 ("show all"), we therefore
+  // paginate through the RPC in batches to collect every row.
   type RpcRow = {
     id: number
     root_word: string
@@ -775,20 +771,50 @@ export async function getAllLyrics(
     lyric_group_name: string | null
     total_count: number
   }
-  const rows = (data ?? []) as RpcRow[]
-  const total = rows.length > 0 ? Number(rows[0].total_count) : 0
-  const mapped: AdminAllLyricRow[] = rows.map(r => ({
-    id:            r.id,
-    root_word:     r.root_word,
-    is_flagged:    r.is_flagged,
+
+  const callRpc = async (offset: number, limit: number) => {
+    const { data, error } = await supabase.rpc('get_admin_lyrics_paged', {
+      p_offset:      offset,
+      p_limit:       limit,
+      p_search:      search || null,
+      p_blocklisted: blocklistedFilter,
+      p_playable:    playableFilter,
+    })
+    if (error) throw error
+    return (data ?? []) as RpcRow[]
+  }
+
+  const toRow = (r: RpcRow): AdminAllLyricRow => ({
+    id:             r.id,
+    root_word:      r.root_word,
+    is_flagged:     r.is_flagged,
     is_blocklisted: r.is_blocklisted,
-    image_count:   r.image_count,
-    is_playable:   r.is_playable,
-    lyric_group:   r.lyric_group_id != null
+    image_count:    r.image_count,
+    is_playable:    r.is_playable,
+    lyric_group:    r.lyric_group_id != null
       ? { id: r.lyric_group_id, name: r.lyric_group_name ?? '' }
       : null,
-  }))
-  return { data: mapped, total }
+  })
+
+  if (pageSize === 0) {
+    // Collect all matching rows by iterating in batches that stay within PostgREST's max-rows.
+    const batchSize = 500
+    const all: RpcRow[] = []
+    let offset = 0
+    let total = 0
+    while (true) {
+      const batch = await callRpc(offset, batchSize)
+      if (batch.length > 0) total = Number(batch[0].total_count)
+      all.push(...batch)
+      if (batch.length < batchSize) break
+      offset += batchSize
+    }
+    return { data: all.map(toRow), total }
+  }
+
+  const rows = await callRpc((page - 1) * pageSize, pageSize)
+  const total = rows.length > 0 ? Number(rows[0].total_count) : 0
+  return { data: rows.map(toRow), total }
 }
 
 export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
