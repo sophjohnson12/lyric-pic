@@ -749,72 +749,46 @@ export async function getAllLyrics(
   blocklistedFilter: 'all' | 'yes' | 'no' = 'no',
   playableFilter: 'all' | 'yes' | 'no' = 'all',
 ): Promise<{ data: AdminAllLyricRow[]; total: number }> {
-  // Fetch min_image_count threshold for playability computation.
-  const { data: configData } = await supabase.from('app_config').select('min_image_count').maybeSingle()
-  const minImageCount = (configData?.min_image_count ?? 2) as number
-
-  // Always fetch selectable image counts via DB aggregate (SECURITY DEFINER, no PostgREST row
-  // limit). This single source is used for both the playability filter and per-row image_count /
-  // is_playable values, guaranteeing they are always consistent with each other.
-  const { data: imgData } = await supabase.rpc('get_selectable_image_counts')
-  const globalCountsMap = new Map<number, number>()
-  for (const row of (imgData ?? []) as { lyric_id: number; image_count: number }[]) {
-    globalCountsMap.set(row.lyric_id, row.image_count)
-  }
-
-  const playableIds = [...globalCountsMap.entries()]
-    .filter(([, c]) => c >= minImageCount)
-    .map(([id]) => id)
-
-  const buildQuery = (from: number, to: number) => {
-    let q = supabase
-      .from('lyric')
-      .select('id, root_word, is_flagged, is_blocklisted, lyric_group!lyric_group_id(id, name)', { count: 'exact' })
-      .order('root_word')
-      .range(from, to)
-    if (search) q = q.ilike('root_word', `%${search}%`)
-    if (blocklistedFilter === 'yes') q = q.eq('is_blocklisted', true)
-    if (blocklistedFilter === 'no') q = q.or('is_blocklisted.eq.false,is_blocklisted.is.null')
-    if (playableFilter === 'yes') {
-      q = playableIds.length > 0 ? q.in('id', playableIds) : q.in('id', [-1])
-    } else if (playableFilter === 'no') {
-      // Non-playable lyrics are those NOT in playableIds.
-      // Lyrics with 0 images (absent from globalCountsMap) are naturally included.
-      if (playableIds.length > 0) q = q.not('id', 'in', `(${playableIds.join(',')})`)
-    }
-    return q
-  }
-
-  const rowToResult = (l: any) => ({
-    ...l,
-    image_count: globalCountsMap.get(l.id) ?? 0,
-    is_playable: (globalCountsMap.get(l.id) ?? 0) >= minImageCount,
+  // All filtering, pagination, and image-count aggregation is done in a single DB RPC.
+  // The old approach (get_selectable_image_counts + client-side ID list) had two bugs:
+  //   1. PostgREST silently caps result sets at 1000 rows, so >1000 image-bearing lyrics
+  //      produced an incomplete map and wrong counts/playability for an arbitrary subset.
+  //   2. Passing thousands of IDs via .not('id','in','(...)') overflows the PostgREST URL
+  //      length limit and returns incorrect results silently.
+  const offset = pageSize === 0 ? 0 : (page - 1) * pageSize
+  const { data, error } = await supabase.rpc('get_admin_lyrics_paged', {
+    p_offset:      offset,
+    p_limit:       pageSize,        // 0 → NULLIF(0,0) = NULL → no LIMIT in SQL
+    p_search:      search || null,
+    p_blocklisted: blocklistedFilter,
+    p_playable:    playableFilter,
   })
-
-  if (pageSize === 0) {
-    const all: any[] = []
-    let from = 0
-    const batchSize = 1000
-    let total = 0
-    while (true) {
-      const { data, error, count } = await buildQuery(from, from + batchSize - 1)
-      if (error) throw error
-      if (count !== null) total = count
-      all.push(...(data ?? []))
-      if ((data ?? []).length < batchSize) break
-      from += batchSize
-    }
-    return { data: all.map(rowToResult) as AdminAllLyricRow[], total }
-  }
-
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
-  const { data, error, count } = await buildQuery(from, to)
   if (error) throw error
-  return {
-    data: ((data ?? []) as any[]).map(rowToResult) as AdminAllLyricRow[],
-    total: count ?? 0,
+  type RpcRow = {
+    id: number
+    root_word: string
+    is_flagged: boolean
+    is_blocklisted: boolean
+    image_count: number
+    is_playable: boolean
+    lyric_group_id: number | null
+    lyric_group_name: string | null
+    total_count: number
   }
+  const rows = (data ?? []) as RpcRow[]
+  const total = rows.length > 0 ? Number(rows[0].total_count) : 0
+  const mapped: AdminAllLyricRow[] = rows.map(r => ({
+    id:            r.id,
+    root_word:     r.root_word,
+    is_flagged:    r.is_flagged,
+    is_blocklisted: r.is_blocklisted,
+    image_count:   r.image_count,
+    is_playable:   r.is_playable,
+    lyric_group:   r.lyric_group_id != null
+      ? { id: r.lyric_group_id, name: r.lyric_group_name ?? '' }
+      : null,
+  }))
+  return { data: mapped, total }
 }
 
 export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
