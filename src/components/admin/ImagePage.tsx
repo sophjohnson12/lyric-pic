@@ -67,7 +67,7 @@ export default function ImagePage() {
     Promise.all([
       getImageById(Number(imageId)),
       getImageLyrics(Number(imageId)),
-      getBlocklistReasons(),
+      getBlocklistReasons(true),
     ]).then(([img, lyr, rsnList]) => {
       setImage(img)
       setLyrics(lyr)

@@ -64,7 +64,7 @@ export default function FlaggedImagesPage() {
     try {
       const [f, r] = await Promise.all([
         getFlaggedImages(),
-        getBlocklistReasons(),
+        getBlocklistReasons(true),
       ])
       setFlagged(f)
       setReasons(r)

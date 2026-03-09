@@ -57,7 +57,7 @@ export default function BlocklistedLyricsPage() {
     try {
       const [b, r] = await Promise.all([
         getBlocklistedLyrics(),
-        getBlocklistReasons(),
+        getBlocklistReasons(false),
       ])
       setBlocklisted(b)
       setReasons(r)

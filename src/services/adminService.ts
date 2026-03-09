@@ -980,10 +980,11 @@ export async function bulkUnblocklistLyrics(lyricIds: number[]) {
   if (slError) throw slError
 }
 
-export async function getBlocklistReasons(): Promise<{ id: number; reason: string }[]> {
+export async function getBlocklistReasons(isImage: boolean): Promise<{ id: number; reason: string }[]> {
   const { data, error } = await supabase
     .from('blocklist_reason')
     .select('id, reason')
+    .eq('is_image', isImage)
     .order('reason')
   if (error) throw error
   return data
@@ -1028,7 +1029,7 @@ const SEED_VOCALIZATIONS = [
 ]
 
 export async function seedBlocklist(): Promise<{ created: number; updated: number }> {
-  const reasons = await getBlocklistReasons()
+  const reasons = await getBlocklistReasons(false)
   const commonWordReasonId = reasons.find((r) => r.reason === 'common_word')?.id
   const vocalizationReasonId = reasons.find((r) => r.reason === 'vocalization')?.id
   const contractionReasonId = reasons.find((r) => r.reason === 'contraction')?.id

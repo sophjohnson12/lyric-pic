@@ -70,7 +70,7 @@ export default function BlocklistedImagesPage() {
     try {
       const [b, r] = await Promise.all([
         getBlocklistedImages(),
-        getBlocklistReasons(),
+        getBlocklistReasons(true),
       ])
       setBlocklisted(b)
       setReasons(r)

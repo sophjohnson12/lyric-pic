@@ -44,7 +44,7 @@ export default function LyricsPage() {
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'All Lyrics' }])
-    getBlocklistReasons().then(setReasons)
+    getBlocklistReasons(false).then(setReasons)
   }, [setBreadcrumbs])
 
   useEffect(() => {

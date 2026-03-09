@@ -79,7 +79,7 @@ export default function LyricPage() {
       getLyricById(Number(lyricId)),
       getLyricImages(Number(lyricId)),
       getLyricSongs(Number(lyricId)),
-      getBlocklistReasons(),
+      getBlocklistReasons(false),
       getAppConfig(),
     ]).then(([lyr, imgs, sngs, rsnList, config]) => {
       setLyric(lyr)
