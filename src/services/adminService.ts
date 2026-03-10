@@ -822,13 +822,23 @@ export async function getAllLyrics(
 }
 
 export async function getFlaggedLyrics(): Promise<AdminFlaggedLyricRow[]> {
-  const { data, error } = await supabase
-    .from('lyric')
-    .select('id, root_word, flagged_by, lyric_group!lyric_group_id(id, name)')
-    .eq('is_flagged', true)
-    .order('root_word')
-  if (error) throw error
-  return (data as unknown as (Omit<AdminFlaggedLyricRow, 'lyric_group'> & { lyric_group: { id: number; name: string } | null })[])
+  type Row = Omit<AdminFlaggedLyricRow, 'lyric_group'> & { lyric_group: { id: number; name: string } | null }
+  const all: Row[] = []
+  const batchSize = 500
+  let offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('lyric')
+      .select('id, root_word, flagged_by, lyric_group!lyric_group_id(id, name)')
+      .eq('is_flagged', true)
+      .order('root_word')
+      .range(offset, offset + batchSize - 1)
+    if (error) throw error
+    all.push(...(data as unknown as Row[]))
+    if (data.length < batchSize) break
+    offset += batchSize
+  }
+  return all
 }
 
 export async function getBlocklistedLyrics(): Promise<AdminBlocklistedLyricRow[]> {
