@@ -35,7 +35,6 @@ export default function LyricGroupPage() {
   const [removing, setRemoving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [reviewConfirm, setReviewConfirm] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [allLyrics, setAllLyrics] = useState<{ id: number; root_word: string; is_blocklisted: boolean }[]>([])
@@ -152,7 +151,6 @@ export default function LyricGroupPage() {
     try {
       await bulkUnflagLyrics(members.map((m) => m.id))
       showToast(`Marked ${members.length} lyric${members.length !== 1 ? 's' : ''} as reviewed`)
-      setReviewConfirm(false)
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to mark reviewed'}`)
     } finally {
@@ -252,7 +250,7 @@ export default function LyricGroupPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setReviewConfirm(true)}
+            onClick={handleMarkReviewed}
             disabled={reviewing || members.length === 0}
             className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
           >
@@ -488,13 +486,6 @@ export default function LyricGroupPage() {
           message={`Remove "${removeConfirm.word}" from this group?`}
           onConfirm={handleRemove}
           onCancel={() => setRemoveConfirm(null)}
-        />
-      )}
-      {reviewConfirm && (
-        <ConfirmPopup
-          message={`Mark all ${members.length} lyric${members.length !== 1 ? 's' : ''} in "${group.name}-" as reviewed? This will unFlag all members.`}
-          onConfirm={handleMarkReviewed}
-          onCancel={() => setReviewConfirm(false)}
         />
       )}
       {deleteConfirm && (
