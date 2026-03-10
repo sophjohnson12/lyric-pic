@@ -117,7 +117,7 @@ export default function LyricGroupPage() {
     try {
       await Promise.all([...selectedLyricIds].map((lyricId) => addLyricToGroup(lyricId, Number(groupId))))
       const added = allLyrics.filter((l) => selectedLyricIds.has(l.id))
-      const newMembers = [...members, ...added.map((l) => ({ id: l.id, root_word: l.root_word, is_blocklisted: l.is_blocklisted, stem: null }))]
+      const newMembers = [...members, ...added.map((l) => ({ id: l.id, root_word: l.root_word, is_blocklisted: l.is_blocklisted, is_flagged: false, stem: null }))]
         .sort((a, b) => a.root_word.localeCompare(b.root_word))
       setMembers(newMembers)
       setShowAddModal(false)
@@ -150,6 +150,7 @@ export default function LyricGroupPage() {
     setReviewing(true)
     try {
       await bulkUnflagLyrics(members.map((m) => m.id))
+      setMembers((prev) => prev.map((m) => ({ ...m, is_flagged: false })))
       showToast(`Marked ${members.length} lyric${members.length !== 1 ? 's' : ''} as reviewed`)
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to mark reviewed'}`)
@@ -302,6 +303,10 @@ export default function LyricGroupPage() {
           {
             header: 'Blocklisted?',
             accessor: (m) => (m.is_blocklisted ? <Check size={16} className="text-primary" /> : null),
+          },
+          {
+            header: 'Flagged?',
+            accessor: (m) => (m.is_flagged ? <Check size={16} className="text-primary" /> : null),
           },
           {
             header: 'Actions',
