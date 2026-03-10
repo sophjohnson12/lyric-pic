@@ -75,6 +75,7 @@ export default function LyricPage() {
   useEffect(() => {
     if (!lyricId) return
     setLoading(true)
+    setFlagging(false)
     Promise.all([
       getLyricById(Number(lyricId)),
       getLyricImages(Number(lyricId)),
