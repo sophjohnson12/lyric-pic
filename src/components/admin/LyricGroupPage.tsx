@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Trash2, Check, Plus } from 'lucide-react'
+import { ArrowLeft, Trash2, Check, Plus, CheckCheck } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
@@ -17,6 +17,7 @@ import {
   getLyricGroupImages,
   updateLyricImageSelectable,
   addLyricImage,
+  bulkUnflagLyrics,
 } from '../../services/adminService'
 import type { AdminLyricGroupMemberRow, AdminLyricGroupImageRow } from '../../services/adminService'
 
@@ -34,6 +35,8 @@ export default function LyricGroupPage() {
   const [removing, setRemoving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [reviewConfirm, setReviewConfirm] = useState(false)
+  const [reviewing, setReviewing] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [allLyrics, setAllLyrics] = useState<{ id: number; root_word: string; is_blocklisted: boolean }[]>([])
   const [lyricSearch, setLyricSearch] = useState('')
@@ -144,6 +147,19 @@ export default function LyricGroupPage() {
     }
   }
 
+  async function handleMarkReviewed() {
+    setReviewing(true)
+    try {
+      await bulkUnflagLyrics(members.map((m) => m.id))
+      showToast(`Marked ${members.length} lyric${members.length !== 1 ? 's' : ''} as reviewed`)
+      setReviewConfirm(false)
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to mark reviewed'}`)
+    } finally {
+      setReviewing(false)
+    }
+  }
+
   const memberIds = new Set(members.map((m) => m.id))
 
   const uniqueImages = useMemo(() => {
@@ -234,14 +250,24 @@ export default function LyricGroupPage() {
           </Link>
           <h1 className="text-2xl font-bold">Lyric Group</h1>
         </div>
-        <button
-          onClick={() => setDeleteConfirm(true)}
-          disabled={deleting}
-          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-        >
-          <Trash2 size={16} />
-          Delete Group
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setReviewConfirm(true)}
+            disabled={reviewing || members.length === 0}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            <CheckCheck size={16} />
+            Mark Reviewed
+          </button>
+          <button
+            onClick={() => setDeleteConfirm(true)}
+            disabled={deleting}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+          >
+            <Trash2 size={16} />
+            Delete Group
+          </button>
+        </div>
       </div>
 
       <h2 className="text-4xl font-bold mb-4">{group.name}-</h2>
@@ -462,6 +488,13 @@ export default function LyricGroupPage() {
           message={`Remove "${removeConfirm.word}" from this group?`}
           onConfirm={handleRemove}
           onCancel={() => setRemoveConfirm(null)}
+        />
+      )}
+      {reviewConfirm && (
+        <ConfirmPopup
+          message={`Mark all ${members.length} lyric${members.length !== 1 ? 's' : ''} in "${group.name}-" as reviewed? This will unFlag all members.`}
+          onConfirm={handleMarkReviewed}
+          onCancel={() => setReviewConfirm(false)}
         />
       )}
       {deleteConfirm && (

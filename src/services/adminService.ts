@@ -914,6 +914,17 @@ export async function unflagLyric(lyricId: number) {
   if (error) throw error
 }
 
+export async function bulkUnflagLyrics(lyricIds: number[]) {
+  const batchSize = 500
+  for (let i = 0; i < lyricIds.length; i += batchSize) {
+    const { error } = await supabase
+      .from('lyric')
+      .update({ is_flagged: false, flagged_by: null })
+      .in('id', lyricIds.slice(i, i + batchSize))
+    if (error) throw error
+  }
+}
+
 export async function blocklistLyric(lyricId: number, reasonId: number, disableImages = false) {
   const { error } = await supabase
     .from('lyric')
