@@ -12,7 +12,7 @@ function GuessCircle({ index, isFlipped }: {
   isFlipped: boolean
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [showError, setShowError] = useState(false)
+  const [showError, setShowError] = useState(true)
   const prevFlippedRef = useRef(isFlipped)
 
   useEffect(() => {
@@ -38,7 +38,7 @@ function GuessCircle({ index, isFlipped }: {
           { duration: 300 }
         )
         anim?.addEventListener('finish', () => setShowError(false))
-      }, 300)
+      }, 250)
 
       return () => {
         clearTimeout(delay)
