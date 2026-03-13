@@ -24,8 +24,6 @@ export default function SongDropdown({
   const [showModal, setShowModal] = useState(false)
   const [modalSelection, setModalSelection] = useState<{ id: number; name: string } | null>(null)
 
-  if (songGuessed) return null
-
   if (!isMd) {
     const handleModalGuess = () => {
       if (!modalSelection) return

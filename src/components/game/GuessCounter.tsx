@@ -7,56 +7,62 @@ interface GuessCounterProps {
   allowedCount: number
 }
 
-function GuessCircle({ index, isFlipped, isJustFlipped }: {
+function GuessCircle({ index, isFlipped }: {
   index: number
   isFlipped: boolean
-  isJustFlipped: boolean
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [showError, setShowError] = useState(false)
+  const prevFlippedRef = useRef(isFlipped)
 
   useEffect(() => {
-    if (!isJustFlipped) return
-    let anim: Animation | undefined
-    const delay = setTimeout(() => {
+    const wasFlipped = prevFlippedRef.current
+    prevFlippedRef.current = isFlipped
+
+    if (!wasFlipped && isFlipped) {
       setShowError(true)
-      anim = containerRef.current?.animate(
-        [
-          { transform: 'translateX(0)' },
-          { transform: 'translateX(-6px)' },
-          { transform: 'translateX(6px)' },
-          { transform: 'translateX(-4px)' },
-          { transform: 'translateX(4px)' },
-          { transform: 'translateX(-2px)' },
-          { transform: 'translateX(2px)' },
-          { transform: 'translateX(0)' },
-        ],
-        { duration: 400 }
-      )
-      anim?.addEventListener('finish', () => setShowError(false))
-    }, 250)
-    return () => {
-      clearTimeout(delay)
-      anim?.cancel()
-      setShowError(false)
+      let anim: Animation | undefined
+      // Delay shake until flip settles
+      const delay = setTimeout(() => {
+        anim = containerRef.current?.animate(
+          [
+            { transform: 'translateX(0)' },
+            { transform: 'translateX(-6px)' },
+            { transform: 'translateX(6px)' },
+            { transform: 'translateX(-4px)' },
+            { transform: 'translateX(4px)' },
+            { transform: 'translateX(-2px)' },
+            { transform: 'translateX(2px)' },
+            { transform: 'translateX(0)' },
+          ],
+          { duration: 300 }
+        )
+        anim?.addEventListener('finish', () => setShowError(false))
+      }, 300)
+
+      return () => {
+        clearTimeout(delay)
+        anim?.cancel()
+        setShowError(false)
+      }
     }
-  }, [isJustFlipped])
+  }, [isFlipped])
 
   return (
     <div ref={containerRef} className="relative w-6 h-6 [perspective:1000px]">
       <motion.div
         initial={false}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.6, type: 'spring', stiffness: 260, damping: 20 }}
+        transition={{ duration: 1.0, type: 'spring', stiffness: 140, damping: 22 }}
         className="w-full h-full relative [transform-style:preserve-3d]"
       >
         {/* Front Side (Blank/Remaining) */}
         <div
           className="absolute inset-0 w-full h-full rounded-full bg-secondary shadow-inner [backface-visibility:hidden]"
         />
-        {/* Back Side (Number/Incorrect) */}
+        {/* Back Side (Number/Used) */}
         <div
-          className={`absolute inset-0 w-full h-full rounded-full flex items-center justify-center text-white font-bold [backface-visibility:hidden] [transform:rotateY(180deg)] transition-colors duration-300 ${showError ? 'bg-error' : 'bg-primary'}`}
+          className={`absolute inset-0 w-full h-full rounded-full flex items-center justify-center text-white font-bold [backface-visibility:hidden] [transform:rotateY(180deg)] transition-colors duration-500 ${showError ? 'bg-error' : 'bg-primary'}`}
         >
           {index + 1}
         </div>
@@ -66,16 +72,6 @@ function GuessCircle({ index, isFlipped, isJustFlipped }: {
 }
 
 export default function GuessCounter({ guessMessage, guessCount, allowedCount }: GuessCounterProps) {
-  const prevGuessCountRef = useRef(guessCount)
-  const [newlyFlippedIndex, setNewlyFlippedIndex] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (guessCount > prevGuessCountRef.current) {
-      setNewlyFlippedIndex(guessCount - 1)
-    }
-    prevGuessCountRef.current = guessCount
-  }, [guessCount])
-
   return (
     <div className="flex items-center justify-center py-4 w-full">
       <div className="flex flex-row items-center justify-center max-w-full w-7/8 sm:w-3/5 md:w-full">
@@ -88,7 +84,6 @@ export default function GuessCounter({ guessMessage, guessCount, allowedCount }:
               key={index}
               index={index}
               isFlipped={index < guessCount}
-              isJustFlipped={newlyFlippedIndex === index}
             />
           ))}
         </div>
