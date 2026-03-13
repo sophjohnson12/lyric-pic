@@ -91,6 +91,7 @@ export default function GamePage() {
     return game.puzzleWords.filter((w: any) => w.guessed || w.revealed).length
   }, [game.puzzleWords])
   const guessCountInitialized = useRef(false)
+  const prevPuzzleWordsRef = useRef<typeof game.puzzleWords>(game.puzzleWords)
   const [focusTrigger, setFocusTrigger] = useState(0)
 
   const scrollToSlide = (index: number) => {
@@ -198,12 +199,41 @@ export default function GamePage() {
       return
     }
     if (!isMd || autoFocusIndex < 0) return
+
+    // prevPuzzleWordsRef holds the pre-solve state (updated by the no-dep effect below,
+    // which fires AFTER this effect so the ref here is still the previous render's value)
+    const prev = prevPuzzleWordsRef.current
+    const curr = game.puzzleWords || []
+
+    // Find the last index that transitioned to guessed/revealed this cycle
+    let lastSolvedIndex = -1
+    for (let i = 0; i < curr.length; i++) {
+      if (prev[i] && !prev[i].guessed && !prev[i].revealed &&
+          curr[i] && (curr[i].guessed || curr[i].revealed)) {
+        lastSolvedIndex = i
+      }
+    }
+
+    // Focus the next available word after the solved one; wrap to first if none
+    let nextIndex = autoFocusIndex
+    if (lastSolvedIndex >= 0) {
+      const after = curr.findIndex((w: any, i: number) => i > lastSolvedIndex && !w.guessed && !w.revealed)
+      if (after >= 0) nextIndex = after
+    }
+
     const timer = setTimeout(() => {
-      setDeferredFocusIndex(autoFocusIndex)
+      setDeferredFocusIndex(nextIndex)
       setFocusTrigger((n) => n + 1)
     }, 500)
     return () => clearTimeout(timer)
   }, [guessedCount])
+
+  // Keep prevPuzzleWordsRef in sync after every render. Declared after the solve effect
+  // so it fires after it — the solve effect above always reads the pre-solve (previous
+  // render) state, and this effect advances the snapshot for next time.
+  useEffect(() => {
+    prevPuzzleWordsRef.current = game.puzzleWords || []
+  })
 
 
   if (!levelSlug) {
