@@ -53,7 +53,7 @@ function GuessCircle({ index, isFlipped }: {
       <motion.div
         initial={false}
         animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 1.0, type: 'spring', stiffness: 140, damping: 22 }}
+        transition={{ duration: 1.2, type: 'spring', stiffness: 100, damping: 22 }}
         className="w-full h-full relative [transform-style:preserve-3d]"
       >
         {/* Front Side (Blank/Remaining) */}
