@@ -151,15 +151,29 @@ export default function GamePage() {
 
     if (isMd || prev === activeSlide || !hadFocusOnSwipeStart.current) return
 
-    const timer = setTimeout(() => {
-      const container = scrollContainerRef.current
-      if (!container) return
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const doFocus = () => {
+      clearTimeout(fallbackTimer)
       const slideEl = container.children[activeSlide]
       const inputEl = slideEl?.querySelector<HTMLInputElement>('input')
       inputEl?.focus({ preventScroll: true })
-    }, 300)
+    }
 
-    return () => clearTimeout(timer)
+    // Use scrollend (fires when snap fully completes) with a timeout fallback for older browsers
+    let fallbackTimer: ReturnType<typeof setTimeout>
+    if ('onscrollend' in window) {
+      container.addEventListener('scrollend', doFocus, { once: true })
+      fallbackTimer = setTimeout(doFocus, 600)
+    } else {
+      fallbackTimer = setTimeout(doFocus, 500)
+    }
+
+    return () => {
+      clearTimeout(fallbackTimer)
+      container.removeEventListener('scrollend', doFocus)
+    }
   }, [activeSlide, isMd])
 
   // When any word is solved, update focus target and trigger focus (md+ only)
