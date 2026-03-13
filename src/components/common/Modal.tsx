@@ -27,8 +27,8 @@ export default function Modal({ children, onClose, showClose = true }: ModalProp
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, y: 12, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
         className="bg-neutral-50 text-neutral-800 rounded-2xl shadow-xl p-6 mx-4 max-w-lg w-full max-h-[80vh] overflow-y-auto relative"
         onClick={(e) => e.stopPropagation()}
