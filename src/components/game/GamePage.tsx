@@ -147,6 +147,9 @@ export default function GamePage() {
       if (inputEl) {
         inputEl.style.caretColor = 'transparent'
         inputEl.focus({ preventScroll: true })
+      } else {
+        // New slide is already guessed — drop focus from the off-screen input
+        (document.activeElement as HTMLElement)?.blur()
       }
     }
     container.addEventListener('scroll', onScrollForFocus, { passive: true })
