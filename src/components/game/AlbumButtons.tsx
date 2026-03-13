@@ -34,6 +34,31 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [showError, setShowError] = useState(false)
+  const [showCorrect, setShowCorrect] = useState(false)
+  const prevIsCorrectRef = useRef(isCorrect)
+
+  useEffect(() => {
+    if (isCorrect && !prevIsCorrectRef.current) {
+      setShowCorrect(true)
+      const anim = buttonRef.current?.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.2)' },
+          { transform: 'scale(1)' },
+        ],
+        { duration: 500, easing: 'ease-in-out' }
+      )
+      const onFinish = () => setShowCorrect(false)
+      anim?.addEventListener('finish', onFinish)
+      prevIsCorrectRef.current = true
+      return () => {
+        anim?.removeEventListener('finish', onFinish)
+        anim?.cancel()
+        setShowCorrect(false)
+      }
+    }
+    prevIsCorrectRef.current = isCorrect
+  }, [isCorrect])
 
   useEffect(() => {
     if (!isJustIncorrect) return
@@ -73,7 +98,8 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
     onGuess(album.id, album.name)
   }
 
-  const isGrayed = !readonly && !showError && ((isDisabled && !isCorrect) || isDepletedOnly)
+  const isGrayed = !readonly && !showError && !showCorrect && ((isDisabled && !isCorrect) || isDepletedOnly)
+  const suppressInlineColors = isGrayed || showError || showCorrect
 
   return (
     <button
@@ -85,15 +111,17 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
       className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border
         ${showError
           ? 'bg-error border-error'
-          : isGrayed
-            ? 'bg-neutral-400 border-neutral-300 opacity-50'
-            : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-80' : ''}`
+          : showCorrect
+            ? 'bg-success border-success'
+            : isGrayed
+              ? 'bg-neutral-400 border-neutral-300 opacity-50'
+              : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-80' : ''}`
         }
         ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`
       }
       style={{
-        ...(!isGrayed && !showError && album.theme_primary_color ? { backgroundColor: album.theme_primary_color } : {}),
-        ...(!isGrayed && !showError && album.theme_secondary_color ? { borderColor: album.theme_secondary_color } : {}),
+        ...(!suppressInlineColors && album.theme_primary_color ? { backgroundColor: album.theme_primary_color } : {}),
+        ...(!suppressInlineColors && album.theme_secondary_color ? { borderColor: album.theme_secondary_color } : {}),
       }}
     >
       {album.image_url !== null
