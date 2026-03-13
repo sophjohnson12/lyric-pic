@@ -59,7 +59,6 @@ export default function GamePage() {
   const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
   // Track whether a word input was focused at the start of a swipe gesture
   const hadFocusOnSwipeStart = useRef(false)
-  const prevActiveSlideRef = useRef(0)
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)')
@@ -131,9 +130,41 @@ export default function GamePage() {
     }
     container.addEventListener('touchstart', onTouchStart, { passive: true })
 
+    // Focus the snapped-to input when the snap animation fully completes.
+    // Registered once here (not inside a React effect) so it's always live and
+    // never misses a fast snap that fires before an effect can register.
+    const focusSnappedInput = () => {
+      if (!hadFocusOnSwipeStart.current) return
+      if (window.matchMedia('(min-width: 768px)').matches) return
+      const width = container.clientWidth
+      if (width === 0) return
+      const index = Math.round(container.scrollLeft / width)
+      const inputEl = container.children[index]?.querySelector<HTMLInputElement>('input')
+      inputEl?.focus({ preventScroll: true })
+    }
+
+    let scrollEndFallback: ReturnType<typeof setTimeout>
+    let onScrollForFallback: (() => void) | undefined
+
+    if ('onscrollend' in window) {
+      container.addEventListener('scrollend', focusSnappedInput, { passive: true })
+    } else {
+      // Fallback: debounce scroll events to approximate scrollend
+      onScrollForFallback = () => {
+        clearTimeout(scrollEndFallback)
+        scrollEndFallback = setTimeout(focusSnappedInput, 150)
+      }
+      container.addEventListener('scroll', onScrollForFallback, { passive: true })
+    }
+
     return () => {
       container.removeEventListener('scroll', handleScroll)
       container.removeEventListener('touchstart', onTouchStart)
+      container.removeEventListener('scrollend', focusSnappedInput)
+      if (onScrollForFallback) {
+        container.removeEventListener('scroll', onScrollForFallback)
+        clearTimeout(scrollEndFallback)
+      }
     }
   }, [game.loading])
 
@@ -143,38 +174,6 @@ export default function GamePage() {
     focusInitialized.current = true
     setDeferredFocusIndex(autoFocusIndex)
   }, [autoFocusIndex])
-
-  // Auto-focus the visible input after a swipe if an input was focused before the swipe (mobile only)
-  useEffect(() => {
-    const prev = prevActiveSlideRef.current
-    prevActiveSlideRef.current = activeSlide
-
-    if (isMd || prev === activeSlide || !hadFocusOnSwipeStart.current) return
-
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const doFocus = () => {
-      clearTimeout(fallbackTimer)
-      const slideEl = container.children[activeSlide]
-      const inputEl = slideEl?.querySelector<HTMLInputElement>('input')
-      inputEl?.focus({ preventScroll: true })
-    }
-
-    // Use scrollend (fires when snap fully completes) with a timeout fallback for older browsers
-    let fallbackTimer: ReturnType<typeof setTimeout>
-    if ('onscrollend' in window) {
-      container.addEventListener('scrollend', doFocus, { once: true })
-      fallbackTimer = setTimeout(doFocus, 600)
-    } else {
-      fallbackTimer = setTimeout(doFocus, 500)
-    }
-
-    return () => {
-      clearTimeout(fallbackTimer)
-      container.removeEventListener('scrollend', doFocus)
-    }
-  }, [activeSlide, isMd])
 
   // When any word is solved, update focus target and trigger focus (md+ only)
   useEffect(() => {
