@@ -323,7 +323,6 @@ export default function GamePage() {
               <SongDropdown
                 songs={game.allSongs}
                 incorrectGuesses={game.incorrectSongGuesses}
-                songGuessed={game.songGuessed}
                 onGuess={game.guessSong}
                 isMd={isMd}
               />

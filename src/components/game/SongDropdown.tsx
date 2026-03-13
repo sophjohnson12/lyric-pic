@@ -7,7 +7,6 @@ import type { Song } from '../../types/database'
 interface SongDropdownProps {
   songs: Song[]
   incorrectGuesses: string[]
-  songGuessed: boolean
   onGuess: (songId: number, songName: string) => string
   isMd: boolean
 }
@@ -15,7 +14,6 @@ interface SongDropdownProps {
 export default function SongDropdown({
   songs,
   incorrectGuesses,
-  songGuessed,
   onGuess,
   isMd,
 }: SongDropdownProps) {
