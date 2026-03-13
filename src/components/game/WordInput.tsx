@@ -118,7 +118,16 @@ export default function WordInput({
       <div className="pb-0 w-7/8 sm:w-3/5 md:w-full mx-auto">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white border-b border-secondary">
           {/* Image Container */}
-          <div className="relative flex-1 w-full overflow-hidden bg-neutral-300 rounded-t-xl border-x border-t border-secondary">
+          <div
+            className="relative flex-1 w-full overflow-hidden bg-neutral-300 rounded-t-xl border-x border-t border-secondary"
+            onPointerDown={(e) => {
+              inputWasFocused.current = document.activeElement === inputRef.current
+              if (inputWasFocused.current) e.preventDefault()
+            }}
+            onClick={() => {
+              if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true })
+            }}
+          >
             <ImageDisplay
               imageUrls={puzzleWord.imageUrls}
               currentIndex={puzzleWord.currentImageIndex}
