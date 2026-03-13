@@ -362,7 +362,7 @@ export default function GamePage() {
       {showSkipConfirm && (
         <ConfirmPopup
           title="Skip Song?"
-          message="Are you sure you want to skip this song? It won't be marked as played and might reappear later."
+          message="Are you sure you want to skip this song? We'll keep it in the queue so you can try again later."
           confirmLabel="Skip"
           cancelLabel="Cancel"
           onConfirm={() => { game.skipSong(); setShowSkipConfirm(false) }}
