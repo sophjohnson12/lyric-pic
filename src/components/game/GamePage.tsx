@@ -39,6 +39,16 @@ export default function GamePage() {
   }, [])
   const [showHistory, setShowHistory] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
+  const [showFailedModal, setShowFailedModal] = useState(false)
+
+  useEffect(() => {
+    if (!game.songFailed) {
+      setShowFailedModal(false)
+      return
+    }
+    const timer = setTimeout(() => setShowFailedModal(true), 1000)
+    return () => clearTimeout(timer)
+  }, [game.songFailed])
  
   // Carousel state
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -340,7 +350,7 @@ export default function GamePage() {
           onNext={game.nextSong}
         />
       )}
-      {game.songFailed && (
+      {showFailedModal && (
         <ResultModal
           correct={false}
           message={game.currentSong.failure_message || game.artist.failure_message || "Better luck next time."}

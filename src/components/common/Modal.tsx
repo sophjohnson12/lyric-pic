@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { motion } from 'motion/react'
 import { X } from 'lucide-react'
 
 interface ModalProps {
@@ -18,11 +19,17 @@ export default function Modal({ children, onClose, showClose = true }: ModalProp
   }, [onClose])
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
       className="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 12, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
         className="bg-neutral-50 text-neutral-800 rounded-2xl shadow-xl p-6 mx-4 max-w-lg w-full max-h-[80vh] overflow-y-auto relative"
         onClick={(e) => e.stopPropagation()}
       >
@@ -36,7 +43,7 @@ export default function Modal({ children, onClose, showClose = true }: ModalProp
           </button>
         )}
         {children}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
