@@ -122,49 +122,62 @@ export default function GamePage() {
     container.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
 
+    let prevFocusIndex = 0
+
     // Capture focus state at swipe start (before blur fires during scroll)
     const onTouchStart = () => {
       const active = document.activeElement
       hadFocusOnSwipeStart.current =
         active instanceof HTMLInputElement && container.contains(active)
+      prevFocusIndex = Math.round(container.scrollLeft / (container.clientWidth || 1))
     }
     container.addEventListener('touchstart', onTouchStart, { passive: true })
 
-    // Focus the snapped-to input when the snap animation fully completes.
-    // Registered once here (not inside a React effect) so it's always live and
-    // never misses a fast snap that fires before an effect can register.
-    const focusSnappedInput = () => {
+    // Focus the new slide's input the instant the swipe crosses the midpoint,
+    // but keep the caret hidden so it doesn't jump around mid-animation
+    const onScrollForFocus = () => {
       if (!hadFocusOnSwipeStart.current) return
       if (window.matchMedia('(min-width: 768px)').matches) return
       const width = container.clientWidth
       if (width === 0) return
       const index = Math.round(container.scrollLeft / width)
+      if (index === prevFocusIndex) return
+      prevFocusIndex = index
       const inputEl = container.children[index]?.querySelector<HTMLInputElement>('input')
-      inputEl?.focus({ preventScroll: true })
+      if (inputEl) {
+        inputEl.style.caretColor = 'transparent'
+        inputEl.focus({ preventScroll: true })
+      }
+    }
+    container.addEventListener('scroll', onScrollForFocus, { passive: true })
+
+    // Once snap fully completes, reveal the caret
+    const onScrollEnd = () => {
+      const focused = document.activeElement
+      if (focused instanceof HTMLInputElement && container.contains(focused)) {
+        focused.style.caretColor = ''
+      }
     }
 
-    let scrollEndFallback: ReturnType<typeof setTimeout>
-    let onScrollForFallback: (() => void) | undefined
+    let scrollEndFallbackTimer: ReturnType<typeof setTimeout>
+    const onScrollForFallback = () => {
+      clearTimeout(scrollEndFallbackTimer)
+      scrollEndFallbackTimer = setTimeout(onScrollEnd, 150)
+    }
 
     if ('onscrollend' in window) {
-      container.addEventListener('scrollend', focusSnappedInput, { passive: true })
+      container.addEventListener('scrollend', onScrollEnd, { passive: true })
     } else {
-      // Fallback: debounce scroll events to approximate scrollend
-      onScrollForFallback = () => {
-        clearTimeout(scrollEndFallback)
-        scrollEndFallback = setTimeout(focusSnappedInput, 150)
-      }
       container.addEventListener('scroll', onScrollForFallback, { passive: true })
     }
 
     return () => {
       container.removeEventListener('scroll', handleScroll)
       container.removeEventListener('touchstart', onTouchStart)
-      container.removeEventListener('scrollend', focusSnappedInput)
-      if (onScrollForFallback) {
-        container.removeEventListener('scroll', onScrollForFallback)
-        clearTimeout(scrollEndFallback)
-      }
+      container.removeEventListener('scroll', onScrollForFocus)
+      container.removeEventListener('scrollend', onScrollEnd)
+      container.removeEventListener('scroll', onScrollForFallback)
+      clearTimeout(scrollEndFallbackTimer)
     }
   }, [game.loading])
 
