@@ -46,7 +46,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
           { transform: 'scale(1.2)' },
           { transform: 'scale(1)' },
         ],
-        { duration: 500, easing: 'ease-in-out' }
+        { duration: 750, easing: 'ease-in-out' }
       )
       const onFinish = () => setShowCorrect(false)
       anim?.addEventListener('finish', onFinish)
@@ -150,7 +150,8 @@ export default function AlbumButtons({
       (a) => !incorrectAlbumIds.includes(a.id) && !depletedAlbumIds.includes(a.id)
     )
     if (remaining.length === 1) {
-      onGuess(remaining[0].id, remaining[0].name)
+      const timer = setTimeout(() => onGuess(remaining[0].id, remaining[0].name), 400)
+      return () => clearTimeout(timer)
     }
   }, [incorrectAlbumIds.length, depletedAlbumIds.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
