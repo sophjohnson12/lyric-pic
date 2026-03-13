@@ -46,7 +46,7 @@ export default function SongDropdown({
           />
         </div>
         {showModal && (
-          <Modal showClose={false} onClose={() => setShowModal(false)}>
+          <Modal showClose={false} onClose={() => setShowModal(false)} showEaseIn={true}>
             <form onSubmit={(e) => { e.preventDefault(); handleModalGuess() }}>
               <SongWheelPicker
                 songs={songs}

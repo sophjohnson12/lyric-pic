@@ -7,6 +7,7 @@ interface ConfirmPopupProps {
   onCancel: () => void
   confirmLabel?: string
   cancelLabel?: string
+  showEaseIn?: boolean
 }
 
 export default function ConfirmPopup({
@@ -16,9 +17,10 @@ export default function ConfirmPopup({
   onCancel,
   confirmLabel = 'Yes',
   cancelLabel = 'No',
+  showEaseIn = false,
 }: ConfirmPopupProps) {
   return (
-    <Modal onClose={onCancel} showClose={false}>
+    <Modal onClose={onCancel} showClose={false} showEaseIn={showEaseIn}>
       {title && <h2 className="text-lg font-bold text-primary mb-2">{title}</h2>}
       {message && <p className="text-sm mb-6">{message}</p>}
       <div className="flex gap-3 md:justify-end">

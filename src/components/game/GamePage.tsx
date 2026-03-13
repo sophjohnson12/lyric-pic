@@ -368,6 +368,7 @@ export default function GamePage() {
           cancelLabel="Cancel"
           onConfirm={() => { game.skipSong(); setShowSkipConfirm(false) }}
           onCancel={() => setShowSkipConfirm(false)}
+          showEaseIn={true}
         />
       )}
       {showInfo && (

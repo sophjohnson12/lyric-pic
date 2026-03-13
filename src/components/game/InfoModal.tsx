@@ -15,7 +15,7 @@ interface InfoModalProps {
 
 export default function InfoModal({ minSongLyricCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, onClose }: InfoModalProps) {
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
       <div className="space-y-4 text-sm text-neutral-600">
         <div>
@@ -31,8 +31,8 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         {showAlbumFilters && (
           <div>
             <p className="font-semibold text-neutral-800">2. Guess the Album</p>
-            <p className="hidden md:inline">Click buttons until you guess the album.</p>
-            <p className="inline md:hidden">Tap buttons until you guess the album.</p>
+            <p className="hidden md:inline">Click the buttons until you guess the album.</p>
+            <p className="inline md:hidden">Tap the buttons until you guess the album.</p>
             <div className="mt-1">
               {albums.length > 0 && <AlbumButtons albums={albums} readonly list />}
             </div>

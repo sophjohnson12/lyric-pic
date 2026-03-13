@@ -6,9 +6,10 @@ interface ModalProps {
   children: ReactNode
   onClose?: () => void
   showClose?: boolean
+  showEaseIn?: boolean
 }
 
-export default function Modal({ children, onClose, showClose = true }: ModalProps) {
+export default function Modal({ children, onClose, showClose = true, showEaseIn = false }: ModalProps) {
   useEffect(() => {
     if (!onClose) return
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -20,16 +21,16 @@ export default function Modal({ children, onClose, showClose = true }: ModalProp
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={showEaseIn ? { opacity: 0 } : { opacity: 1 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: showEaseIn ? 0.2 : 0 }}
       className="fixed inset-0 z-60 flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
+        initial={showEaseIn ? { opacity: 0, scale: 0.97 } : { opacity: 1, scale: 1 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
+        transition={{ duration: showEaseIn ? 0.25 : 0, ease: 'easeOut' }}
         className="bg-neutral-50 text-neutral-800 rounded-2xl shadow-xl p-6 mx-4 max-w-lg w-full max-h-[80vh] overflow-y-auto relative"
         onClick={(e) => e.stopPropagation()}
       >

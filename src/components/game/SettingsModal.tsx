@@ -55,7 +55,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
   }
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary mb-4">Settings & Stats</h2>
 
       <h3 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-2 flex items-center gap-1">

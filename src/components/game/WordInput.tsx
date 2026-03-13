@@ -257,6 +257,7 @@ export default function WordInput({
           cancelLabel="Cancel"
           onConfirm={handleFlagConfirm}
           onCancel={() => setShowFlagConfirm(false)}
+          showEaseIn={true}
         />
       )}
       {showImageFlagConfirm && (
@@ -267,6 +268,7 @@ export default function WordInput({
           cancelLabel="Cancel"
           onConfirm={handleImageFlagConfirm}
           onCancel={() => setShowImageFlagConfirm(false)}
+          showEaseIn={true}
         />
       )}
 

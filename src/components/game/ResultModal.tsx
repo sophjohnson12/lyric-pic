@@ -29,7 +29,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
   const lyricsWithLines = puzzleWords.filter(pw => pw.lineText)
 
   return (
-    <Modal showClose={false}>
+    <Modal showClose={false} showEaseIn={true}>
       <div className="flex flex-col text-center justify-center items-center md:w-11/12 mx-auto">
         <div className="flex justify-center mb-2">
           {correct
