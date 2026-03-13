@@ -325,6 +325,7 @@ export default function GamePage() {
                 incorrectGuesses={game.incorrectSongGuesses}
                 onGuess={game.guessSong}
                 isMd={isMd}
+                resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
               />
             </div>
             <div className="md:max-w-md mx-auto">

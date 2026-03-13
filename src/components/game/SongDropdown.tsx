@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Dropdown from '../common/Dropdown'
 import Modal from '../common/Modal'
 import SongWheelPicker from './SongWheelPicker'
@@ -9,6 +9,7 @@ interface SongDropdownProps {
   incorrectGuesses: string[]
   onGuess: (songId: number, songName: string) => string
   isMd: boolean
+  resetKey?: string | number
 }
 
 export default function SongDropdown({
@@ -16,9 +17,15 @@ export default function SongDropdown({
   incorrectGuesses,
   onGuess,
   isMd,
+  resetKey,
 }: SongDropdownProps) {
   const [selectedId, setSelectedId] = useState<number | undefined>(undefined)
   const [selectedLabel, setSelectedLabel] = useState('')
+
+  useEffect(() => {
+    setSelectedId(undefined)
+    setSelectedLabel('')
+  }, [resetKey])
   const [showModal, setShowModal] = useState(false)
   const [modalSelection, setModalSelection] = useState<{ id: number; name: string } | null>(null)
 
@@ -108,7 +115,7 @@ export default function SongDropdown({
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }}>
         <div className="flex items-center gap-2">
           <Dropdown
-            key={incorrectGuesses.length}
+            key={`${incorrectGuesses.length}-${resetKey}`}
             options={options}
             placeholder="Guess the song..."
             onSelect={handleSelect}
