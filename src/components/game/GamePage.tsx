@@ -46,7 +46,7 @@ export default function GamePage() {
       setShowFailedModal(false)
       return
     }
-    const timer = setTimeout(() => setShowFailedModal(true), 750)
+    const timer = setTimeout(() => setShowFailedModal(true), 500)
     return () => clearTimeout(timer)
   }, [game.songFailed])
  
