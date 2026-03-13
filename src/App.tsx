@@ -29,7 +29,9 @@ import LevelFormPage from './components/admin/LevelFormPage'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
+      <div id="bg-pattern" aria-hidden="true" />
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/taylorswift" replace />} />
         <Route path="/admin/login" element={<LoginPage />} />
@@ -65,5 +67,6 @@ export default function App() {
         <Route path="/:artistSlug/:difficulty" element={<GamePage />} />
       </Routes>
     </BrowserRouter>
+    </>
   )
 }

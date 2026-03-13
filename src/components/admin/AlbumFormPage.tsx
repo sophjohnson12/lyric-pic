@@ -5,8 +5,9 @@ import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
 import ColorField from './ColorField'
 import Toast from '../common/Toast'
-import { getAdminAlbumById, getAdminArtistById, createAlbum, updateAlbum, uploadAlbumIcon } from '../../services/adminService'
+import { getAdminAlbumById, getAdminArtistById, createAlbum, updateAlbum, uploadAlbumIcon, uploadAlbumBackground } from '../../services/adminService'
 import AlbumIcon from '../common/AlbumIcon'
+import { Trash2 } from 'lucide-react'
 
 export default function AlbumFormPage() {
   const { artistId, id } = useParams()
@@ -24,6 +25,8 @@ export default function AlbumFormPage() {
   const [secondaryColor, setSecondaryColor] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [backgroundUrl, setBackgroundUrl] = useState('')
+  const [pendingBackgroundFile, setPendingBackgroundFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -46,6 +49,7 @@ export default function AlbumFormPage() {
         setPrimaryColor(a.theme_primary_color ?? '')
         setSecondaryColor(a.theme_secondary_color ?? '')
         setImageUrl(a.image_url ?? '')
+        setBackgroundUrl(a.background_url ?? '')
       })
     }
   }, [id, isEdit])
@@ -58,6 +62,10 @@ export default function AlbumFormPage() {
       if (pendingFile) {
         finalImageUrl = await uploadAlbumIcon(pendingFile)
       }
+      let finalBackgroundUrl = backgroundUrl || null
+      if (pendingBackgroundFile) {
+        finalBackgroundUrl = await uploadAlbumBackground(pendingBackgroundFile)
+      }
       const data = {
         artist_id: aid,
         name,
@@ -65,6 +73,7 @@ export default function AlbumFormPage() {
         theme_primary_color: primaryColor || null,
         theme_secondary_color: secondaryColor || null,
         image_url: finalImageUrl,
+        background_url: finalBackgroundUrl,
       }
       if (isEdit) {
         await updateAlbum(Number(id), data)
@@ -114,7 +123,7 @@ export default function AlbumFormPage() {
                 }}
               />
               <label className={`${inputClass} cursor-pointer`}>
-                {pendingFile ? pendingFile.name : 'Choose file…'}
+                {pendingFile ? pendingFile.name : imageUrl ? imageUrl.split('/').pop() : 'Choose file…'}
                 <input
                   type="file"
                   accept=".svg,image/svg+xml"
@@ -122,6 +131,29 @@ export default function AlbumFormPage() {
                   className="sr-only"
                 />
               </label>
+              {(pendingFile || imageUrl) && (
+                <button type="button" onClick={() => { setPendingFile(null); setImageUrl('') }} title="Remove icon" className="text-neutral-400 hover:text-error shrink-0">
+                  <Trash2 size={20} className="drop-shadow-md" />
+                </button>
+              )}
+            </div>
+          </FormField>
+          <FormField label="Background Pattern (SVG)">
+            <div className="flex items-center gap-3">
+              <label className={`${inputClass} cursor-pointer`}>
+                {pendingBackgroundFile ? pendingBackgroundFile.name : backgroundUrl ? backgroundUrl.split('/').pop() : 'Choose file…'}
+                <input
+                  type="file"
+                  accept=".svg,image/svg+xml"
+                  onChange={(e) => setPendingBackgroundFile(e.target.files?.[0] ?? null)}
+                  className="sr-only"
+                />
+              </label>
+              {(pendingBackgroundFile || backgroundUrl) && (
+                <button type="button" onClick={() => { setPendingBackgroundFile(null); setBackgroundUrl('') }} title="Remove background" className="text-neutral-400 hover:text-error shrink-0">
+                  <Trash2 size={20} className="drop-shadow-md" />
+                </button>
+              )}
             </div>
           </FormField>
         </div>

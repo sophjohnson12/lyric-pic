@@ -313,6 +313,7 @@ export interface AlbumFormData {
   theme_secondary_color: string | null
   theme_background_color?: string | null
   image_url: string | null
+  background_url?: string | null
 }
 
 export async function createAlbum(data: AlbumFormData) {
@@ -336,6 +337,17 @@ export async function updateAlbum(id: number, data: AlbumFormData) {
 export async function uploadAlbumIcon(file: File): Promise<string> {
   const ext = file.name.split('.').pop()
   const fileName = `${Date.now()}.${ext}`
+  const { error } = await supabase.storage
+    .from('album_icons')
+    .upload(fileName, file, { contentType: file.type })
+  if (error) throw error
+  const { data } = supabase.storage.from('album_icons').getPublicUrl(fileName)
+  return data.publicUrl
+}
+
+export async function uploadAlbumBackground(file: File): Promise<string> {
+  const ext = file.name.split('.').pop()
+  const fileName = `bg_${Date.now()}.${ext}`
   const { error } = await supabase.storage
     .from('album_icons')
     .upload(fileName, file, { contentType: file.type })

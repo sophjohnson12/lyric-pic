@@ -29,6 +29,7 @@ export interface Album {
   theme_secondary_color: string | null
   theme_background_color: string | null
   image_url: string | null
+  background_url: string | null
   updated_at: string | null
   created_at: string
 }
