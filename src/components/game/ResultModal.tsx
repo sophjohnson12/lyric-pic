@@ -53,7 +53,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
             </div>
           )}
         </div>
-        {!correct && <div className="text-xs text-neutral-500 text-center font-medium min-w-0 shrink mb-4 px-8">
+        {!correct && <div className="text-xs text-neutral-500 text-center font-medium min-w-0 shrink mb-4 px-4">
           We'll keep this one in the queue so you can try again later.
         </div>}
         <button
