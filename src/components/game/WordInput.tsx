@@ -130,7 +130,7 @@ export default function WordInput({
                 <button
                   onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
                   onClick={() => { onRefresh(wordIndex); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
-                  className="group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 rounded-full hover:cursor-pointer transition-colors z-10"
+                  className="group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/100 rounded-full hover:cursor-pointer transition-colors z-10"
                   title="Get different image"
                 >
                   <RefreshCw size={24} className="drop-shadow-md transition-transform group-hover:scale-110" />

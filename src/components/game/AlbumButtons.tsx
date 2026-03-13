@@ -23,15 +23,42 @@ function getInitials(name: string): string {
     .slice(0, 3)
 }
 
-function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, onGuess }: {
+function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncorrect, readonly, onGuess }: {
   album: Album
   isDisabled: boolean
   isCorrect: boolean
   isDepletedOnly: boolean
+  isJustIncorrect: boolean
   readonly: boolean
   onGuess?: (albumId: number | null, albumName: string) => string
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const [showError, setShowError] = useState(false)
+
+  useEffect(() => {
+    if (!isJustIncorrect) return
+    setShowError(true)
+    const anim = buttonRef.current?.animate(
+      [
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-8px)' },
+        { transform: 'translateX(8px)' },
+        { transform: 'translateX(-6px)' },
+        { transform: 'translateX(6px)' },
+        { transform: 'translateX(-3px)' },
+        { transform: 'translateX(3px)' },
+        { transform: 'translateX(0)' },
+      ],
+      { duration: 400 }
+    )
+    const onFinish = () => setShowError(false)
+    anim?.addEventListener('finish', onFinish)
+    return () => {
+      anim?.removeEventListener('finish', onFinish)
+      anim?.cancel()
+      setShowError(false)
+    }
+  }, [isJustIncorrect])
 
   const handlePointerDown = () => {
     if (readonly || !onGuess || isDisabled || isDepletedOnly) return
@@ -46,7 +73,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
     onGuess(album.id, album.name)
   }
 
-  const isGrayed = !readonly && ((isDisabled && !isCorrect) || isDepletedOnly)
+  const isGrayed = !readonly && !showError && ((isDisabled && !isCorrect) || isDepletedOnly)
 
   return (
     <button
@@ -56,15 +83,17 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, readonly, o
       disabled={!readonly && (isDisabled || isDepletedOnly)}
       title={album.name}
       className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border
-        ${isGrayed
-          ? 'bg-neutral-400 border-neutral-300 opacity-50'
-          : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-80' : ''}`
+        ${showError
+          ? 'bg-error border-error'
+          : isGrayed
+            ? 'bg-neutral-400 border-neutral-300 opacity-50'
+            : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-80' : ''}`
         }
         ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`
       }
       style={{
-        ...(!isGrayed && album.theme_primary_color ? { backgroundColor: album.theme_primary_color } : {}),
-        ...(!isGrayed && album.theme_secondary_color ? { borderColor: album.theme_secondary_color } : {}),
+        ...(!isGrayed && !showError && album.theme_primary_color ? { backgroundColor: album.theme_primary_color } : {}),
+        ...(!isGrayed && !showError && album.theme_secondary_color ? { borderColor: album.theme_secondary_color } : {}),
       }}
     >
       {album.image_url !== null
@@ -96,6 +125,18 @@ export default function AlbumButtons({
       onGuess(remaining[0].id, remaining[0].name)
     }
   }, [incorrectAlbumIds.length, depletedAlbumIds.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const prevIncorrectRef = useRef<number[]>([])
+  const [newlyIncorrectId, setNewlyIncorrectId] = useState<number | null>(null)
+
+  useEffect(() => {
+    const prev = prevIncorrectRef.current
+    const justAdded = incorrectAlbumIds.filter((id) => !prev.includes(id))
+    if (justAdded.length > 0) {
+      setNewlyIncorrectId(justAdded[0])
+    }
+    prevIncorrectRef.current = incorrectAlbumIds
+  }, [incorrectAlbumIds])
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
@@ -161,6 +202,7 @@ export default function AlbumButtons({
                       isDisabled={albumGuessed || incorrectAlbumIds.includes(album.id)}
                       isCorrect={albumGuessed && correctAlbumId === album.id}
                       isDepletedOnly={!albumGuessed && !incorrectAlbumIds.includes(album.id) && depletedAlbumIds.includes(album.id)}
+                      isJustIncorrect={newlyIncorrectId === album.id}
                       readonly={readonly}
                       onGuess={onGuess}
                     />
@@ -178,6 +220,7 @@ export default function AlbumButtons({
                 isDisabled={albumGuessed || incorrectAlbumIds.includes(album.id)}
                 isCorrect={albumGuessed && correctAlbumId === album.id}
                 isDepletedOnly={!albumGuessed && !incorrectAlbumIds.includes(album.id) && depletedAlbumIds.includes(album.id)}
+                isJustIncorrect={newlyIncorrectId === album.id}
                 readonly={readonly}
                 onGuess={onGuess}
               />
