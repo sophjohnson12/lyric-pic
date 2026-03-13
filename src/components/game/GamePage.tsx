@@ -57,6 +57,9 @@ export default function GamePage() {
   const [deferredFocusIndex, setDeferredFocusIndex] = useState(0)
   const focusInitialized = useRef(false)
   const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
+  // Track whether a word input was focused at the start of a swipe gesture
+  const hadFocusOnSwipeStart = useRef(false)
+  const prevActiveSlideRef = useRef(0)
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)')
@@ -119,7 +122,19 @@ export default function GamePage() {
     if (!container) return
     container.addEventListener('scroll', handleScroll, { passive: true })
     handleScroll()
-    return () => container.removeEventListener('scroll', handleScroll)
+
+    // Capture focus state at swipe start (before blur fires during scroll)
+    const onTouchStart = () => {
+      const active = document.activeElement
+      hadFocusOnSwipeStart.current =
+        active instanceof HTMLInputElement && container.contains(active)
+    }
+    container.addEventListener('touchstart', onTouchStart, { passive: true })
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+      container.removeEventListener('touchstart', onTouchStart)
+    }
   }, [game.loading])
 
   // Set deferredFocusIndex on initial load only
@@ -128,6 +143,24 @@ export default function GamePage() {
     focusInitialized.current = true
     setDeferredFocusIndex(autoFocusIndex)
   }, [autoFocusIndex])
+
+  // Auto-focus the visible input after a swipe if an input was focused before the swipe (mobile only)
+  useEffect(() => {
+    const prev = prevActiveSlideRef.current
+    prevActiveSlideRef.current = activeSlide
+
+    if (isMd || prev === activeSlide || !hadFocusOnSwipeStart.current) return
+
+    const timer = setTimeout(() => {
+      const container = scrollContainerRef.current
+      if (!container) return
+      const slideEl = container.children[activeSlide]
+      const inputEl = slideEl?.querySelector<HTMLInputElement>('input')
+      inputEl?.focus({ preventScroll: true })
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [activeSlide, isMd])
 
   // When any word is solved, update focus target and trigger focus (md+ only)
   useEffect(() => {
