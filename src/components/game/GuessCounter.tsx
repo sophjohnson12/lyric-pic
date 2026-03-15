@@ -58,7 +58,7 @@ function GuessCircle({ index, isFlipped }: {
       >
         {/* Front Side (Blank/Remaining) */}
         <div
-          className="absolute inset-0 w-full h-full rounded-full border border-neutral-200 bg-neutral-300 shadow-inner [backface-visibility:hidden]"
+          className="absolute inset-0 w-full h-full rounded-full bg-secondary shadow-inner [backface-visibility:hidden]"
         />
         {/* Back Side (Number/Used) */}
         <div
