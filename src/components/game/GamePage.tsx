@@ -242,7 +242,7 @@ export default function GamePage() {
 
   if (game.loading) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         {loadMessage && (
           <p className="text-neutral-500 font-medium text-center max-w-xs px-4">{loadMessage}</p>
@@ -253,7 +253,7 @@ export default function GamePage() {
 
   if (game.artist && !game.artist.is_selectable) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-8">
+      <div className="min-h-screen flex items-center justify-center p-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-primary mb-2">
             Coming Soon
@@ -267,7 +267,7 @@ export default function GamePage() {
   if (game.allSongsPlayed) {
     const noSongs = game.totalPlayableSongs === 0
     return (
-      <div className="min-h-screen bg-neutral-50 flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <Header
           artistName={game.artist?.name || null}
           playedCount={game.playedSongIds.length}
@@ -328,7 +328,7 @@ export default function GamePage() {
 
   if (!game.currentSong || !game.artist) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-neutral-500 mb-4">Something went wrong loading a song.</div>
           <button
@@ -346,7 +346,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="h-dvh md:h-auto flex flex-col bg-neutral-50">
+    <div className="h-dvh md:h-auto flex flex-col">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}

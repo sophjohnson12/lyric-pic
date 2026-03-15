@@ -114,7 +114,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
           : showCorrect
             ? 'bg-success border-success-light'
             : isGrayed
-              ? 'bg-neutral-300 border-neutral-200'
+              ? 'bg-neutral-300 border-neutral-200 text-neutral-400'
               : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-80' : ''}`
         }
         ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`

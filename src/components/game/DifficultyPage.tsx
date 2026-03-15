@@ -38,14 +38,14 @@ export default function DifficultyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
       <h1 className="text-3xl font-bold text-primary mb-2">Lyric Pic</h1>
       {artist?.name && (
         <p className="text-neutral-500 mb-10 text-sm">{artist.name}</p>

@@ -58,11 +58,11 @@ function GuessCircle({ index, isFlipped }: {
       >
         {/* Front Side (Blank/Remaining) */}
         <div
-          className="absolute inset-0 w-full h-full rounded-full bg-secondary shadow-inner [backface-visibility:hidden]"
+          className="absolute inset-0 w-full h-full rounded-full border border-neutral-200 bg-neutral-300 shadow-inner [backface-visibility:hidden]"
         />
         {/* Back Side (Number/Used) */}
         <div
-          className={`absolute inset-0 w-full h-full rounded-full flex items-center justify-center text-white font-bold [backface-visibility:hidden] [transform:rotateY(180deg)] transition-colors duration-500 ${showError ? 'bg-error' : 'bg-primary'}`}
+          className={`absolute inset-0 w-full h-full rounded-full flex items-center justify-center text-white font-bold [backface-visibility:hidden] [transform:rotateY(180deg)] transition-colors duration-500 border ${showError ? 'bg-error border-error-light' : 'bg-primary border-secondary'}`}
         >
           {index + 1}
         </div>
@@ -75,7 +75,7 @@ export default function GuessCounter({ guessMessage, guessCount, allowedCount }:
   return (
     <div className="flex items-center justify-center py-4 w-full">
       <div className="flex flex-row items-center justify-center max-w-full w-7/8 sm:w-3/5 md:w-full">
-        <div className="text-xs text-neutral-500 text-center font-medium min-w-0 shrink">
+        <div className="text-xs text-neutral-600 text-center font-medium min-w-0 shrink">
           {guessMessage || "Guesses:"}
         </div>
         <div className="flex flex-row gap-1.5 flex-shrink-0 ml-1.5">

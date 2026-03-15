@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [primaryColor, setPrimaryColor] = useState('')
   const [secondaryColor, setSecondaryColor] = useState('')
   const [enableImages, setEnableImages] = useState(true)
+  const [enableBackgrounds, setEnableBackgrounds] = useState(false)
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState('')
@@ -41,6 +42,7 @@ export default function SettingsPage() {
         setPrimaryColor(config.theme_primary_color)
         setSecondaryColor(config.theme_secondary_color)
         setEnableImages(config.enable_images)
+        setEnableBackgrounds(config.enable_backgrounds)
         setEnableLyricFlag(config.enable_lyric_flag)
         setEnableImageFlag(config.enable_image_flag)
         setMaxGuessCount(String(config.max_guess_count))
@@ -67,6 +69,18 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Failed to save:', err)
       setEnableImages(!value)
+      showToast('Failed to save')
+    }
+  }
+
+  async function handleToggleBackgrounds(value: boolean) {
+    setEnableBackgrounds(value)
+    try {
+      await updateAppConfig({ enable_backgrounds: value })
+      showToast('Saved')
+    } catch (err) {
+      console.error('Failed to save:', err)
+      setEnableBackgrounds(!value)
       showToast('Failed to save')
     }
   }
@@ -227,6 +241,13 @@ export default function SettingsPage() {
                   <div className="text-xs text-neutral-500">Players see images for puzzle words</div>
                 </div>
                 <ToggleSwitch checked={enableImages} onChange={handleToggleImages} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Show Album Backgrounds</div>
+                  <div className="text-xs text-neutral-500">Display album SVG pattern after album is guessed</div>
+                </div>
+                <ToggleSwitch checked={enableBackgrounds} onChange={handleToggleBackgrounds} />
               </div>
               <div className="flex items-center justify-between">
                 <div>

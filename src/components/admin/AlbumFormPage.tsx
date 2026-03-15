@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminFormPage from './AdminFormPage'
@@ -23,10 +23,12 @@ export default function AlbumFormPage() {
   const [releaseYear, setReleaseYear] = useState('')
   const [primaryColor, setPrimaryColor] = useState('')
   const [secondaryColor, setSecondaryColor] = useState('')
+  const [backgroundPatternColor, setBackgroundPatternColor] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [backgroundUrl, setBackgroundUrl] = useState('')
   const [pendingBackgroundFile, setPendingBackgroundFile] = useState<File | null>(null)
+  const [backgroundTileSize, setBackgroundTileSize] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -48,11 +50,58 @@ export default function AlbumFormPage() {
         setReleaseYear(a.release_year?.toString() ?? '')
         setPrimaryColor(a.theme_primary_color ?? '')
         setSecondaryColor(a.theme_secondary_color ?? '')
+        setBackgroundPatternColor(a.theme_background_color ?? '')
         setImageUrl(a.image_url ?? '')
         setBackgroundUrl(a.background_url ?? '')
+        setBackgroundTileSize(a.background_tile_size?.toString() ?? '')
       })
     }
   }, [id, isEdit])
+
+  // Live-preview the background pattern on #bg-pattern
+  useEffect(() => {
+    let objectUrl: string | null = null
+    const bgPattern = document.getElementById('bg-pattern')
+    if (!bgPattern) return
+
+    const effectiveUrl = pendingBackgroundFile
+      ? (objectUrl = URL.createObjectURL(pendingBackgroundFile))
+      : backgroundUrl || null
+
+    if (effectiveUrl) {
+      bgPattern.style.backgroundColor = backgroundPatternColor || primaryColor
+      bgPattern.style.webkitMaskImage = `url(${effectiveUrl})`
+      bgPattern.style.maskImage = `url(${effectiveUrl})`
+      const maskSize = backgroundTileSize ? `${backgroundTileSize}px auto` : ''
+      bgPattern.style.webkitMaskSize = maskSize
+      bgPattern.style.setProperty('mask-size', maskSize)
+      bgPattern.style.opacity = '1'
+    } else {
+      bgPattern.style.webkitMaskImage = ''
+      bgPattern.style.maskImage = ''
+      bgPattern.style.webkitMaskSize = ''
+      bgPattern.style.setProperty('mask-size', '')
+      bgPattern.style.opacity = '0'
+    }
+
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl) }
+  }, [pendingBackgroundFile, backgroundUrl, backgroundPatternColor, primaryColor, backgroundTileSize])
+
+  // Reset #bg-pattern before the browser paints the next page.
+  // useLayoutEffect fires before paint; setting backgroundColor to 'transparent'
+  // avoids the primary-color flash caused by the CSS opacity transition (which has
+  // !important and can't be overridden inline).
+  useLayoutEffect(() => () => {
+    const bgPattern = document.getElementById('bg-pattern')
+    if (bgPattern) {
+      bgPattern.style.webkitMaskImage = ''
+      bgPattern.style.maskImage = ''
+      bgPattern.style.webkitMaskSize = ''
+      bgPattern.style.setProperty('mask-size', '')
+      bgPattern.style.backgroundColor = 'transparent'
+      bgPattern.style.opacity = '0'
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -72,8 +121,10 @@ export default function AlbumFormPage() {
         release_year: releaseYear ? Number(releaseYear) : null,
         theme_primary_color: primaryColor || null,
         theme_secondary_color: secondaryColor || null,
+        theme_background_color: backgroundPatternColor || null,
         image_url: finalImageUrl,
         background_url: finalBackgroundUrl,
+        background_tile_size: backgroundTileSize ? Number(backgroundTileSize) : null,
       }
       if (isEdit) {
         await updateAlbum(Number(id), data)
@@ -110,6 +161,9 @@ export default function AlbumFormPage() {
             </FormField>
             <FormField label="Secondary Color">
               <ColorField value={secondaryColor} onChange={setSecondaryColor} />
+            </FormField>
+            <FormField label="Background Pattern Color">
+              <ColorField value={backgroundPatternColor} onChange={setBackgroundPatternColor} />
             </FormField>
           </div>
           <FormField label="Icon (SVG)">
@@ -155,6 +209,16 @@ export default function AlbumFormPage() {
                 </button>
               )}
             </div>
+          </FormField>
+          <FormField label="Background Tile Size (px)">
+            <input
+              type="number"
+              min="1"
+              value={backgroundTileSize}
+              onChange={(e) => setBackgroundTileSize(e.target.value)}
+              placeholder="Auto (intrinsic SVG size)"
+              className={inputClass}
+            />
           </FormField>
         </div>
       </AdminFormPage>

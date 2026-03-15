@@ -132,7 +132,7 @@ function Breadcrumbs() {
   if (breadcrumbs.length === 0) return null
 
   return (
-    <nav className="border-b border-primary/20 px-6 py-2 text-sm flex items-center gap-1.5 text-neutral-800">
+    <nav className="bg-neutral-50 border-b border-primary/20 px-6 py-2 text-sm flex items-center gap-1.5 text-neutral-800">
       {breadcrumbs.map((crumb, i) => (
         <span key={i} className="flex items-center gap-1.5">
           {i > 0 && <span className="text-neutral-400">/</span>}
@@ -161,7 +161,7 @@ export default function AdminLayout() {
 
   return (
     <AdminBreadcrumbProvider>
-      <div className="h-screen flex flex-col bg-neutral-50 text-neutral-800">
+      <div className="h-screen flex flex-col text-neutral-800">
         <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} />
         <div className="flex flex-1 overflow-hidden">
           <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />

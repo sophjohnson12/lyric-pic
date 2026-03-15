@@ -30,6 +30,7 @@ export interface Album {
   theme_background_color: string | null
   image_url: string | null
   background_url: string | null
+  background_tile_size: number | null
   updated_at: string | null
   created_at: string
 }
@@ -161,6 +162,7 @@ export interface AppConfig {
   enable_images: boolean
   enable_lyric_flag: boolean
   enable_image_flag: boolean
+  enable_backgrounds: boolean
   max_guess_count: number
   min_image_count: number
   min_song_lyric_count: number

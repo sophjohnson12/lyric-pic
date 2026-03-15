@@ -4,9 +4,9 @@
   --color-primary: var(--color-theme-primary, #823549);
   --color-secondary: var(--color-theme-secondary, #f4cb8d);
   --color-success: #15803d;
-  --color-success-light: #b9f8cf;
+  --color-success-light: #dcfce7;
   --color-error: #b91c1c;
-  --color-error-light: #ffc9c9;
+  --color-error-light: #ffe2e2;
   --font-heading: 'Quicksand', 'Nunito', sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --text-tiny: 0.625rem;
@@ -28,12 +28,12 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   background-color: var(--color-theme-primary);
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
   opacity: 0;
-  transition: opacity 0.75s ease-in-out, background-color 0.75s ease-in-out;
+  transition: opacity 0.75s ease-in-out !important;
 }
 
 body {

@@ -140,6 +140,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
   const currentAlbumRef = useRef<Album | null>(null)
   const maxImageCountRef = useRef<number | undefined>(undefined)
   const enableImagesRef = useRef<boolean>(true)
+  const enableBackgroundsRef = useRef<boolean>(false)
   const maxDifficultyRankRef = useRef<number | undefined>(undefined)
   const puzzleWordCountRef = useRef<number>(3)
   const topDistinctiveCountRef = useRef<number>(5)
@@ -259,6 +260,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
           setImagesEnabled(config.enable_images)
           setEnableImages(config.enable_images)
           enableImagesRef.current = config.enable_images
+          enableBackgroundsRef.current = config.enable_backgrounds
           setEnableLyricFlag(config.enable_lyric_flag)
           setEnableImageFlag(config.enable_image_flag)
           maxImageCountRef.current = config.max_image_count
@@ -442,7 +444,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
         setState((prev) => ({ ...prev, albumGuessed: true, correctAlbum: album }))
 
         if (album) {
-          setTimeout(() => applyAlbumTheme(album), 500)
+          setTimeout(() => applyAlbumTheme(album, enableBackgroundsRef.current), 500)
           getSongsByAlbum(state.artist!.id, albumId, playedSongIds, maxDifficultyRankRef.current).then((songs) => {
             setFilteredSongs(songs)
           })
@@ -481,7 +483,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
 
       if (songId === state.currentSong.id) {
         const correctAlbum = currentAlbumRef.current
-        if (!state.albumGuessed && correctAlbum) applyAlbumTheme(correctAlbum)
+        if (!state.albumGuessed && correctAlbum) applyAlbumTheme(correctAlbum, enableBackgroundsRef.current)
         setState((prev) => ({
           ...prev,
           songGuessed: true,
@@ -495,7 +497,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
 
       if (isLastGuess && !state.albumGuessed) {
         const correctAlbum = currentAlbumRef.current
-        if (correctAlbum) applyAlbumTheme(correctAlbum)
+        if (correctAlbum) applyAlbumTheme(correctAlbum, enableBackgroundsRef.current)
       }
 
       setState((prev) => ({

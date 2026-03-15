@@ -17,7 +17,7 @@ export default function LandingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-neutral-800 border-t-transparent rounded-full animate-spin" />
       </div>
     )

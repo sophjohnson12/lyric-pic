@@ -73,7 +73,7 @@ export default function SongDropdown({
                 <button
                   type="submit"
                   disabled={!modalSelection}
-                  className="h-12 flex-1 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default border border-secondary"
+                  className="h-12 flex-1 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium hover:opacity-90 hover:text-white cursor-pointer border border-secondary disabled:cursor-default disabled:hover:opacity-100 disabled:bg-neutral-300 disabled:border-neutral-200"
                 >
                   Submit
                 </button>
@@ -122,13 +122,15 @@ export default function SongDropdown({
             onEnterSelect={handleEnterSelect}
             excludeLabels={incorrectGuesses}
           />
-          <button
-            type="submit"
-            disabled={selectedId === undefined}
-            className="h-12 px-4 py-2 bg-primary text-white rounded-lg text-base font-medium hover:opacity-90 disabled:opacity-40 cursor-pointer disabled:cursor-default shrink-0 border border-secondary"
-          >
-            Submit
-          </button>
+          <div className="shrink-0 rounded-lg bg-neutral-50">
+            <button
+              type="submit"
+              disabled={selectedId === undefined}
+              className="h-12 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium hover:text-white hover:opacity-90 cursor-pointer border border-secondary disabled:cursor-default disabled:hover:opacity-100 disabled:bg-neutral-300 disabled:border-neutral-200"
+            >
+              Submit
+            </button>
+          </div>
         </div>
       </form>
     </div>
