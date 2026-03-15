@@ -78,7 +78,7 @@ export default function GuessCounter({ guessMessage, guessCount, allowedCount }:
         <div className="text-xs text-neutral-500 text-center font-medium min-w-0 shrink">
           {guessMessage || "Guesses:"}
         </div>
-        <div className="flex flex-row gap-2 flex-shrink-0 ml-2">
+        <div className="flex flex-row gap-1.5 flex-shrink-0 ml-1.5">
           {Array.from({ length: allowedCount }, (_, index) => (
             <GuessCircle
               key={index}

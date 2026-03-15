@@ -110,9 +110,9 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
       title={album.name}
       className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border
         ${showError
-          ? 'bg-error border-error'
+          ? 'bg-error border-error-light'
           : showCorrect
-            ? 'bg-success border-success'
+            ? 'bg-success border-success-light'
             : isGrayed
               ? 'bg-neutral-300 border-neutral-200'
               : `${!album.theme_primary_color ? 'bg-neutral-500' : ''} ${!album.theme_secondary_color ? 'border-neutral-400' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-80' : ''}`
