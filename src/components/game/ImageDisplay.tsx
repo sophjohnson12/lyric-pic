@@ -6,14 +6,14 @@ interface ImageDisplayProps {
 export default function ImageDisplay({ imageUrls, currentIndex }: ImageDisplayProps) {
   if (imageUrls.length === 0) {
     return (
-      <div className="w-full aspect-square bg-primary/10 rounded-xl flex items-center justify-center">
+      <div className="w-full aspect-square bg-secondary rounded-xl flex items-center justify-center">
         <span className="text-neutral-400 text-sm">no image</span>
       </div>
     )
   }
 
   return (
-    <div className="w-full aspect-square rounded-xl overflow-hidden bg-primary/5">
+    <div className="w-full aspect-square rounded-xl overflow-hidden bg-secondary">
       <img
         src={imageUrls[currentIndex]}
         alt="Puzzle clue"

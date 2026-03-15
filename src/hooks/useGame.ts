@@ -139,6 +139,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
   const puzzleWordGroupMembersRef = useRef<Map<number, Set<number>>>(new Map())
   const currentAlbumRef = useRef<Album | null>(null)
   const maxImageCountRef = useRef<number | undefined>(undefined)
+  const enableImagesRef = useRef<boolean>(true)
   const maxDifficultyRankRef = useRef<number | undefined>(undefined)
   const puzzleWordCountRef = useRef<number>(3)
   const topDistinctiveCountRef = useRef<number>(5)
@@ -176,9 +177,9 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
           return
         }
 
-      const imageUrls = await Promise.all(
-        selected.map((w) => getCachedImages(w.lyric_id, maxImageCountRef.current))
-      )
+      const imageUrls = enableImagesRef.current
+        ? await Promise.all(selected.map((w) => getCachedImages(w.lyric_id, maxImageCountRef.current)))
+        : selected.map(() => [])
 
       const puzzleWords: PuzzleWord[] = selected.map((w, i) => ({
         lyricId: w.lyric_id,
@@ -257,6 +258,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
         if (config) {
           setImagesEnabled(config.enable_images)
           setEnableImages(config.enable_images)
+          enableImagesRef.current = config.enable_images
           setEnableLyricFlag(config.enable_lyric_flag)
           setEnableImageFlag(config.enable_image_flag)
           maxImageCountRef.current = config.max_image_count
