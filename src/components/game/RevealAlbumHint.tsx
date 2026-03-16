@@ -1,4 +1,4 @@
-import { useRef, useLayoutEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { Lightbulb } from 'lucide-react'
 import type { Album } from '../../types/database'
 import AlbumIcon from '../common/AlbumIcon'
@@ -13,20 +13,16 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
   const buttonRef = useRef<HTMLButtonElement>(null)
   const revealedRef = useRef<HTMLDivElement>(null)
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!albumHintRevealed || !revealedRef.current) return
     const el = revealedRef.current
     // Use transform (not opacity) so the element doesn't create an isolated
     // compositing group — opacity < 1 blocks backdrop-filter on children.
-    // useLayoutEffect fires before paint so the element never flashes at
-    // natural size. The cleanup cancels any in-progress animation (e.g. React
-    // Strict Mode double-invoke) so a stale animation can't restart the new one.
     const anim = el.animate(
       [{ transform: 'scale(0)' }, { transform: 'scale(1)' }],
       { duration: 500, easing: 'ease-out', fill: 'forwards' }
     )
     anim.addEventListener('finish', () => anim.cancel())
-    return () => anim.cancel()
   }, [albumHintRevealed])
 
   const handleClick = () => {
