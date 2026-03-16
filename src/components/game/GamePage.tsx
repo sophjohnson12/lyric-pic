@@ -389,7 +389,7 @@ export default function GamePage() {
           ))}
         </div>
         {/* Carousel Dots (Mobile Only) */}
-        <div className={`flex justify-center mt-3 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
+        <div className={`flex justify-center mt-2 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
           <div className="flex gap-2 rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
             {game.puzzleWords.map((_: any, index: number) => (
               <button
@@ -405,7 +405,7 @@ export default function GamePage() {
         {(
           <div className="w-5/6 sm:w-3/5 md:w-full mx-auto">
             {game.showAlbumFilters ? (
-              <div className="md:max-w-md lg:max-w-full mx-auto my-6 md:mb-10">
+              <div className="md:max-w-md lg:max-w-full mx-auto mt-2 mb-3 md:mb-10">
                 <AlbumButtons
                   albums={game.albums}
                   incorrectAlbumIds={game.incorrectAlbumIds}

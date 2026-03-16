@@ -45,7 +45,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
       {albumHintRevealed && correctAlbum ? (
         <div
           ref={revealedRef}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 [will-change:transform]"
         >
           <AlbumIcon album={correctAlbum} size="lg" />
           <div className="flex text-sm sm:text-base rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
