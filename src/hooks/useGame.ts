@@ -303,9 +303,10 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
         allLevelAlbumsRef.current = albumData.filter((a) => levelAlbumIds.has(a.id))
         setAlbums(allLevelAlbumsRef.current)
 
-        // Preload all album background images so the CSS mask-image transition is instant
+        // Preload all album images (background + icon) so transitions are instant
         allLevelAlbumsRef.current.forEach((a) => {
           if (a.background_url) new Image().src = a.background_url
+          if (a.image_url) new Image().src = a.image_url
         })
 
         setState((prev) => ({ ...prev, artist, totalPlayableSongs: playableSongIds.length }))
