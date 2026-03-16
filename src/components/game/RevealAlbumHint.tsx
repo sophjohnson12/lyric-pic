@@ -48,7 +48,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
           className="flex items-center gap-2"
         >
           <AlbumIcon album={correctAlbum} size="lg" />
-          <div className="flex text-base rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
+          <div className="flex text-sm sm:text-base rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
             <span className="font-medium text-neutral-700">{correctAlbum.name}</span>
             <span className="ml-1 font-thin text-neutral-600">{correctAlbum.release_year ? `(${correctAlbum.release_year})` : ''}</span>
           </div>

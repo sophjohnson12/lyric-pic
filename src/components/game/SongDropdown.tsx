@@ -37,17 +37,15 @@ export default function SongDropdown({
     }
 
     return (
-      <div className="w-full flex items-center justify-center">
-        <div className="w-7/8 sm:w-3/5 md:w-full gap-2">
-          <input
-            type="text"
-            readOnly
-            placeholder="Guess the song..."
-            onClick={() => setShowModal(true)}
-            onKeyDown={(e) => { if (e.key === 'Enter') setShowModal(true) }}
-            className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm  text-neutral-800 placeholder-neutral-400 text-base cursor-pointer border border-secondary"
-          />
-        </div>
+      <div className="w-full">
+        <input
+          type="text"
+          readOnly
+          placeholder="Guess the song..."
+          onClick={() => setShowModal(true)}
+          onKeyDown={(e) => { if (e.key === 'Enter') setShowModal(true) }}
+          className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm  text-neutral-800 placeholder-neutral-400 text-base cursor-pointer border border-secondary"
+        />
         {showModal && (
           <Modal showClose={false} onClose={() => setShowModal(false)} showEaseIn={true}>
             <form onSubmit={(e) => { e.preventDefault(); handleModalGuess() }}>

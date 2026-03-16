@@ -114,8 +114,8 @@ export default function WordInput({
     'bg-primary hover:bg-primary/80 text-neutral-100 hover:text-white'
 
   return (
-    <div className="min-w-full snap-center mx-auto">
-      <div className="pb-0 w-7/8 sm:w-3/5 md:w-full mx-auto">
+    <div className="w-full">
+      <div className="pb-0 w-full">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white border-b border-secondary">
           {/* Image Container */}
           <div

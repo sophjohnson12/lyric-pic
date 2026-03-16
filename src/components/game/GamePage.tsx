@@ -357,7 +357,7 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
       />
 
-      <main className="min-w-2xs sm:max-w-11/12 lg:max-w-4/5 w-full mx-auto px-4 py-3 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
+      <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
@@ -368,6 +368,7 @@ export default function GamePage() {
               key={`${game.currentSong!.id}-${index}`}
               className="w-full flex-shrink-0 md:w-[calc(33.333%-1rem)] md:flex-none snap-center md:px-0"
             >
+              <div className="w-7/8 sm:w-3/5 md:w-full mx-auto">
               <WordInput
                 key={`${game.currentSong!.id}-${index}`}
                 puzzleWord={word}
@@ -383,6 +384,7 @@ export default function GamePage() {
                 focusTrigger={focusTrigger}
                 revealBehavior={revealBehavior}
               />
+              </div>
             </div>
           ))}
         </div>
@@ -401,7 +403,7 @@ export default function GamePage() {
         </div>
         {/* Album and Song dropdowns */}
         {(
-          <div>
+          <div className="w-7/8 sm:w-3/5 md:w-full mx-auto">
             {game.showAlbumFilters ? (
               <div className="md:max-w-md lg:max-w-full mx-auto my-6 md:mb-10">
                 <AlbumButtons
