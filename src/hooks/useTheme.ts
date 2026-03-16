@@ -19,6 +19,20 @@ function clearBgPattern(bgPattern: HTMLElement) {
   }, TRANSITION_MS)
 }
 
+// Clears the bg-pattern instantly (no fade) — use when navigating away from the game.
+function clearBgPatternImmediate(bgPattern: HTMLElement) {
+  if (clearPatternTimer) { clearTimeout(clearPatternTimer); clearPatternTimer = null }
+  bgPattern.style.transition = 'none'
+  bgPattern.style.opacity = '0'
+  bgPattern.style.webkitMaskImage = ''
+  bgPattern.style.maskImage = ''
+  bgPattern.style.webkitMaskSize = ''
+  bgPattern.style.setProperty('mask-size', '')
+  bgPattern.style.backgroundColor = ''
+  // Re-enable the CSS transition after the current paint so future fades still work.
+  requestAnimationFrame(() => { bgPattern.style.transition = '' })
+}
+
 export function useTheme() {
   const applyArtistTheme = useCallback((artist: Artist) => {
     document.documentElement.style.setProperty('--color-theme-primary', artist.theme_primary_color)
@@ -59,5 +73,10 @@ export function useTheme() {
     }
   }, [])
 
-  return { applyArtistTheme, applyAlbumTheme }
+  const clearBackground = useCallback(() => {
+    const bgPattern = document.getElementById('bg-pattern')
+    if (bgPattern) clearBgPatternImmediate(bgPattern)
+  }, [])
+
+  return { applyArtistTheme, applyAlbumTheme, clearBackground }
 }

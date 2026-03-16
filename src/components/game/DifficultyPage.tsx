@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getArtistBySlug, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
@@ -9,7 +9,13 @@ import type { GameLevel } from '../../types/game'
 export default function DifficultyPage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const navigate = useNavigate()
-  const { applyArtistTheme } = useTheme()
+  const { applyArtistTheme, clearBackground } = useTheme()
+
+  // Clear the album background immediately before the first paint so there's
+  // no fade-out and no flash of the game's album background on back navigation.
+  useLayoutEffect(() => {
+    clearBackground()
+  }, [])
   const [artist, setArtist] = useState<Artist | null>(null)
   const [levels, setLevels] = useState<GameLevel[]>([])
   const [loading, setLoading] = useState(true)
