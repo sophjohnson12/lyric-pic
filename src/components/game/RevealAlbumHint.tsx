@@ -15,10 +15,14 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
 
   useEffect(() => {
     if (!albumHintRevealed || !revealedRef.current) return
-    revealedRef.current.animate(
-      [{ opacity: '0' }, { opacity: '1' }],
-      { duration: 1300, easing: 'ease-out', fill: 'forwards' }
+    const el = revealedRef.current
+    // Use transform (not opacity) so the element doesn't create an isolated
+    // compositing group — opacity < 1 blocks backdrop-filter on children.
+    const anim = el.animate(
+      [{ transform: 'scale(0)' }, { transform: 'scale(1)' }],
+      { duration: 500, easing: 'ease-out', fill: 'forwards' }
     )
+    anim.addEventListener('finish', () => anim.cancel())
   }, [albumHintRevealed])
 
   const handleClick = () => {
@@ -41,14 +45,13 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
       {albumHintRevealed && correctAlbum ? (
         <div
           ref={revealedRef}
-          className="flex items-center gap-2 rounded-3xl bg-neutral-50/1 backdrop-blur-xs h-12 p-2"
-          style={{ opacity: 0 }}
+          className="flex items-center gap-2"
         >
-          <AlbumIcon album={correctAlbum} size="sm" />
-          <span className="text-sm font-medium text-neutral-700">
-            {correctAlbum.name}
-            {correctAlbum.release_year ? ` (${correctAlbum.release_year})` : ''}
-          </span>
+          <AlbumIcon album={correctAlbum} size="lg" />
+          <div className="flex text-base rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
+            <span className="font-medium text-neutral-700">{correctAlbum.name}</span>
+            <span className="ml-1 font-thin text-neutral-600">{correctAlbum.release_year ? `(${correctAlbum.release_year})` : ''}</span>
+          </div>
         </div>
       ) : (
         <button

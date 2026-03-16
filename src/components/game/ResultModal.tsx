@@ -40,8 +40,10 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
         <h2 className="text-xl md:text-2xl font-bold text-primary mb-4 mx-auto">{message}</h2>
         <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
           <p className="text-md md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
-          <p className={"text-sm text-neutral-600 mb-2 md:mb-4 italic"}>
-            {album ? album.name : 'Single'}
+          <p className={"text-sm mb-2 md:mb-4 italic"}>
+            
+            <span className="font-medium text-neutral-700">{album ? album.name : 'Single'}</span>
+            <span className="ml-1 font-thin text-neutral-600">{album && album.release_year ? `(${album.release_year})` : ''}</span>
           </p>
           {lyricsWithLines.length > 0 && (
             <div className="text-center space-y-2 md:space-y-3">
