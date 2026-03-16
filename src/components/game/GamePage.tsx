@@ -368,7 +368,7 @@ export default function GamePage() {
               key={`${game.currentSong!.id}-${index}`}
               className="w-full flex-shrink-0 md:w-[calc(33.333%-1rem)] md:flex-none snap-center md:px-0"
             >
-              <div className="w-7/9 sm:w-3/5 md:w-full mx-auto">
+              <div className="w-9/11 sm:w-3/5 md:w-full mx-auto">
               <WordInput
                 key={`${game.currentSong!.id}-${index}`}
                 puzzleWord={word}
@@ -403,7 +403,7 @@ export default function GamePage() {
         </div>
         {/* Album and Song dropdowns */}
         {(
-          <div className="w-7/9 sm:w-3/5 md:w-full mx-auto">
+          <div className="w-9/11 sm:w-3/5 md:w-full mx-auto">
             {game.showAlbumFilters ? (
               <div className="md:max-w-md lg:max-w-full mx-auto mt-2 mb-3 md:mb-10">
                 <AlbumButtons
