@@ -40,9 +40,9 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         )}
         {!showAlbumFilters && (
           <div>
-            <p className="font-semibold text-neutral-800">2. Show the Album</p>
-            <p className="hidden md:inline">Click the button if you need a hint.</p>
-            <p className="inline md:hidden">Tap the button if you need a hint.</p>
+            <p className="font-semibold text-neutral-800">2. Reveal the Album</p>
+            <p className="hidden md:inline">Click the button for a hint.</p>
+            <p className="inline md:hidden">Tap the button for a hint.</p>
             <ul className="mt-1 space-y-1">
               <li className="flex items-center"><Lightbulb size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal album and release year</li>
             </ul>         
