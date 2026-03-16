@@ -54,10 +54,10 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
         <button
           ref={buttonRef}
           onClick={handleClick}
-          className="h-12 px-4 py-2 bg-primary text-neutral-100 rounded-3xl text-base font-medium hover:text-white hover:opacity-90 cursor-pointer border border-secondary flex items-center gap-2"
+          className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-base font-medium hover:text-white hover:opacity-90 cursor-pointer border border-secondary flex items-center gap-1"
         >
           <Lightbulb size={20} />
-          Reveal Album
+          Album
         </button>
       )}
     </div>

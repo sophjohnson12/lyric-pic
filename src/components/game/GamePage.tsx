@@ -361,7 +361,7 @@ export default function GamePage() {
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:flex-wrap md:justify-center gap-0 md:gap-6 mb-2 md:mb-11 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:flex-wrap md:justify-center gap-0 md:gap-6 md:mb-10 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
           >
           {game.puzzleWords.map((word: any, index: number) => (
             <div
@@ -387,7 +387,7 @@ export default function GamePage() {
           ))}
         </div>
         {/* Carousel Dots (Mobile Only) */}
-        <div className={`flex justify-center mb-2 md:mb-11 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
+        <div className={`flex justify-center mt-3 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
           <div className="flex gap-2 rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
             {game.puzzleWords.map((_: any, index: number) => (
               <button
@@ -403,7 +403,7 @@ export default function GamePage() {
         {(
           <div>
             {game.showAlbumFilters ? (
-              <div className="md:max-w-md lg:max-w-full mx-auto mb-6 md:mb-12">
+              <div className="md:max-w-md lg:max-w-full mx-auto my-6 md:mb-10">
                 <AlbumButtons
                   albums={game.albums}
                   incorrectAlbumIds={game.incorrectAlbumIds}
@@ -414,7 +414,7 @@ export default function GamePage() {
                 />
               </div>
             ) : (
-              <div className="md:max-w-md lg:max-w-full mx-auto mb-6 md:mb-12">
+              <div className="md:max-w-md lg:max-w-full mx-auto my-6 md:mb-10">
                 <RevealAlbumHint
                   key={game.currentSong?.id}
                   correctAlbum={game.correctAlbum}
