@@ -8,6 +8,7 @@ import type { RevealBehavior } from './SettingsModal'
 import Header from '../layout/Header'
 import WordInput from './WordInput'
 import AlbumButtons from './AlbumButtons'
+import RevealAlbumHint from './RevealAlbumHint'
 import SongDropdown from './SongDropdown'
 import GuessCounter from './GuessCounter'
 import ResultModal from './ResultModal'
@@ -356,11 +357,11 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
       />
 
-      <main className="min-w-2xs sm:max-w-11/12 lg:max-w-4/5 w-full mx-auto px-4 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
+      <main className="min-w-2xs sm:max-w-11/12 lg:max-w-4/5 w-full mx-auto px-4 py-3 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Word puzzles */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:flex-wrap md:justify-center gap-0 md:gap-6 mb-3 md:mb-12 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:flex-wrap md:justify-center gap-0 md:gap-6 mb-1 md:mb-10 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
           >
           {game.puzzleWords.map((word: any, index: number) => (
             <div
@@ -386,20 +387,22 @@ export default function GamePage() {
           ))}
         </div>
         {/* Carousel Dots (Mobile Only) */}
-        <div className={`flex justify-center gap-2 mb-3 md:mb-12 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
-          {game.puzzleWords.map((_: any, index: number) => (
-            <button
-              key={index}
-              onClick={() => scrollToSlide(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-secondary hover:bg-primary/40'}`}
-              aria-label={`Go to image ${index + 1}`}
-            />
-          ))}
+        <div className={`flex justify-center mb-1 md:mb-10 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
+          <div className="flex gap-2 rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-2">
+            {game.puzzleWords.map((_: any, index: number) => (
+              <button
+                key={index}
+                onClick={() => scrollToSlide(index)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-secondary hover:bg-primary/40'}`}
+                aria-label={`Go to image ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
         {/* Album and Song dropdowns */}
         {(
           <div>
-            {game.showAlbumFilters && (
+            {game.showAlbumFilters ? (
               <div className="md:max-w-md lg:max-w-full mx-auto mb-6 md:mb-12">
                 <AlbumButtons
                   albums={game.albums}
@@ -408,6 +411,15 @@ export default function GamePage() {
                   albumGuessed={game.albumGuessed}
                   correctAlbumId={game.correctAlbum?.id || null}
                   onGuess={game.guessAlbum}
+                />
+              </div>
+            ) : (
+              <div className="md:max-w-md lg:max-w-full mx-auto mb-6 md:mb-12">
+                <RevealAlbumHint
+                  key={game.currentSong?.id}
+                  correctAlbum={game.correctAlbum}
+                  albumHintRevealed={game.albumHintRevealed}
+                  onReveal={game.revealAlbumHint}
                 />
               </div>
             )}

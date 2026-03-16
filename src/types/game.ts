@@ -44,6 +44,7 @@ export interface GameState {
   allWordsGuessed: boolean
   incorrectWordGuesses: Record<number, string[]>
   albumGuessed: boolean
+  albumHintRevealed: boolean
   correctAlbum: Album | null
   incorrectAlbumGuesses: string[]
   incorrectAlbumIds: number[]

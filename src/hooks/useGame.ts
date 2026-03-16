@@ -109,6 +109,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     allWordsGuessed: false,
     incorrectWordGuesses: {},
     albumGuessed: false,
+    albumHintRevealed: false,
     correctAlbum: null,
     incorrectAlbumGuesses: [],
     incorrectAlbumIds: [],
@@ -228,6 +229,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
         allWordsGuessed: false,
         incorrectWordGuesses: {},
         albumGuessed: false,
+        albumHintRevealed: false,
         correctAlbum: null,
         incorrectAlbumGuesses: [],
         incorrectAlbumIds: [],
@@ -472,6 +474,13 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     [state.currentSong, state.incorrectAlbumGuesses, state.artist, albums, playedSongIds, showToast, applyAlbumTheme]
   )
 
+  const revealAlbumHint = useCallback(() => {
+    const album = currentAlbumRef.current
+    if (!album) return
+    setState((prev) => ({ ...prev, albumHintRevealed: true, correctAlbum: album }))
+    applyAlbumTheme(album, enableBackgroundsRef.current)
+  }, [applyAlbumTheme])
+
   const guessSong = useCallback(
     (songId: number, songName: string) => {
       if (!state.currentSong) return 'incorrect'
@@ -561,6 +570,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     revealWord,
     refreshImage,
     guessAlbum,
+    revealAlbumHint,
     guessSong,
     nextSong,
     skipSong,

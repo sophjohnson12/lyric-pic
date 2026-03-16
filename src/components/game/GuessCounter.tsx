@@ -73,19 +73,21 @@ function GuessCircle({ index, isFlipped }: {
 
 export default function GuessCounter({ guessMessage, guessCount, allowedCount }: GuessCounterProps) {
   return (
-    <div className="flex items-center justify-center py-4 w-full">
+    <div className="flex items-center justify-center py-3 w-full">
       <div className="flex flex-row items-center justify-center max-w-full w-7/8 sm:w-3/5 md:w-full">
-        <div className="text-xs text-neutral-600 text-center font-medium min-w-0 shrink">
-          {guessMessage || "Guesses:"}
-        </div>
-        <div className="flex flex-row gap-1.5 flex-shrink-0 ml-1.5">
-          {Array.from({ length: allowedCount }, (_, index) => (
-            <GuessCircle
-              key={index}
-              index={index}
-              isFlipped={index < guessCount}
-            />
-          ))}
+        <div className="flex bg-neutral-50/1 backdrop-blur-xs rounded-3xl px-4 py-2 items-center">
+          <div className="text-xs text-neutral-600 text-center font-medium min-w-0 shrink">
+            {guessMessage || "Guesses:"}
+          </div>
+          <div className="flex flex-row gap-1.5 flex-shrink-0 pl-1.5">
+            {Array.from({ length: allowedCount }, (_, index) => (
+              <GuessCircle
+                key={index}
+                index={index}
+                isFlipped={index < guessCount}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

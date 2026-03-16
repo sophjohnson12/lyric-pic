@@ -73,7 +73,9 @@ export default function SongDropdown({
                 <button
                   type="submit"
                   disabled={!modalSelection}
-                  className="h-12 flex-1 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium hover:opacity-90 hover:text-white cursor-pointer border border-secondary disabled:cursor-default disabled:hover:opacity-100 disabled:bg-neutral-300 disabled:border-neutral-200"
+                  className="h-12 flex-1 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium 
+                  border border-secondary cursor-pointer hover:opacity-90 hover:text-white 
+                  disabled:cursor-default disabled:hover:opacity-100 disabled:hover:text-neutral-100 disabled:bg-primary/30"
                 >
                   Submit
                 </button>
@@ -113,7 +115,7 @@ export default function SongDropdown({
   return (
     <div className="w-full">
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit() }}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <Dropdown
             key={`${incorrectGuesses.length}-${resetKey}`}
             options={options}
@@ -126,7 +128,9 @@ export default function SongDropdown({
             <button
               type="submit"
               disabled={selectedId === undefined}
-              className="h-12 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium hover:text-white hover:opacity-90 cursor-pointer border border-secondary disabled:cursor-default disabled:hover:opacity-100 disabled:bg-neutral-300 disabled:border-neutral-200"
+              className="h-12 px-4 py-2 bg-primary text-neutral-100 rounded-r-lg text-base font-medium 
+              border-y border-r border-secondary cursor-pointer hover:text-white hover:opacity-90
+              disabled:cursor-default disabled:hover:opacity-100 disabled:hover:text-neutral-100 disabled:bg-primary/30"
             >
               Submit
             </button>

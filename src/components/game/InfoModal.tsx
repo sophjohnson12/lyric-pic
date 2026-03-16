@@ -1,5 +1,5 @@
 import Modal from '../common/Modal'
-import { KeyRound, Sliders, SkipForward, RefreshCw, Flag } from 'lucide-react';
+import { KeyRound, Sliders, SkipForward, RefreshCw, Flag, Lightbulb } from 'lucide-react';
 import type { Album } from '../../types/database'
 import AlbumButtons from './AlbumButtons'
 
@@ -38,8 +38,18 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
             </div>
           </div>
         )}
+        {!showAlbumFilters && (
+          <div>
+            <p className="font-semibold text-neutral-800">2. Reveal the Album</p>
+            <p className="hidden md:inline">Click the button for a hint.</p>
+            <p className="inline md:hidden">Tap the button for a hint.</p>
+            <ul className="mt-1 space-y-1">
+              <li className="flex items-center"><Lightbulb size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal album and release year</li>
+            </ul>         
+          </div>
+        )}
         <div>
-          <p className="font-semibold text-neutral-800">{showAlbumFilters ? '3' : '2'}. Guess the Song</p>
+          <p className="font-semibold text-neutral-800">3. Guess the Song</p>
           <p>
             <span className="hidden md:inline">You have {guessCount} chances to select a song from the dropdown and click Submit.</span>
             <span className="inline md:hidden">You have {guessCount} chances to select a song and press Submit.</span>
