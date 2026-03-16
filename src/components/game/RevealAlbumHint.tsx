@@ -17,7 +17,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
     if (!albumHintRevealed || !revealedRef.current) return
     revealedRef.current.animate(
       [{ opacity: '0' }, { opacity: '1' }],
-      { duration: 850, easing: 'ease-out', fill: 'forwards' }
+      { duration: 1300, easing: 'ease-out', fill: 'forwards' }
     )
   }, [albumHintRevealed])
 
@@ -27,7 +27,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
         { transform: 'scale(1)', opacity: '1' },
         { transform: 'scale(0)', opacity: '0' },
       ],
-      { duration: 300, easing: 'ease-in', fill: 'forwards' }
+      { duration: 275, easing: 'ease-in', fill: 'forwards' }
     )
     if (anim) {
       anim.addEventListener('finish', () => onReveal())
