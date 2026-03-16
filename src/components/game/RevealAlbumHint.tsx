@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useLayoutEffect } from 'react'
 import { Lightbulb } from 'lucide-react'
 import type { Album } from '../../types/database'
 import AlbumIcon from '../common/AlbumIcon'
@@ -13,7 +13,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
   const buttonRef = useRef<HTMLButtonElement>(null)
   const revealedRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!albumHintRevealed || !revealedRef.current) return
     const el = revealedRef.current
     // Use transform (not opacity) so the element doesn't create an isolated
