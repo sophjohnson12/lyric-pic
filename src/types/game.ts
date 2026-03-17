@@ -7,6 +7,7 @@ export interface GameLevel {
   name: string
   slug: string
   description: string | null
+  load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
 }

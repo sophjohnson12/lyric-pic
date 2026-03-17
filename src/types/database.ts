@@ -148,6 +148,7 @@ export interface Level {
   name: string
   slug: string
   description: string | null
+  load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
   created_at: string

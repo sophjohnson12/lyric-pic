@@ -317,6 +317,7 @@ export default function GamePage() {
             levelSlug={levelSlug}
             levelSongCounts={game.levelSongCounts}
             fanbaseName={game.artist?.fanbase_name ?? null}
+            artistLoadMessage={game.artist?.load_message ?? null}
             revealBehavior={revealBehavior}
             onRevealBehaviorChange={setRevealBehavior}
             onClose={() => setShowHistory(false)}
@@ -497,6 +498,7 @@ export default function GamePage() {
           levelSlug={levelSlug}
           levelSongCounts={game.levelSongCounts}
           fanbaseName={game.artist?.fanbase_name ?? null}
+          artistLoadMessage={game.artist?.load_message ?? null}
           revealBehavior={revealBehavior}
           onRevealBehaviorChange={setRevealBehavior}
           onClose={() => setShowHistory(false)}

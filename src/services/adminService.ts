@@ -2683,6 +2683,7 @@ export interface AdminLevelRow {
   name: string
   slug: string
   description: string | null
+  load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
 }
@@ -2690,7 +2691,7 @@ export interface AdminLevelRow {
 export async function getAdminLevels(artistId: number): Promise<AdminLevelRow[]> {
   const { data, error } = await supabase
     .from('level')
-    .select('id, name, slug, description, max_difficulty_rank, show_album_filters')
+    .select('id, name, slug, description, load_message, max_difficulty_rank, show_album_filters')
     .eq('artist_id', artistId)
     .order('max_difficulty_rank', { ascending: true })
   if (error) throw error
@@ -2700,7 +2701,7 @@ export async function getAdminLevels(artistId: number): Promise<AdminLevelRow[]>
 export async function getLevelById(id: number): Promise<AdminLevelRow & { artist_id: number }> {
   const { data, error } = await supabase
     .from('level')
-    .select('id, artist_id, name, slug, description, max_difficulty_rank, show_album_filters')
+    .select('id, artist_id, name, slug, description, load_message, max_difficulty_rank, show_album_filters')
     .eq('id', id)
     .single()
   if (error) throw error
@@ -2712,6 +2713,7 @@ export interface LevelFormData {
   name: string
   slug: string
   description: string | null
+  load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
 }

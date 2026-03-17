@@ -4,6 +4,7 @@ import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { getPlayedSongNames } from '../../services/supabase'
+import { LOAD_MESSAGE_KEY } from '../../utils/constants'
 import type { GameLevel, RevealBehavior } from '../../types/game'
 
 export type { RevealBehavior }
@@ -16,13 +17,14 @@ interface SettingsModalProps {
   levelSlug: string
   levelSongCounts: Record<number, number>
   fanbaseName: string | null
+  artistLoadMessage: string | null
   revealBehavior: RevealBehavior
   onRevealBehaviorChange: (behavior: RevealBehavior) => void
   onClose: () => void
   onClearHistory: () => void
 }
 
-export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, levelSongCounts, fanbaseName, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
+export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, levelSongCounts, fanbaseName, artistLoadMessage, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,6 +53,13 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
 
   const handleLevelChange = (slug: string) => {
     if (slug === levelSlug) return
+    const level = levels.find((l) => l.slug === slug)
+    const message = level?.load_message ?? artistLoadMessage ?? null
+    if (message) {
+      localStorage.setItem(LOAD_MESSAGE_KEY, message)
+    } else {
+      localStorage.removeItem(LOAD_MESSAGE_KEY)
+    }
     window.location.href = `/${artistSlug}/${slug}`
   }
 

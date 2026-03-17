@@ -25,6 +25,7 @@ export default function LevelFormPage() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
+  const [loadMessage, setLoadMessage] = useState<string | null>(null)
   const [maxDifficultyRank, setMaxDifficultyRank] = useState('')
   const [showAlbumFilters, setShowAlbumFilters] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -47,6 +48,7 @@ export default function LevelFormPage() {
         setName(l.name)
         setSlug(l.slug)
         setDescription(l.description ?? '')
+        setLoadMessage(l.load_message)
         setMaxDifficultyRank(l.max_difficulty_rank.toString())
         setShowAlbumFilters(l.show_album_filters)
       })
@@ -62,6 +64,7 @@ export default function LevelFormPage() {
           name,
           slug,
           description: description || null,
+          load_message: loadMessage,
           max_difficulty_rank: Number(maxDifficultyRank),
           show_album_filters: showAlbumFilters,
         })
@@ -71,6 +74,7 @@ export default function LevelFormPage() {
           name,
           slug,
           description: description || null,
+          load_message: loadMessage,
           max_difficulty_rank: Number(maxDifficultyRank),
           show_album_filters: showAlbumFilters,
         })
@@ -136,6 +140,14 @@ export default function LevelFormPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
+              className={inputClass}
+            />
+          </FormField>
+          <FormField label="Load Message">
+            <input
+              type="text"
+              value={loadMessage ?? ''}
+              onChange={(e) => setLoadMessage(e.target.value || null)}
               className={inputClass}
             />
           </FormField>

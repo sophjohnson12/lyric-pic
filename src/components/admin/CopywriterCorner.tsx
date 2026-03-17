@@ -65,6 +65,7 @@ export default function CopywriterCorner() {
   // ── Edit: level modal ─────────────────────────────────
   const [editingLevel, setEditingLevel] = useState<AdminLevelRow | null>(null)
   const [editingLevelDesc, setEditingLevelDesc] = useState('')
+  const [editingLevelLoadMsg, setEditingLevelLoadMsg] = useState<string | null>(null)
 
   // ── Edit: song modal ──────────────────────────────────
   const [editingSong, setEditingSong] = useState<CopywriterSongRow | null>(null)
@@ -184,6 +185,7 @@ export default function CopywriterCorner() {
         name: editingLevel.name,
         slug: editingLevel.slug,
         description: editingLevelDesc,
+        load_message: editingLevelLoadMsg,
         max_difficulty_rank: editingLevel.max_difficulty_rank,
         show_album_filters: editingLevel.show_album_filters,
       })
@@ -298,8 +300,9 @@ export default function CopywriterCorner() {
           keyFn={(l) => l.id}
           loading={loadingLevels}
           columns={[
-            { header: 'Name', className: 'w-1/2', accessor: (l) => l.name },
-            { header: 'Description', className: 'w-1/2', accessor: (l) => l.description ?? <span className="text-neutral-400">—</span> },
+            { header: 'Name', className: 'w-1/5', accessor: (l) => l.name },
+            { header: 'Description', className: 'w-1/4', accessor: (l) => l.description ?? <span className="text-neutral-400">—</span> },
+            { header: 'Load Message', className: 'w-2/5', accessor: (l) => l.load_message ?? <span className="text-neutral-400">—</span> },
             {
               header: 'Edit',
               className: 'w-16',
@@ -308,6 +311,7 @@ export default function CopywriterCorner() {
                   onClick={() => {
                     setEditingLevel(l)
                     setEditingLevelDesc(l.description ?? '')
+                    setEditingLevelLoadMsg(l.load_message)
                   }}
                   className="hover:opacity-70 cursor-pointer"
                   title="Edit level"
@@ -417,17 +421,28 @@ export default function CopywriterCorner() {
         <Modal onClose={() => setEditingLevel(null)} showEaseIn>
           <h2 className="text-lg font-bold mb-1">Edit Level</h2>
           <p className="text-sm text-neutral-500 mb-4">{editingLevel.name}</p>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">Description <span className="text-error">*</span></label>
-            <textarea
-              rows={3}
-              value={editingLevelDesc}
-              onChange={(e) => setEditingLevelDesc(e.target.value)}
-              className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-            {!editingLevelDesc.trim() && (
-              <p className="text-error text-xs mt-1">Required</p>
-            )}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">Description <span className="text-error">*</span></label>
+              <textarea
+                rows={3}
+                value={editingLevelDesc}
+                onChange={(e) => setEditingLevelDesc(e.target.value)}
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              {!editingLevelDesc.trim() && (
+                <p className="text-error text-xs mt-1">Required</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">Load Message</label>
+              <input
+                type="text"
+                value={editingLevelLoadMsg ?? ''}
+                onChange={(e) => setEditingLevelLoadMsg(e.target.value || null)}
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <button

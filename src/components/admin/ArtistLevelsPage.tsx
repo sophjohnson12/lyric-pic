@@ -125,7 +125,6 @@ export default function ArtistLevelsPage() {
             header: 'Album Filters?',
             accessor: (l) => l.show_album_filters ? <Check size={20} className="drop-shadow-md" /> : null,
           },
-          { header: 'Description', accessor: (l) => l.description ?? '—' },
           {
             header: 'Actions',
             accessor: (l) => (

@@ -34,8 +34,9 @@ export default function DifficultyPage() {
   }, [artistSlug, applyArtistTheme])
 
   function handleSelect(level: GameLevel) {
-    if (artist?.load_message) {
-      localStorage.setItem(LOAD_MESSAGE_KEY, artist.load_message)
+    const message = level.load_message ?? artist?.load_message ?? null
+    if (message) {
+      localStorage.setItem(LOAD_MESSAGE_KEY, message)
     } else {
       localStorage.removeItem(LOAD_MESSAGE_KEY)
     }
