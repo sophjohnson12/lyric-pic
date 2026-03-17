@@ -3,6 +3,7 @@ import { useState } from 'react'
 export interface Column<T> {
   header: string
   accessor: (row: T) => React.ReactNode
+  className?: string
 }
 
 interface AdminTableProps<T> {
@@ -100,7 +101,7 @@ export default function AdminTable<T>({
             {columns.map((col, i) => (
               <th
                 key={i}
-                className="text-left px-4 py-2.5 font-semibold border-b border-primary/20 text-neutral-800"
+                className={`text-left px-4 py-2.5 font-semibold border-b border-primary/20 text-neutral-800${col.className ? ` ${col.className}` : ''}`}
               >
                 {col.header}
               </th>
@@ -128,7 +129,7 @@ export default function AdminTable<T>({
                   </td>
                 )}
                 {columns.map((col, i) => (
-                  <td key={i} className="px-4 py-2.5">
+                  <td key={i} className={`px-4 py-2.5${col.className ? ` ${col.className}` : ''}`}>
                     {col.accessor(row)}
                   </td>
                 ))}

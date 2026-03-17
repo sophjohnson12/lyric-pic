@@ -2733,3 +2733,80 @@ export async function deleteLevel(id: number): Promise<void> {
   const { error } = await supabase.from('level').delete().eq('id', id)
   if (error) throw error
 }
+
+// ─── Copywriter Corner ────────────────────────────────────
+
+export async function updateArtistMessages(
+  id: number,
+  data: {
+    load_message: string | null
+    success_message: string | null
+    failure_message: string | null
+    guess_counter_message: string | null
+  },
+): Promise<void> {
+  const { error } = await supabase
+    .from('artist')
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function updateSongMessages(
+  id: number,
+  data: { success_message: string | null; failure_message: string | null },
+): Promise<void> {
+  const { error } = await supabase
+    .from('song')
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export interface CopywriterSongRow {
+  id: number
+  name: string
+  success_message: string | null
+  failure_message: string | null
+}
+
+export interface PaginatedResult<T> {
+  rows: T[]
+  total: number
+}
+
+export async function getCopywriterSongs(
+  artistId: number,
+  page: number,
+  pageSize: number,
+  search: string,
+): Promise<PaginatedResult<CopywriterSongRow>> {
+  let query = supabase
+    .from('playable_song')
+    .select('id, name, success_message, failure_message, album!inner(is_selectable)', { count: 'exact' })
+    .eq('artist_id', artistId)
+    .eq('album.is_selectable', true)
+    .order('name')
+
+  if (pageSize > 0) {
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+    query = query.range(from, to)
+  }
+
+  if (search) {
+    query = query.ilike('name', `%${search}%`)
+  }
+
+  const { data, count, error } = await query
+  if (error) throw error
+
+  const rows: CopywriterSongRow[] = (data ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    success_message: row.success_message,
+    failure_message: row.failure_message,
+  }))
+
+  return { rows, total: count ?? 0 }
+}

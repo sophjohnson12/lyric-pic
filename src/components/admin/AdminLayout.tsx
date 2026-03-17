@@ -10,6 +10,7 @@ type SidebarLink =
   | { label: string; children: { to: string; label: string; end?: boolean }[] }
 
 const sidebarLinks: SidebarLink[] = [
+  { to: '/admin/copywriter', label: 'Copywriter Corner' },
   { to: '/admin', label: 'Artists', end: true },
   {
     label: 'Lyrics',
