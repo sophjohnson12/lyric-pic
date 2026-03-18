@@ -312,6 +312,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
         setState((prev) => ({ ...prev, artist, totalPlayableSongs: playableSongIds.length }))
         if (cancelled) return
         await document.fonts.ready
+        await document.fonts.load('700 1em Quicksand')
         if (cancelled) return
         await loadNewSong(artist, validPlayedIds, maxDifficultyRankRef.current)
       } catch (err) {

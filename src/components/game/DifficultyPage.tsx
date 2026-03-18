@@ -29,6 +29,7 @@ export default function DifficultyPage() {
       const lvls = await getArtistLevels(a.id)
       setLevels(lvls)
       await document.fonts.ready
+      await document.fonts.load('700 1em Quicksand')
       setLoading(false)
     }
     load().catch(() => setLoading(false))

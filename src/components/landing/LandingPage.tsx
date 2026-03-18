@@ -16,6 +16,7 @@ export default function LandingPage() {
         console.error(e)
       }
       await document.fonts.ready
+      await document.fonts.load('700 1em Quicksand')
       setLoading(false)
     }
     load()
