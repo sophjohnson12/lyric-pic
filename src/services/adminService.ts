@@ -2812,3 +2812,24 @@ export async function getCopywriterSongs(
 
   return { rows, total: count ?? 0 }
 }
+
+export async function uploadCustomImage(file: File): Promise<{ url: string; imageId: string }> {
+  const ext = file.name.split('.').pop()
+  const fileName = `img_${Date.now()}.${ext}`
+  const { error } = await supabase.storage
+    .from('images')
+    .upload(fileName, file, { contentType: file.type })
+  if (error) throw error
+  const { data } = supabase.storage.from('images').getPublicUrl(fileName)
+  return { url: data.publicUrl, imageId: fileName }
+}
+
+export async function createCustomImage(url: string, imageId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from('image')
+    .insert({ image_id: imageId, url, is_flagged: false, is_blocklisted: false })
+    .select('id')
+    .single()
+  if (error) throw error
+  return data.id
+}

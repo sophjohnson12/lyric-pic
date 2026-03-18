@@ -70,7 +70,15 @@ export default function ImagesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">All Images</h1>
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
+        <h1 className="text-2xl font-bold">All Images</h1>
+        <Link
+          to="/admin/images/upload"
+          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center whitespace-nowrap"
+        >
+          Upload Image
+        </Link>
+      </div>
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <input
           type="text"

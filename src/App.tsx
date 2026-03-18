@@ -27,6 +27,7 @@ import DifficultyRanksPage from './components/admin/DifficultyRanksPage'
 import ArtistLevelsPage from './components/admin/ArtistLevelsPage'
 import LevelFormPage from './components/admin/LevelFormPage'
 import CopywriterCorner from './components/admin/CopywriterCorner'
+import UploadImagePage from './components/admin/UploadImagePage'
 
 export default function App() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="images" element={<FlaggedImagesPage />} />
           <Route path="images/all" element={<ImagesPage />} />
           <Route path="images/blocklisted" element={<BlocklistedImagesPage />} />
+          <Route path="images/upload" element={<UploadImagePage />} />
           <Route path="images/:imageId" element={<ImagePage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="copywriter" element={<CopywriterCorner />} />
