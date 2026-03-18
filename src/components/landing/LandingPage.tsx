@@ -9,10 +9,16 @@ export default function LandingPage() {
 
   useEffect(() => {
     document.title = 'Lyric Pic'
-    getAllArtists()
-      .then(setArtists)
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    async function load() {
+      try {
+        setArtists(await getAllArtists())
+      } catch (e) {
+        console.error(e)
+      }
+      await document.fonts.ready
+      setLoading(false)
+    }
+    load()
   }, [])
 
   if (loading) {

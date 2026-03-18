@@ -28,6 +28,7 @@ export default function DifficultyPage() {
       setArtist(a)
       const lvls = await getArtistLevels(a.id)
       setLevels(lvls)
+      await document.fonts.ready
       setLoading(false)
     }
     load().catch(() => setLoading(false))

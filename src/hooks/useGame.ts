@@ -311,6 +311,8 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
 
         setState((prev) => ({ ...prev, artist, totalPlayableSongs: playableSongIds.length }))
         if (cancelled) return
+        await document.fonts.ready
+        if (cancelled) return
         await loadNewSong(artist, validPlayedIds, maxDifficultyRankRef.current)
       } catch (err) {
         console.error('Failed to initialize game:', err)
