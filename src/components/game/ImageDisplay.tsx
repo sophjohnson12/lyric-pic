@@ -13,7 +13,7 @@ export default function ImageDisplay({ imageUrls, currentIndex }: ImageDisplayPr
   }
 
   return (
-    <div className="w-full aspect-square rounded-xl overflow-hidden bg-secondary">
+    <div className="w-full aspect-square rounded-xl overflow-hidden bg-neutral-50">
       <img
         src={imageUrls[currentIndex]}
         alt="Puzzle clue"
