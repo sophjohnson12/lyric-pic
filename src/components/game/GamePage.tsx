@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { CircleHelp } from 'lucide-react'
 import { useGame } from '../../hooks/useGame'
 import { parseLevelSlug } from '../../types/game'
 import { LOAD_MESSAGE_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
@@ -236,6 +237,11 @@ export default function GamePage() {
     prevPuzzleWordsRef.current = game.puzzleWords || []
   })
 
+  // Reset to first word tab when song changes
+  useEffect(() => {
+    setActiveSlide(0)
+  }, [game.currentSong?.id])
+
 
   if (!levelSlug) {
     return <Navigate to={`/${artistSlug}`} replace />
@@ -359,17 +365,58 @@ export default function GamePage() {
       />
 
       <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
-        {/* Word puzzles */}
+        {/* Mobile: file-tab panel */}
+        <div className="md:hidden mx-4 mb-3">
+          {game.puzzleWords.length > 1 && (
+            <div className="flex gap-1.5 items-end">
+              {game.puzzleWords.map((word: any, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => scrollToSlide(index)}
+                  className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 ${
+                    index === activeSlide
+                      ? 'bg-white border-b-white text-primary -mb-px relative z-10'
+                      : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-50 hover:text-neutral-600'
+                  }`}
+                >
+                  {word.guessed || word.revealed
+                    ? <span className="truncate px-1">{word.word.toLowerCase()}</span>
+                    : <CircleHelp size={16} />
+                  }
+                </button>
+              ))}
+            </div>
+          )}
+          <div className={`bg-white border border-neutral-200 shadow-[0_4px_20px_rgba(0,0,0,0.07)] p-2.5 ${game.puzzleWords.length > 1 ? 'rounded-b-xl' : 'rounded-xl'}`}>
+            {game.puzzleWords[activeSlide] && (
+              <WordInput
+                key={`${game.currentSong!.id}-${activeSlide}`}
+                puzzleWord={game.puzzleWords[activeSlide]}
+                wordIndex={activeSlide}
+                incorrectGuesses={game.incorrectWordGuesses[activeSlide] || []}
+                onGuess={game.guessWord}
+                onReveal={game.revealWord}
+                onRefresh={game.refreshImage}
+                onFlag={game.enableLyricFlag ? (lyricId) => flagWord(lyricId) : undefined}
+                onFlagImage={game.enableImageFlag ? (url) => flagImage(url) : undefined}
+                debugMode={game.enableLyricFlag}
+                autoFocus={false}
+                focusTrigger={0}
+                revealBehavior={revealBehavior}
+              />
+            )}
+          </div>
+        </div>
+        {/* Desktop: word grid */}
         <div
           ref={scrollContainerRef}
-          className="overflow-x-auto snap-x snap-mandatory md:snap-none flex md:flex-wrap md:justify-center gap-0 md:gap-6 md:mb-10 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
-          >
+          className="hidden md:flex flex-wrap justify-center gap-6 mb-10"
+        >
           {game.puzzleWords.map((word: any, index: number) => (
             <div
               key={`${game.currentSong!.id}-${index}`}
-              className="w-full flex-shrink-0 md:w-[calc(33.333%-1rem)] md:flex-none snap-center md:px-0"
+              className="w-[calc(33.333%-1rem)] flex-none"
             >
-              <div className="w-9/11 sm:w-3/5 md:w-full mx-auto">
               <WordInput
                 key={`${game.currentSong!.id}-${index}`}
                 puzzleWord={word}
@@ -385,22 +432,8 @@ export default function GamePage() {
                 focusTrigger={focusTrigger}
                 revealBehavior={revealBehavior}
               />
-              </div>
             </div>
           ))}
-        </div>
-        {/* Carousel Dots (Mobile Only) */}
-        <div className={`flex justify-center mt-2 md:hidden${game.minSongLyricCount <= 1 ? ' invisible' : ''}`}>
-          <div className="flex gap-2 rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
-            {game.puzzleWords.map((_: any, index: number) => (
-              <button
-                key={index}
-                onClick={() => scrollToSlide(index)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${index === activeSlide ? 'bg-primary scale-110' : 'bg-secondary hover:bg-primary/40'}`}
-                aria-label={`Go to image ${index + 1}`}
-              />
-            ))}
-          </div>
         </div>
         {/* Album and Song dropdowns */}
         {(

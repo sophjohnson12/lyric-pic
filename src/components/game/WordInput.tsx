@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence, useAnimate } from 'motion/react'
-import { RefreshCw, Flag, Lock, LockOpen, KeyRound } from 'lucide-react'
+import { Flag, Lock, LockOpen, KeyRound } from 'lucide-react'
 import ImageDisplay from './ImageDisplay'
 import ConfirmPopup from '../common/ConfirmPopup'
 import HighlightedLine from './HighlightedLine'
@@ -29,7 +29,6 @@ export default function WordInput({
   wordIndex,
   onGuess,
   onReveal,
-  onRefresh,
   onFlag,
   onFlagImage,
   autoFocus = false,
@@ -44,9 +43,10 @@ export default function WordInput({
   const [flaggedImageUrls, setFlaggedImageUrls] = useState<Set<string>>(new Set())
   const [lockState, setLockState] = useState<LockState>('locked')
   const [lockScope, animateLock] = useAnimate()
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
   const inputWasFocused = useRef(false)
 
-  const currentImageUrl = puzzleWord.imageUrls[puzzleWord.currentImageIndex] ?? ''
+  const currentImageUrl = puzzleWord.imageUrls[activeImageIndex] ?? ''
   const currentImageFlagged = flaggedImageUrls.has(currentImageUrl)
 
   const handleImageFlagConfirm = () => {
@@ -61,6 +61,8 @@ export default function WordInput({
   // Track when a word transitions from unguessed → guessed to play the unlock animation
   const prevIsGuessedRef = useRef(isGuessed)
   const [revealReady, setRevealReady] = useState(isGuessed)
+  // If the word was already solved when this component mounted, skip the reveal animation
+  const alreadyGuessedOnMount = useRef(isGuessed)
 
   useEffect(() => {
     if (isGuessed && !prevIsGuessedRef.current) {
@@ -130,22 +132,31 @@ export default function WordInput({
           >
             <ImageDisplay
               imageUrls={puzzleWord.imageUrls}
-              currentIndex={puzzleWord.currentImageIndex}
+              onIndexChange={(i) => setActiveImageIndex(i)}
             />
 
-            {/* Refresh button (top-right) */}
-             <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
-              {puzzleWord.imageUrls.length > 1 && (
-                <button
-                  onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
-                  onClick={() => { onRefresh(wordIndex); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
-                  className="group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/100 rounded-full hover:cursor-pointer transition-colors z-10"
-                  title="Get different image"
-                >
-                  <RefreshCw size={24} className="drop-shadow-md transition-transform group-hover:scale-110" />
-                </button>
-              )}
-            </div>
+            {/* KeyRound reveal button (top-right) */}
+            {!isGuessed && (
+              <button
+                onPointerDown={(e) => {
+                  inputWasFocused.current = document.activeElement === inputRef.current
+                  e.preventDefault()
+                  e.currentTarget.animate(
+                    [{ transform: 'scale(1)' }, { transform: 'scale(0.75)' }, { transform: 'scale(1)' }],
+                    { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
+                  )
+                }}
+                onClick={() => {
+                  onReveal(wordIndex)
+                  if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true })
+                }}
+                className="absolute top-2 right-2 z-10 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/100 rounded-full hover:cursor-pointer transition-colors [will-change:transform]"
+                title="Reveal answer"
+                type="button"
+              >
+                <KeyRound size={20} className="drop-shadow-md" />
+              </button>
+            )}
 
             {/* Flag button (top-left) */}
             <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
@@ -172,8 +183,8 @@ export default function WordInput({
           <div className="relative h-12 bg-white flex items-center shrink-0">
             {revealReady ? (
               <motion.div
-                initial={{ clipPath: "inset(0 100% 0 0)" }}
-                animate={{ clipPath: "inset(0 0% 0 0)" }}
+                initial={alreadyGuessedOnMount.current ? false : { clipPath: "inset(0 0 0 100%)" }}
+                animate={{ clipPath: "inset(0 0 0 0%)" }}
                 className={`absolute inset-0 bg-success flex items-center justify-center text-white rounded-b-xl border-t border-x border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
               >
                 {revealBehavior === 'full_lyric' && puzzleWord.lineText
@@ -193,12 +204,26 @@ export default function WordInput({
               </motion.div>
             ) : (
               <>
+                <form onSubmit={handleSubmit} className="flex-1 h-full">
+                  <input
+                    type="text"
+                    ref={inputRef}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onPointerDown={(e) => {
+                      e.preventDefault()
+                      inputRef.current?.focus({ preventScroll: true })
+                    }}
+                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-bl-xl border-t border-l border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
+                    placeholder="Guess the word..."
+                  />
+                </form>
                 <motion.button
                   ref={lockScope}
                   type="button"
                   onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
                   onClick={async () => { await submitGuess(); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
-                  className={`group h-full flex items-center justify-center z-10 px-3 rounded-bl-xl border-t border-x border-secondary transition-colors cursor-pointer ${lockBgClass}`}
+                  className={`group h-full flex items-center justify-center z-10 px-3 rounded-br-xl border-t border-x border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
                     {lockState === 'unlocking' || lockState === 'unlocked' ? (
@@ -223,36 +248,6 @@ export default function WordInput({
                     )}
                   </AnimatePresence>
                 </motion.button>
-
-                <form onSubmit={handleSubmit} className="flex-1 h-full">
-                  <input
-                    type="text"
-                    ref={inputRef}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onPointerDown={(e) => {
-                      e.preventDefault()
-                      inputRef.current?.focus({ preventScroll: true })
-                    }}
-                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-br-xl border-t border-r border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
-                    placeholder="Guess the word..."
-                  />
-                </form>
-                <button
-                  onPointerDown={(e) => {
-                    e.preventDefault()
-                    e.currentTarget.animate(
-                      [{ transform: 'scale(1)' }, { transform: 'scale(0.75)' }, { transform: 'scale(1)' }],
-                      { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
-                    )
-                  }}
-                  onClick={() => onReveal(wordIndex)}
-                  className="group absolute bottom-1.5 right-1.5 p-2 text-neutral-500 bg-white/60 hover:text-neutral-600 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer [will-change:transform]"
-                  title="Reveal answer"
-                  type="button"
-                >
-                  <KeyRound size={20} className="drop-shadow-md transition-transform group-hover:scale-110" />
-                </button>
               </>
             )}
           </div>
