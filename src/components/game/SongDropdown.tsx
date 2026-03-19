@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import Dropdown from '../common/Dropdown'
 import Modal from '../common/Modal'
 import SongWheelPicker from './SongWheelPicker'
-import type { Song } from '../../types/database'
+import AlbumIcon from '../common/AlbumIcon'
+import type { Song, Album } from '../../types/database'
 
 interface SongDropdownProps {
   songs: Song[]
@@ -10,6 +11,8 @@ interface SongDropdownProps {
   onGuess: (songId: number, songName: string) => string
   isMd: boolean
   resetKey?: string | number
+  correctAlbum?: Album | null
+  albumRevealed?: boolean
 }
 
 export default function SongDropdown({
@@ -18,6 +21,8 @@ export default function SongDropdown({
   onGuess,
   isMd,
   resetKey,
+  correctAlbum,
+  albumRevealed,
 }: SongDropdownProps) {
   const [selectedId, setSelectedId] = useState<number | undefined>(undefined)
   const [selectedLabel, setSelectedLabel] = useState('')
@@ -37,24 +42,30 @@ export default function SongDropdown({
     }
 
     return (
-      <div className="w-full">
-        <input
-          type="text"
-          readOnly
-          placeholder="Guess the song..."
+      <div className="flex justify-center">
+        <button
           onClick={() => setShowModal(true)}
-          onKeyDown={(e) => { if (e.key === 'Enter') setShowModal(true) }}
-          className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm  text-neutral-800 placeholder-neutral-400 text-base cursor-pointer border border-secondary"
-        />
+          className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-base font-medium
+                     hover:text-white hover:opacity-90 cursor-pointer border border-secondary
+                     flex items-center gap-1"
+        >
+          Guess Song
+        </button>
         {showModal && (
           <Modal showClose={false} onClose={() => setShowModal(false)} showEaseIn={true}>
+            {albumRevealed && correctAlbum && (
+              <div className="flex items-center justify-left gap-2 mb-3">
+                <AlbumIcon album={correctAlbum} size="sm" />
+                <span className="text-sm font-medium text-neutral-700">{correctAlbum.name}</span>
+              </div>
+            )}
             <form onSubmit={(e) => { e.preventDefault(); handleModalGuess() }}>
               <SongWheelPicker
                 songs={songs}
                 incorrectGuesses={incorrectGuesses}
                 visibleCount={5}
                 containerFraction={0.8}
-                reservedHeight={112}
+                reservedHeight={albumRevealed && correctAlbum ? 212 : 172}
                 onSelectionChange={(id, name) =>
                   setModalSelection(id !== null ? { id, name } : null)
                 }
@@ -71,8 +82,8 @@ export default function SongDropdown({
                 <button
                   type="submit"
                   disabled={!modalSelection}
-                  className="h-12 flex-1 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium 
-                  border border-secondary cursor-pointer hover:opacity-90 hover:text-white 
+                  className="h-12 flex-1 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium
+                  border border-secondary cursor-pointer hover:opacity-90 hover:text-white
                   disabled:cursor-default disabled:hover:opacity-100 disabled:hover:text-neutral-100 disabled:bg-primary/30"
                 >
                   Submit

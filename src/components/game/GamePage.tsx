@@ -381,7 +381,7 @@ export default function GamePage() {
                 >
                   {word.guessed || word.revealed
                     ? <span className="truncate px-1">{word.word.toLowerCase()}</span>
-                    : <CircleHelp size={16} />
+                    : <CircleHelp size={24} />
                   }
                 </button>
               ))}
@@ -466,6 +466,8 @@ export default function GamePage() {
                 onGuess={game.guessSong}
                 isMd={isMd}
                 resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
+                correctAlbum={game.correctAlbum}
+                albumRevealed={game.albumGuessed || game.albumHintRevealed}
               />
             </div>
             <div className="md:max-w-md mx-auto">

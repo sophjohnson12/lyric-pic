@@ -25,7 +25,16 @@ export default function SongWheelPicker({
   reservedHeight = 0,
 }: SongWheelPickerProps) {
   const filteredSongs = songs.filter((s) => !incorrectGuesses.includes(s.name))
-  const items = filteredSongs
+
+  const [search, setSearch] = useState('')
+
+  const searchedSongs = search.trim()
+    ? filteredSongs.filter((s) =>
+        s.name.toLowerCase().includes(search.trim().toLowerCase())
+      )
+    : filteredSongs
+
+  const items = searchedSongs
 
   const containerRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -54,12 +63,21 @@ export default function SongWheelPicker({
   // Reset to placeholder whenever the songs list changes (e.g. album clicked)
   const songsKey = songs.map((s) => s.id).join(',')
   useEffect(() => {
+    setSearch('')
     setSelectedIndex(0)
     if (containerRef.current) {
       containerRef.current.scrollTop = 0
     }
     onSelectionChange?.(filteredSongs[0]?.id ?? null, filteredSongs[0]?.name ?? '')
   }, [songsKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When search changes, snap to first result and notify parent
+  useEffect(() => {
+    setSelectedIndex(0)
+    if (containerRef.current) containerRef.current.scrollTop = 0
+    const first = items[0]
+    onSelectionChange?.(first?.id ?? null, first?.name ?? '')
+  }, [search]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clamp selectedIndex when items shrinks after an incorrect guess
   useEffect(() => {
@@ -92,57 +110,73 @@ export default function SongWheelPicker({
 
   return (
     <div className="w-full flex flex-col items-center gap-3">
-      <div className="relative w-full" style={{ height: containerHeight }}>
-        {/* Top fade overlay */}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={`Search ${filteredSongs.length} songs...`}
+        className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm text-neutral-800
+                   placeholder-neutral-400 text-base border border-secondary mb-3"
+      />
+      {items.length === 0 ? (
         <div
-          className="absolute top-0 left-0 right-0 pointer-events-none z-10 bg-gradient-to-b from-bg to-transparent"
-          style={{ height: padding }}
-        />
-        {/* Bottom fade overlay */}
-        <div
-          className="absolute bottom-0 left-0 right-0 pointer-events-none z-10 bg-gradient-to-t from-bg to-transparent"
-          style={{ height: padding }}
-        />
-        {/* Center selection lines */}
-        <div
-          className="absolute left-0 right-0 pointer-events-none z-10 border-t border-b border-secondary"
-          style={{ top: padding, height: itemHeight }}
-        />
-        {/* Scroll container */}
-        <div
-          ref={containerRef}
-          onScroll={handleScroll}
-          className="h-full overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
-          style={{ scrollSnapType: 'y mandatory' }}
+          className="w-full flex items-center justify-center text-neutral-400 text-sm"
+          style={{ height: containerHeight }}
         >
-          <div style={{ paddingTop: padding, paddingBottom: padding }}>
-            {items.map((item, index) => (
-              <button
-                key={item.id ?? 'placeholder'}
-                type="button"
-                autoFocus={index === 0}
-                className={`w-full flex items-center justify-center text-center px-4 transition-opacity duration-150 max-sm:focus:outline-none ${getItemClass(index)}`}
-                style={{ height: itemHeight, scrollSnapAlign: 'center' }}
-                onFocus={() => {
-                  if (containerRef.current) {
-                    containerRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' })
-                  }
-                  setSelectedIndex(index)
-                  onSelectionChange?.(item.id, item.name)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    onSubmit?.()
-                  }
-                }}
-              >
-                <span className="truncate max-w-full text-sm">{item.name}</span>
-              </button>
-            ))}
+          No songs found
+        </div>
+      ) : (
+        <div className="relative w-full" style={{ height: containerHeight }}>
+          {/* Top fade overlay */}
+          <div
+            className="absolute top-0 left-0 right-0 pointer-events-none z-10 bg-gradient-to-b from-bg to-transparent"
+            style={{ height: padding }}
+          />
+          {/* Bottom fade overlay */}
+          <div
+            className="absolute bottom-0 left-0 right-0 pointer-events-none z-10 bg-gradient-to-t from-bg to-transparent"
+            style={{ height: padding }}
+          />
+          {/* Center selection lines */}
+          <div
+            className="absolute left-0 right-0 pointer-events-none z-10 border-t border-b border-secondary"
+            style={{ top: padding, height: itemHeight }}
+          />
+          {/* Scroll container */}
+          <div
+            ref={containerRef}
+            onScroll={handleScroll}
+            className="h-full overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
+            style={{ scrollSnapType: 'y mandatory' }}
+          >
+            <div style={{ paddingTop: padding, paddingBottom: padding }}>
+              {items.map((item, index) => (
+                <button
+                  key={item.id ?? 'placeholder'}
+                  type="button"
+                  className={`w-full flex items-center justify-center text-center px-4 transition-opacity duration-150 max-sm:focus:outline-none ${getItemClass(index)}`}
+                  style={{ height: itemHeight, scrollSnapAlign: 'center' }}
+                  onFocus={() => {
+                    if (containerRef.current) {
+                      containerRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' })
+                    }
+                    setSelectedIndex(index)
+                    onSelectionChange?.(item.id, item.name)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      onSubmit?.()
+                    }
+                  }}
+                >
+                  <span className="truncate max-w-full text-sm">{item.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
