@@ -61,6 +61,8 @@ export default function GamePage() {
   const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
   // Track whether a word input was focused at the start of a swipe gesture
   const hadFocusOnSwipeStart = useRef(false)
+  // Auto-focus the new tab's input when switching tabs while an input is focused
+  const [pendingMobileFocus, setPendingMobileFocus] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)')
@@ -242,6 +244,11 @@ export default function GamePage() {
     setActiveSlide(0)
   }, [game.currentSong?.id])
 
+  // Reset pending mobile focus after the new tab has mounted and focused
+  useEffect(() => {
+    if (pendingMobileFocus) setPendingMobileFocus(false)
+  }, [activeSlide])
+
 
   if (!levelSlug) {
     return <Navigate to={`/${artistSlug}`} replace />
@@ -372,7 +379,10 @@ export default function GamePage() {
               {game.puzzleWords.map((word: any, index: number) => (
                 <button
                   key={index}
-                  onClick={() => scrollToSlide(index)}
+                  onClick={() => {
+                    if (document.activeElement instanceof HTMLInputElement) setPendingMobileFocus(true)
+                    scrollToSlide(index)
+                  }}
                   className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 ${
                     index === activeSlide
                       ? 'bg-white border-b-white text-primary -mb-px relative z-10'
@@ -400,7 +410,7 @@ export default function GamePage() {
                 onFlag={game.enableLyricFlag ? (lyricId) => flagWord(lyricId) : undefined}
                 onFlagImage={game.enableImageFlag ? (url) => flagImage(url) : undefined}
                 debugMode={game.enableLyricFlag}
-                autoFocus={false}
+                autoFocus={!isMd && pendingMobileFocus}
                 focusTrigger={0}
                 revealBehavior={revealBehavior}
               />

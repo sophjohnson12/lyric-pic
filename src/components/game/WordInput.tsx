@@ -45,6 +45,7 @@ export default function WordInput({
   const [lockScope, animateLock] = useAnimate()
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const inputWasFocused = useRef(false)
+  const wordSolvingRef = useRef(false)
 
   const currentImageUrl = puzzleWord.imageUrls[activeImageIndex] ?? ''
   const currentImageFlagged = flaggedImageUrls.has(currentImageUrl)
@@ -84,6 +85,7 @@ export default function WordInput({
   const submitGuess = async () => {
 
     const result = await onGuess(wordIndex, inputValue)
+    if (result === 'correct') wordSolvingRef.current = true
     if (result === 'correct' || result === 'incorrect' || result === 'invalid' || result === 'already_guessed') {
       setInputValue('')
     }
@@ -147,10 +149,11 @@ export default function WordInput({
                   )
                 }}
                 onClick={() => {
+                  wordSolvingRef.current = true
                   onReveal(wordIndex)
                   if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true })
                 }}
-                className="absolute top-2 right-2 z-10 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/100 rounded-full hover:cursor-pointer transition-colors [will-change:transform]"
+                className="absolute top-2 right-2 z-10 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 rounded-full hover:cursor-pointer transition-colors [will-change:transform]"
                 title="Reveal answer"
                 type="button"
               >
@@ -165,7 +168,7 @@ export default function WordInput({
                   onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
                   onPointerDown={(e) => e.preventDefault()}
                   disabled={currentImageFlagged}
-                  className={`group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/60 hover:text-neutral-800 hover:bg-white/80 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                  className={`group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
                   title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
                 >
                   <Flag size={24} className={`drop-shadow-md transition-transform ${currentImageFlagged ? '' : 'group-hover:scale-110'}`} />
@@ -219,8 +222,9 @@ export default function WordInput({
                     }}
                     onBlur={() => {
                       if (window.innerWidth < 768) {
+                        const solving = wordSolvingRef.current
                         setTimeout(() => {
-                          if (document.activeElement?.tagName !== 'INPUT') {
+                          if (!solving && document.activeElement?.tagName !== 'INPUT') {
                             window.scrollTo({ top: 0, behavior: 'smooth' })
                           }
                         }, 150)
