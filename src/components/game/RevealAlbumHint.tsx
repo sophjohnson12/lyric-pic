@@ -57,7 +57,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
         <button
           ref={buttonRef}
           onClick={handleClick}
-          className="p-2 text-primary rounded-3xl text-sm font-medium hover:bg-white cursor-pointer border border-primary flex items-center gap-1"
+          className="p-2 text-primary rounded-3xl text-sm font-medium cursor-pointer flex items-center gap-1"
         >
           <Lightbulb size={20} />
           Show Album

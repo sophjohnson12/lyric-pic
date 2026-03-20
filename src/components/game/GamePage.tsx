@@ -366,7 +366,7 @@ export default function GamePage() {
 
       <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
         {/* Mobile: file-tab panel */}
-        <div className="md:hidden mx-4 mb-3">
+        <div className="md:hidden mx-4 sm:mx-auto sm:w-3/5 mb-3">
           {game.puzzleWords.length > 1 && (
             <div className="flex gap-1.5 items-end">
               {game.puzzleWords.map((word: any, index: number) => (
