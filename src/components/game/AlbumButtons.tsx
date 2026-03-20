@@ -136,7 +136,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
           ? <InlineSvgIcon
               src={album.image_url}
               alt={album.name}
-              className={`w-8 h-8 ${isGrayed ? 'text-neutral-400' : showError ? 'text-error' : showCorrect ? 'text-success' : !album.theme_primary_color ? 'text-primary' : ''}`}
+              className={`w-8 h-8 transition-colors duration-300 ${isGrayed ? 'text-neutral-400' : showError ? 'text-error' : showCorrect ? 'text-success' : !album.theme_primary_color ? 'text-primary' : ''}`}
               style={!isGrayed && !showError && !showCorrect && album.theme_primary_color
                 ? { color: album.theme_primary_color }
                 : undefined}
