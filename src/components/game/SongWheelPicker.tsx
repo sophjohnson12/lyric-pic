@@ -117,7 +117,7 @@ export default function SongWheelPicker({
     <div className="w-full flex flex-col items-center gap-3">
       <input
         type="text"
-        autoFocus
+        autoFocus={window.innerWidth >= 640}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={`Search ${filteredSongs.length} songs...`}
