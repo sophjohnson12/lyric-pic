@@ -75,6 +75,16 @@ export default function WordInput({
     prevIsGuessedRef.current = isGuessed
   }, [isGuessed])
 
+  // After the input unmounts (revealReady), iOS closes the keyboard and may reset
+  // scroll to 0. Wait 300ms for the keyboard animation to finish, then correct.
+  useEffect(() => {
+    if (!revealReady || alreadyGuessedOnMount.current || window.innerWidth >= 768) return
+    const t = setTimeout(() => {
+      if (window.scrollY < 40) window.scrollTo({ top: 64, behavior: 'smooth' })
+    }, 300)
+    return () => clearTimeout(t)
+  }, [revealReady])
+
   useEffect(() => {
     if (autoFocus && !isGuessed && inputRef.current) {
       inputRef.current.focus({ preventScroll: true })

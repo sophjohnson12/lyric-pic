@@ -380,6 +380,9 @@ export default function GamePage() {
                     flushSync(() => scrollToSlide(index))
                     if (wasInputFocused) {
                       mobilePanelRef.current?.querySelector('input')?.focus({ preventScroll: true })
+                      setTimeout(() => {
+                        if (window.scrollY < 40) window.scrollTo({ top: 64, behavior: 'smooth' })
+                      }, 150)
                     }
                   }}
                   className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 ${
