@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { flushSync } from 'react-dom'
 import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { CircleHelp } from 'lucide-react'
 import { useGame } from '../../hooks/useGame'
@@ -61,8 +62,7 @@ export default function GamePage() {
   const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
   // Track whether a word input was focused at the start of a swipe gesture
   const hadFocusOnSwipeStart = useRef(false)
-  // Auto-focus the new tab's input when switching tabs while an input is focused
-  const [pendingMobileFocus, setPendingMobileFocus] = useState(false)
+  const mobilePanelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)')
@@ -244,10 +244,6 @@ export default function GamePage() {
     setActiveSlide(0)
   }, [game.currentSong?.id])
 
-  // Reset pending mobile focus after the new tab has mounted and focused
-  useEffect(() => {
-    if (pendingMobileFocus) setPendingMobileFocus(false)
-  }, [activeSlide])
 
 
   if (!levelSlug) {
@@ -380,8 +376,11 @@ export default function GamePage() {
                 <button
                   key={index}
                   onClick={() => {
-                    if (document.activeElement instanceof HTMLInputElement) setPendingMobileFocus(true)
-                    scrollToSlide(index)
+                    const wasInputFocused = !isMd && document.activeElement instanceof HTMLInputElement
+                    flushSync(() => scrollToSlide(index))
+                    if (wasInputFocused) {
+                      mobilePanelRef.current?.querySelector('input')?.focus({ preventScroll: true })
+                    }
                   }}
                   className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 ${
                     index === activeSlide
@@ -397,7 +396,7 @@ export default function GamePage() {
               ))}
             </div>
           )}
-          <div className={`bg-white border border-neutral-200 shadow-[0_4px_20px_rgba(0,0,0,0.07)] p-2.5 ${game.puzzleWords.length > 1 ? 'rounded-b-xl' : 'rounded-xl'}`}>
+          <div ref={mobilePanelRef} className={`bg-white border border-neutral-200 shadow-[0_4px_20px_rgba(0,0,0,0.07)] p-2.5 ${game.puzzleWords.length > 1 ? 'rounded-b-xl' : 'rounded-xl'}`}>
             {game.puzzleWords[activeSlide] && (
               <WordInput
                 key={`${game.currentSong!.id}-${activeSlide}`}
@@ -410,7 +409,7 @@ export default function GamePage() {
                 onFlag={game.enableLyricFlag ? (lyricId) => flagWord(lyricId) : undefined}
                 onFlagImage={game.enableImageFlag ? (url) => flagImage(url) : undefined}
                 debugMode={game.enableLyricFlag}
-                autoFocus={!isMd && pendingMobileFocus}
+                autoFocus={false}
                 focusTrigger={0}
                 revealBehavior={revealBehavior}
               />

@@ -45,7 +45,6 @@ export default function WordInput({
   const [lockScope, animateLock] = useAnimate()
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const inputWasFocused = useRef(false)
-  const wordSolvingRef = useRef(false)
 
   const currentImageUrl = puzzleWord.imageUrls[activeImageIndex] ?? ''
   const currentImageFlagged = flaggedImageUrls.has(currentImageUrl)
@@ -85,7 +84,6 @@ export default function WordInput({
   const submitGuess = async () => {
 
     const result = await onGuess(wordIndex, inputValue)
-    if (result === 'correct') wordSolvingRef.current = true
     if (result === 'correct' || result === 'incorrect' || result === 'invalid' || result === 'already_guessed') {
       setInputValue('')
     }
@@ -149,7 +147,6 @@ export default function WordInput({
                   )
                 }}
                 onClick={() => {
-                  wordSolvingRef.current = true
                   onReveal(wordIndex)
                   if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true })
                 }}
@@ -222,9 +219,9 @@ export default function WordInput({
                     }}
                     onBlur={() => {
                       if (window.innerWidth < 768) {
-                        const solving = wordSolvingRef.current
+                        if (isGuessed) return
                         setTimeout(() => {
-                          if (!solving && document.activeElement?.tagName !== 'INPUT') {
+                          if (document.activeElement?.tagName !== 'INPUT') {
                             window.scrollTo({ top: 0, behavior: 'smooth' })
                           }
                         }, 150)
