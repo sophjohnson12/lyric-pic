@@ -110,7 +110,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
         onClick={readonly || !onGuess ? undefined : handleClick}
         disabled={!readonly && (isDisabled || isDepletedOnly)}
         title={album.name}
-        className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border-2
+        className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border-2 [will-change:transform]
           ${showError
             ? 'bg-error/50 border-error'
             : showCorrect
