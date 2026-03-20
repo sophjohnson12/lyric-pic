@@ -61,6 +61,8 @@ export default function GamePage() {
   const [deferredFocusIndex, setDeferredFocusIndex] = useState(0)
   const focusInitialized = useRef(false)
   const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
+  const [mobileCardSize, setMobileCardSize] = useState<number | null>(null)
+  const cardSizeInitialized = useRef(false)
   // Track whether a word input was focused at the start of a swipe gesture
   const hadFocusOnSwipeStart = useRef(false)
   const mobilePanelRef = useRef<HTMLDivElement>(null)
@@ -71,6 +73,34 @@ export default function GamePage() {
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [])
+
+  const handleInputFocus = () => {
+    if (window.innerWidth >= 768) return
+    const headerEl = document.querySelector<HTMLElement>('header')
+    const headerHeight = Math.ceil(headerEl?.getBoundingClientRect().height ?? 64)
+
+    if (!cardSizeInitialized.current) {
+      cardSizeInitialized.current = true
+      window.scrollTo({ top: headerHeight, behavior: 'instant' })
+
+      if (window.visualViewport && mobilePanelRef.current) {
+        let debounceTimer: ReturnType<typeof setTimeout>
+        const handler = () => {
+          clearTimeout(debounceTimer)
+          debounceTimer = setTimeout(() => {
+            window.visualViewport!.removeEventListener('resize', handler)
+            if (!mobilePanelRef.current) return
+            const panelTop = mobilePanelRef.current.getBoundingClientRect().top
+            const cardSize = Math.floor(window.visualViewport!.height - panelTop - 20)
+            if (cardSize > 60) setMobileCardSize(cardSize)
+          }, 150)
+        }
+        window.visualViewport.addEventListener('resize', handler)
+      }
+    } else {
+      window.scrollTo({ top: headerHeight, behavior: 'smooth' })
+    }
+  }
 
   // Update meta tags
   useEffect(() => {
@@ -359,7 +389,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="md:h-auto flex flex-col">
+    <div className="md:h-auto flex flex-col max-md:min-h-[calc(100lvh+64px)]">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}
@@ -402,6 +432,8 @@ export default function GamePage() {
                 revealBehavior={revealBehavior}
                 initialImageIndex={savedImageIndices[activeSlide] ?? 0}
                 onImageIndexChange={(idx) => setSavedImageIndices((prev) => ({ ...prev, [activeSlide]: idx }))}
+                mobileCardSize={mobileCardSize}
+                onInputFocus={handleInputFocus}
               />
             )}
           </div>

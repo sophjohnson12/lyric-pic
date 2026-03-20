@@ -24,6 +24,8 @@ interface WordInputProps {
   revealBehavior?: RevealBehavior
   initialImageIndex?: number
   onImageIndexChange?: (index: number) => void
+  mobileCardSize?: number | null
+  onInputFocus?: () => void
 }
 
 export default function WordInput({
@@ -39,6 +41,8 @@ export default function WordInput({
   revealBehavior = 'word_only',
   initialImageIndex = 0,
   onImageIndexChange,
+  mobileCardSize,
+  onInputFocus,
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
@@ -120,7 +124,10 @@ export default function WordInput({
     'bg-primary hover:bg-primary/80 text-neutral-100 hover:text-white'
 
   return (
-    <div className="w-full max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto">
+    <div
+      className="w-full max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto max-md:transition-[max-width] max-md:duration-300 max-md:ease-out"
+      style={mobileCardSize != null ? { maxWidth: mobileCardSize } : undefined}
+    >
       <div className="pb-0 w-full">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white border-b border-secondary">
           {/* Image Container */}
@@ -219,9 +226,7 @@ export default function WordInput({
                     onPointerDown={(e) => {
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })
-                      if (window.innerWidth < 768) {
-                        requestAnimationFrame(() => window.scrollTo({ top: 64, behavior: 'smooth' }))
-                      }
+                      onInputFocus?.()
                     }}
                     className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-bl-xl border-t border-l border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
                     placeholder="Guess the word..."
