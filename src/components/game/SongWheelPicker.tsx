@@ -37,6 +37,7 @@ export default function SongWheelPicker({
   const items = searchedSongs
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [effectiveVisibleCount, setEffectiveVisibleCount] = useState(visibleCount)
@@ -152,6 +153,15 @@ export default function SongWheelPicker({
           <div
             ref={containerRef}
             onScroll={handleScroll}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                buttonRefs.current[Math.min(effectiveIndex + 1, items.length - 1)]?.focus()
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                buttonRefs.current[Math.max(effectiveIndex - 1, 0)]?.focus()
+              }
+            }}
             className="h-full overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']"
             style={{ scrollSnapType: 'y mandatory' }}
           >
@@ -159,6 +169,7 @@ export default function SongWheelPicker({
               {items.map((item, index) => (
                 <button
                   key={item.id ?? 'placeholder'}
+                  ref={(el) => { buttonRefs.current[index] = el }}
                   type="button"
                   className={`w-full flex items-center justify-center text-center px-4 transition-opacity duration-150 max-sm:focus:outline-none ${getItemClass(index)}`}
                   style={{ height: itemHeight, scrollSnapAlign: 'center' }}
