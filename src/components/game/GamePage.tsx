@@ -81,8 +81,6 @@ export default function GamePage() {
 
     if (!cardSizeInitialized.current) {
       cardSizeInitialized.current = true
-      // Capture large-viewport height before the keyboard shrinks it (used to cap card size)
-      const largeViewportHeight = window.innerHeight
       // Delay scroll until after the full tap sequence (pointerup + click) completes,
       // preventing the instant page shift from causing a ghost click on album buttons.
       setTimeout(() => window.scrollTo({ top: headerHeight, behavior: 'instant' }), 0)
@@ -95,11 +93,7 @@ export default function GamePage() {
             window.visualViewport!.removeEventListener('resize', handler)
             if (!mobilePanelRef.current) return
             const panelTop = mobilePanelRef.current.getBoundingClientRect().top
-            const computedSize = Math.floor(window.visualViewport!.height - panelTop - 32)
-            // Never grow beyond the CSS estimate (prevents Safari expanding the card
-            // when its shorter keyboard leaves more room than the formula assumed)
-            const cssEstimate = Math.floor(largeViewportHeight * 0.52 - 83)
-            const cardSize = Math.min(computedSize, cssEstimate)
+            const cardSize = Math.floor(window.visualViewport!.height - panelTop - 32)
             if (cardSize > 60) setMobileCardSize(cardSize)
           }, 150)
         }
