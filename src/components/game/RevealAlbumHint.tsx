@@ -25,7 +25,11 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
     anim.addEventListener('finish', () => anim.cancel())
   }, [albumHintRevealed])
 
+  const clickedRef = useRef(false)
+
   const handleClick = () => {
+    if (clickedRef.current) return
+    clickedRef.current = true
     const anim = buttonRef.current?.animate(
       [
         { transform: 'scale(1)', opacity: '1' },
