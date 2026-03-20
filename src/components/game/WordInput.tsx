@@ -213,6 +213,9 @@ export default function WordInput({
                     onPointerDown={(e) => {
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })
+                      if (window.innerWidth < 768) {
+                        requestAnimationFrame(() => window.scrollTo({ top: 64, behavior: 'smooth' }))
+                      }
                     }}
                     className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-bl-xl border-t border-l border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
                     placeholder="Guess the word..."
