@@ -12,6 +12,7 @@ import WordInputTabs from './WordInputTabs'
 import AlbumButtons from './AlbumButtons'
 import RevealAlbumHint from './RevealAlbumHint'
 import SongDropdown from './SongDropdown'
+import SongModal from './SongModal'
 import GuessCounter from './GuessCounter'
 import ResultModal from './ResultModal'
 import InfoModal from './InfoModal'
@@ -455,15 +456,26 @@ export default function GamePage() {
               </div>
             )}
             <div className="md:max-w-md mx-auto">
-              <SongDropdown
-                songs={game.allSongs}
-                incorrectGuesses={game.incorrectSongGuesses}
-                onGuess={game.guessSong}
-                isMd={isMd}
-                resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
-                correctAlbum={game.correctAlbum}
-                albumRevealed={game.albumGuessed || game.albumHintRevealed}
-              />
+              <div className="md:hidden">
+                <SongModal
+                  songs={game.allSongs}
+                  incorrectGuesses={game.incorrectSongGuesses}
+                  onGuess={game.guessSong}
+                  resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
+                  correctAlbum={game.correctAlbum}
+                  albumRevealed={game.albumGuessed || game.albumHintRevealed}
+                />
+              </div>
+              <div className="hidden md:block">
+                <SongDropdown
+                  songs={game.allSongs}
+                  incorrectGuesses={game.incorrectSongGuesses}
+                  onGuess={game.guessSong}
+                  resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
+                  correctAlbum={game.correctAlbum}
+                  albumRevealed={game.albumGuessed || game.albumHintRevealed}
+                />
+              </div>
             </div>
             <div className="md:max-w-md mx-auto">
               <GuessCounter
