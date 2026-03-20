@@ -116,7 +116,7 @@ export default function WordInput({
     'bg-primary hover:bg-primary/80 text-neutral-100 hover:text-white'
 
   return (
-    <div className="w-full max-md:max-w-[calc(52lvh-147px)] max-md:mx-auto">
+    <div className="w-full max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto">
       <div className="pb-0 w-full">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white border-b border-secondary">
           {/* Image Container */}
@@ -213,6 +213,18 @@ export default function WordInput({
                     onPointerDown={(e) => {
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })
+                      if (window.innerWidth < 768) {
+                        requestAnimationFrame(() => window.scrollTo({ top: 64, behavior: 'smooth' }))
+                      }
+                    }}
+                    onBlur={() => {
+                      if (window.innerWidth < 768) {
+                        setTimeout(() => {
+                          if (document.activeElement?.tagName !== 'INPUT') {
+                            window.scrollTo({ top: 0, behavior: 'smooth' })
+                          }
+                        }, 150)
+                      }
                     }}
                     className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-bl-xl border-t border-l border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
                     placeholder="Guess the word..."

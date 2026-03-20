@@ -354,7 +354,7 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="h-dvh md:h-auto flex flex-col">
+    <div className="md:h-auto flex flex-col">
       <Header
         artistName={game.artist.name}
         playedCount={game.playedSongIds.length}
@@ -364,7 +364,7 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
       />
 
-      <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 overflow-y-auto md:overflow-y-visible">
+      <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 md:overflow-y-visible">
         {/* Mobile: file-tab panel */}
         <div className="md:hidden mx-4 sm:mx-auto sm:w-3/5 mb-3">
           {game.puzzleWords.length > 1 && (
