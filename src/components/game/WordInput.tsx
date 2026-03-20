@@ -22,6 +22,8 @@ interface WordInputProps {
   focusTrigger?: number
   debugMode?: boolean
   revealBehavior?: RevealBehavior
+  initialImageIndex?: number
+  onImageIndexChange?: (index: number) => void
 }
 
 export default function WordInput({
@@ -35,6 +37,8 @@ export default function WordInput({
   focusTrigger,
   debugMode = false,
   revealBehavior = 'word_only',
+  initialImageIndex = 0,
+  onImageIndexChange,
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
@@ -43,7 +47,7 @@ export default function WordInput({
   const [flaggedImageUrls, setFlaggedImageUrls] = useState<Set<string>>(new Set())
   const [lockState, setLockState] = useState<LockState>('locked')
   const [lockScope, animateLock] = useAnimate()
-  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [activeImageIndex, setActiveImageIndex] = useState(initialImageIndex)
   const inputWasFocused = useRef(false)
 
   const currentImageUrl = puzzleWord.imageUrls[activeImageIndex] ?? ''
@@ -132,7 +136,8 @@ export default function WordInput({
           >
             <ImageDisplay
               imageUrls={puzzleWord.imageUrls}
-              onIndexChange={(i) => setActiveImageIndex(i)}
+              initialIndex={initialImageIndex}
+              onIndexChange={(i) => { setActiveImageIndex(i); onImageIndexChange?.(i) }}
             />
 
             {/* KeyRound reveal button (top-right) */}

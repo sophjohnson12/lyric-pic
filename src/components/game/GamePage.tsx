@@ -57,6 +57,7 @@ export default function GamePage() {
   // Carousel state
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [activeSlide, setActiveSlide] = useState(0)
+  const [savedImageIndices, setSavedImageIndices] = useState<Record<number, number>>({})
   // Deferred focus index: immediate on first load, 500ms delayed on guess/reveal
   const [deferredFocusIndex, setDeferredFocusIndex] = useState(0)
   const focusInitialized = useRef(false)
@@ -243,6 +244,7 @@ export default function GamePage() {
   // Reset to first word tab when song changes
   useEffect(() => {
     setActiveSlide(0)
+    setSavedImageIndices({})
   }, [game.currentSong?.id])
 
 
@@ -399,6 +401,8 @@ export default function GamePage() {
                 autoFocus={false}
                 focusTrigger={0}
                 revealBehavior={revealBehavior}
+                initialImageIndex={savedImageIndices[activeSlide] ?? 0}
+                onImageIndexChange={(idx) => setSavedImageIndices((prev) => ({ ...prev, [activeSlide]: idx }))}
               />
             )}
           </div>

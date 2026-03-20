@@ -1,14 +1,22 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface ImageDisplayProps {
   imageUrls: string[]
   onIndexChange?: (index: number) => void
+  initialIndex?: number
 }
 
-export default function ImageDisplay({ imageUrls, onIndexChange }: ImageDisplayProps) {
-  const [activeIndex, setActiveIndex] = useState(0)
+export default function ImageDisplay({ imageUrls, onIndexChange, initialIndex = 0 }: ImageDisplayProps) {
+  const [activeIndex, setActiveIndex] = useState(initialIndex)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Scroll to initial position instantly on mount (no animation)
+  useEffect(() => {
+    if (initialIndex > 0 && scrollRef.current) {
+      scrollRef.current.scrollTo({ left: scrollRef.current.clientWidth * initialIndex })
+    }
+  }, [])
 
   const goTo = (index: number) => {
     const next = Math.max(0, Math.min(index, imageUrls.length - 1))
