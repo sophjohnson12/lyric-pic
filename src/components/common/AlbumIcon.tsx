@@ -26,10 +26,10 @@ export default function AlbumIcon({ album, size = 'sm' }: AlbumIconProps) {
     <div
       className={`${isLg ? 'w-12 h-12' : 'w-7 h-7'} rounded-lg flex items-center justify-center text-primary shrink-0 overflow-hidden`}
       style={{
-        backgroundColor: album.theme_secondary_color || '#9ca3af',
+        backgroundColor: album.theme_secondary_color || 'var(--color-theme-secondary)',
         border: 'solid',
         borderWidth: '2px',
-        borderColor: album.theme_primary_color || '#6b7280',
+        borderColor: album.theme_primary_color || 'var(--color-theme-primary)',
         fontSize: isLg ? '12px' : '10px',
         fontWeight: 'bold',
       }}
