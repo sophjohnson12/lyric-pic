@@ -175,7 +175,7 @@ export default function WordInput({
 
             {/* Overlay when solved */}
             {isGuessed && (
-              <div className="absolute inset-0 bg-black/10" />
+              <div className="absolute inset-0 bg-black/10 pointer-events-none" />
             )}
           </div>
 
