@@ -81,9 +81,13 @@ export default function GamePage() {
 
     if (!cardSizeInitialized.current) {
       cardSizeInitialized.current = true
-      // Delay scroll until after the full tap sequence (pointerup + click) completes,
-      // preventing the instant page shift from causing a ghost click on album buttons.
-      setTimeout(() => window.scrollTo({ top: headerHeight, behavior: 'instant' }), 0)
+      // Wait for pointerup (finger lift) then add 50ms to also clear the click event
+      // that fires right after. setTimeout(0) isn't enough when the user holds their
+      // finger — the page shifts while they're still down, and click then lands on
+      // whatever element slid up into position (e.g. an album button).
+      window.addEventListener('pointerup', () => {
+        setTimeout(() => window.scrollTo({ top: headerHeight, behavior: 'instant' }), 50)
+      }, { once: true, passive: true })
 
       if (window.visualViewport && mobilePanelRef.current) {
         let debounceTimer: ReturnType<typeof setTimeout>
@@ -100,7 +104,9 @@ export default function GamePage() {
         window.visualViewport.addEventListener('resize', handler)
       }
     } else {
-      setTimeout(() => window.scrollTo({ top: headerHeight, behavior: 'smooth' }), 0)
+      window.addEventListener('pointerup', () => {
+        setTimeout(() => window.scrollTo({ top: headerHeight, behavior: 'smooth' }), 50)
+      }, { once: true, passive: true })
     }
   }
 
@@ -413,7 +419,11 @@ export default function GamePage() {
               flushSync(() => scrollToSlide(index))
               if (wasInputFocused) {
                 mobilePanelRef.current?.querySelector('input')?.focus({ preventScroll: true })
-                handleInputFocus()
+                // Scroll to hide header — called from a click handler so pointerup
+                // has already fired; no ghost-click risk, scroll immediately.
+                const headerEl = document.querySelector<HTMLElement>('header')
+                const headerHeight = Math.ceil(headerEl?.getBoundingClientRect().height ?? 64)
+                window.scrollTo({ top: headerHeight, behavior: 'smooth' })
               }
             }}
           />
