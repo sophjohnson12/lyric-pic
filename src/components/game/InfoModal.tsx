@@ -50,7 +50,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
             <p>
               <span className="hidden md:inline">Click </span>
               <span className="inline md:hidden">Tap </span>
-              <span className="text-primary">Show Album </span>for a hint.
+              <span className="text-primary font-semibold">Show Album </span>for a hint.
             </p>
           </div>
         )}
@@ -59,7 +59,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
           <p>
             <span className="inline md:hidden">
               Tap
-              <span className="text-primary"> Guess Song </span>
+              <span className="text-primary font-semibold"> Guess Song </span>
               to open the song picker.{' '}
             </span>
             You have {guessCount} chances to select a song and

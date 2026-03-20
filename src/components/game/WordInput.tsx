@@ -141,27 +141,28 @@ export default function WordInput({
             />
 
             {/* KeyRound reveal button (top-right) */}
-            {!isGuessed && (
-              <button
-                onPointerDown={(e) => {
-                  inputWasFocused.current = document.activeElement === inputRef.current
-                  e.preventDefault()
-                  e.currentTarget.animate(
-                    [{ transform: 'scale(1)' }, { transform: 'scale(0.75)' }, { transform: 'scale(1)' }],
-                    { duration: 200, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
-                  )
-                }}
-                onClick={() => {
-                  onReveal(wordIndex)
-                  if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true })
-                }}
-                className="absolute top-2 right-2 z-10 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 rounded-full hover:cursor-pointer transition-colors [will-change:transform]"
-                title="Reveal answer"
-                type="button"
-              >
-                <KeyRound size={20} className="drop-shadow-md" />
-              </button>
-            )}
+            <AnimatePresence>
+              {!isGuessed && (
+                <motion.button
+                  key="reveal-btn"
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  onPointerDown={(e) => {
+                    inputWasFocused.current = document.activeElement === inputRef.current
+                    e.preventDefault()
+                  }}
+                  onClick={() => {
+                    onReveal(wordIndex)
+                    if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true })
+                  }}
+                  className="absolute top-2 right-2 z-10 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 rounded-full cursor-pointer transition-colors [will-change:transform]"
+                  title="Reveal answer"
+                  type="button"
+                >
+                  <KeyRound size={20} className="drop-shadow-md" />
+                </motion.button>
+              )}
+            </AnimatePresence>
 
             {/* Flag button (top-left) */}
             <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
