@@ -103,7 +103,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
   const suppressInlineColors = isGrayed || showError || showCorrect
 
   return (
-    <div className="bg-neutral-50 rounded-lg ">
+    <div className="bg-neutral-50 rounded-lg">
       <button
         ref={buttonRef}
         onPointerDown={handlePointerDown}
