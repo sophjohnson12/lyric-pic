@@ -18,8 +18,6 @@ interface WordInputProps {
   onRefresh: (wordIndex: number) => void
   onFlag?: (lyricId: number) => void
   onFlagImage?: (url: string) => void
-  onInputFocus?: () => void
-  onInputBlur?: () => void
   autoFocus?: boolean
   focusTrigger?: number
   debugMode?: boolean
@@ -33,8 +31,6 @@ export default function WordInput({
   onReveal,
   onFlag,
   onFlagImage,
-  onInputFocus,
-  onInputBlur,
   autoFocus = false,
   focusTrigger,
   debugMode = false,
@@ -120,7 +116,7 @@ export default function WordInput({
     'bg-primary hover:bg-primary/80 text-neutral-100 hover:text-white'
 
   return (
-    <div className="w-full max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto">
+    <div className="w-full max-md:max-w-[calc(52lvh-147px)] max-md:mx-auto">
       <div className="pb-0 w-full">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white border-b border-secondary">
           {/* Image Container */}
@@ -217,19 +213,6 @@ export default function WordInput({
                     onPointerDown={(e) => {
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })
-                      if (window.innerWidth < 768) {
-                        onInputFocus?.()
-                      }
-                    }}
-                    onBlur={() => {
-                      if (window.innerWidth < 768) {
-                        if (isGuessed) return
-                        setTimeout(() => {
-                          if (document.activeElement?.tagName !== 'INPUT') {
-                            onInputBlur?.()
-                          }
-                        }, 150)
-                      }
                     }}
                     className="w-full h-full px-2 text-neutral-800 placeholder-neutral-400 text-base rounded-bl-xl border-t border-l border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
                     placeholder="Guess the word..."
