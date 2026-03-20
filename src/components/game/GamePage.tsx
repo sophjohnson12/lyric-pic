@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom'
-import { CircleHelp } from 'lucide-react'
 import { useGame } from '../../hooks/useGame'
 import { parseLevelSlug } from '../../types/game'
 import { LOAD_MESSAGE_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
@@ -9,6 +8,7 @@ import { useLocalStorage } from '../../hooks/useLocalStorage'
 import type { RevealBehavior } from './SettingsModal'
 import Header from '../layout/Header'
 import WordInput from './WordInput'
+import WordInputTabs from './WordInputTabs'
 import AlbumButtons from './AlbumButtons'
 import RevealAlbumHint from './RevealAlbumHint'
 import SongDropdown from './SongDropdown'
@@ -370,32 +370,18 @@ export default function GamePage() {
       <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 md:overflow-y-visible">
         {/* Mobile: file-tab panel */}
         <div className="md:hidden mx-4 sm:mx-auto sm:w-3/5 mb-3">
-          {game.puzzleWords.length > 1 && (
-            <div className="flex gap-1.5 items-end">
-              {game.puzzleWords.map((word: any, index: number) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    const wasInputFocused = !isMd && document.activeElement instanceof HTMLInputElement
-                    flushSync(() => scrollToSlide(index))
-                    if (wasInputFocused) {
-                      mobilePanelRef.current?.querySelector('input')?.focus({ preventScroll: true })
-                    }
-                  }}
-                  className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 ${
-                    index === activeSlide
-                      ? 'bg-white border-b-white text-primary -mb-px relative z-10'
-                      : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-50 hover:text-neutral-600'
-                  }`}
-                >
-                  {word.guessed || word.revealed
-                    ? <span className="truncate px-1">{word.word.toLowerCase()}</span>
-                    : <CircleHelp size={24} />
-                  }
-                </button>
-              ))}
-            </div>
-          )}
+          <WordInputTabs
+            key={game.currentSong?.id}
+            puzzleWords={game.puzzleWords}
+            activeSlide={activeSlide}
+            onTabClick={(index) => {
+              const wasInputFocused = !isMd && document.activeElement instanceof HTMLInputElement
+              flushSync(() => scrollToSlide(index))
+              if (wasInputFocused) {
+                mobilePanelRef.current?.querySelector('input')?.focus({ preventScroll: true })
+              }
+            }}
+          />
           <div ref={mobilePanelRef} className={`bg-white border border-neutral-200 shadow-[0_4px_20px_rgba(0,0,0,0.07)] p-2.5 ${game.puzzleWords.length > 1 ? 'rounded-b-xl' : 'rounded-xl'}`}>
             {game.puzzleWords[activeSlide] && (
               <WordInput
