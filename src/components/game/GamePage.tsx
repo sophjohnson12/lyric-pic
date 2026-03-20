@@ -11,7 +11,6 @@ import WordInput from './WordInput'
 import WordInputTabs from './WordInputTabs'
 import AlbumButtons from './AlbumButtons'
 import RevealAlbumHint from './RevealAlbumHint'
-import SongDropdown from './SongDropdown'
 import SongModal from './SongModal'
 import GuessCounter from './GuessCounter'
 import ResultModal from './ResultModal'
@@ -460,27 +459,15 @@ export default function GamePage() {
               </div>
             )}
             <div className="md:max-w-md mx-auto">
-              <div className="md:hidden">
-                <SongModal
-                  songs={game.allSongs}
-                  incorrectGuesses={game.incorrectSongGuesses}
-                  onGuess={game.guessSong}
-                  resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
-                  correctAlbum={game.correctAlbum}
-                  albumRevealed={game.albumGuessed || game.albumHintRevealed}
-                  showAlbumFilters={game.showAlbumFilters}
-                />
-              </div>
-              <div className="hidden md:block">
-                <SongDropdown
-                  songs={game.allSongs}
-                  incorrectGuesses={game.incorrectSongGuesses}
-                  onGuess={game.guessSong}
-                  resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
-                  correctAlbum={game.correctAlbum}
-                  albumRevealed={game.albumGuessed || game.albumHintRevealed}
-                />
-              </div>
+              <SongModal
+                songs={game.allSongs}
+                incorrectGuesses={game.incorrectSongGuesses}
+                onGuess={game.guessSong}
+                resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
+                correctAlbum={game.correctAlbum}
+                albumRevealed={game.albumGuessed || game.albumHintRevealed}
+                showAlbumFilters={game.showAlbumFilters}
+              />
             </div>
             <div className="md:max-w-md mx-auto">
               <GuessCounter

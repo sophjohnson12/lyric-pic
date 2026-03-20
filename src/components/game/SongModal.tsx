@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Modal from '../common/Modal'
 import SongWheelPicker from './SongWheelPicker'
 import AlbumIcon from '../common/AlbumIcon'
@@ -25,20 +25,27 @@ export default function SongModal({
 }: SongModalProps) {
   const [showModal, setShowModal] = useState(false)
   const [modalSelection, setModalSelection] = useState<{ id: number; name: string } | null>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     setModalSelection(null)
   }, [resetKey])
 
+  const closeModal = () => {
+    setShowModal(false)
+    triggerRef.current?.focus()
+  }
+
   const handleModalGuess = () => {
     if (!modalSelection) return
     onGuess(modalSelection.id, modalSelection.name)
-    setShowModal(false)
+    closeModal()
   }
 
   return (
     <div className="flex justify-center">
       <button
+        ref={triggerRef}
         onClick={() => setShowModal(true)}
         className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-base font-medium
                    hover:text-white hover:opacity-90 cursor-pointer border border-secondary
@@ -47,7 +54,7 @@ export default function SongModal({
         Guess Song
       </button>
       {showModal && (
-        <Modal showClose={false} onClose={() => setShowModal(false)} showEaseIn={true}>
+        <Modal showClose={false} onClose={closeModal} showEaseIn={true} lockTop={true}>
           {albumRevealed && correctAlbum && showAlbumFilters && (
             <div className="flex items-center justify-center mb-3 gap-2">
               <AlbumIcon album={correctAlbum} size="sm" />
@@ -58,10 +65,12 @@ export default function SongModal({
             </div>
           )}
             {albumRevealed && correctAlbum && !showAlbumFilters && (
-              <div className="flex items-center gap-1 mb-3">
+              <div className="flex items-center mb-3 gap-2">
                 <AlbumIcon album={correctAlbum} size="sm" />
-                <span className="text-sm text-neutral-600 font-semibold">Hint:</span>
-                <span className="text-sm text-neutral-700 font-normal">{correctAlbum.name}</span>
+                <div className="text-sm">
+                  <span className="text-neutral-600 font-semibold">Hint: </span>
+                  <span className="text-neutral-700 font-normal">{correctAlbum.name}</span>
+                </div>
               </div>
             )}
           <form onSubmit={(e) => { e.preventDefault(); handleModalGuess() }}>
@@ -79,7 +88,7 @@ export default function SongModal({
             <div className="flex gap-3 mt-4">
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
                 className="h-12 flex-1 px-4 py-2 rounded-lg border border-neutral-200 text-neutral-800 text-base font-medium hover:bg-black/10 transition-colors cursor-pointer"
               >
                 Cancel

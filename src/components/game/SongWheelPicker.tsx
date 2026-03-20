@@ -54,8 +54,13 @@ export default function SongWheelPicker({
     return () => window.removeEventListener('resize', update)
   }, [visibleCount, itemHeight, containerFraction, reservedHeight])
 
-  const containerHeight = effectiveVisibleCount * itemHeight
-  const padding = Math.floor(effectiveVisibleCount / 2) * itemHeight
+  // Cap visible rows based on item count: 0→1 row, 1→1 row, 2→3 rows, 3+→effectiveVisibleCount
+  const actualVisibleCount = items.length === 0
+    ? 1
+    : Math.min(effectiveVisibleCount, items.length * 2 - 1)
+
+  const containerHeight = actualVisibleCount * itemHeight
+  const padding = Math.floor(actualVisibleCount / 2) * itemHeight
 
   // Effective index clamped to valid range
   const effectiveIndex = Math.min(selectedIndex, Math.max(0, items.length - 1))
@@ -112,6 +117,7 @@ export default function SongWheelPicker({
     <div className="w-full flex flex-col items-center gap-3">
       <input
         type="text"
+        autoFocus
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={`Search ${filteredSongs.length} songs...`}
