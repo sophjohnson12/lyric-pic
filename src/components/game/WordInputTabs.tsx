@@ -21,20 +21,20 @@ function WordTab({
   const wordRef = useRef<HTMLSpanElement>(null)
   const initialTabState = useRef(tabState)
 
-  // Animate ? icon shrinking out when transitioning to hidden
+  // Animate ? icon fading out when transitioning to hidden
   useLayoutEffect(() => {
     if (tabState !== 'hiding' || !questionRef.current) return
     questionRef.current.animate(
-      [{ transform: 'scale(1)' }, { transform: 'scale(0)' }],
-      { duration: 150, easing: 'ease-in', fill: 'forwards' }
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 200, easing: 'ease-in', fill: 'forwards' }
     )
   }, [tabState])
 
-  // Animate word growing in when revealed (skip if word was already revealed on mount)
+  // Animate word fading in when revealed (skip if word was already revealed on mount)
   useLayoutEffect(() => {
     if (tabState !== 'word' || initialTabState.current === 'word' || !wordRef.current) return
     const anim = wordRef.current.animate(
-      [{ transform: 'scale(0)' }, { transform: 'scale(1)' }],
+      [{ opacity: 0 }, { opacity: 1 }],
       { duration: 300, easing: 'ease-out', fill: 'forwards' }
     )
     anim.addEventListener('finish', () => anim.cancel())
@@ -50,11 +50,11 @@ function WordTab({
       }`}
     >
       {tabState === 'word' ? (
-        <span ref={wordRef} className="whitespace-nowrap px-1 [will-change:transform]" style={{ fontSize: 'clamp(9px, 12cqw, 14px)' }}>
+        <span ref={wordRef} className="whitespace-nowrap px-1" style={{ fontSize: 'clamp(9px, 12cqw, 14px)' }}>
           {word.word.toLowerCase()}
         </span>
       ) : (
-        <div ref={questionRef} className="[will-change:transform]">
+        <div ref={questionRef}>
           <CircleHelp size={24} />
         </div>
       )}
@@ -96,7 +96,7 @@ export default function WordInputTabs({ puzzleWords, activeSlide, onTabClick }: 
         const t2 = setTimeout(() => {
           setTabStates((s) => { const n = [...s]; n[index] = 'word'; return n })
           pendingTimersRef.current.delete(index)
-        }, 1100)
+        }, 1150)
         pendingTimersRef.current.set(index, [t1, t2])
       }
     })
