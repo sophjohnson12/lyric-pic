@@ -47,7 +47,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
           { transform: 'scale(1.2)' },
           { transform: 'scale(1)' },
         ],
-        { duration: 500, easing: 'ease-in-out' }
+        { duration: 400, easing: 'ease-in-out' }
       )
       const onFinish = () => setShowCorrect(false)
       anim?.addEventListener('finish', onFinish)

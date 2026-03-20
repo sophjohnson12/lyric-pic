@@ -43,6 +43,7 @@ function WordTab({
   return (
     <button
       onClick={() => onTabClick(index)}
+      onPointerDown={(e) => e.preventDefault()}
       className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 [container-type:inline-size] ${
         isActive
           ? 'bg-white border-b-white text-primary -mb-px relative z-10'
