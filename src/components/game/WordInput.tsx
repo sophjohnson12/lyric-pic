@@ -18,6 +18,8 @@ interface WordInputProps {
   onRefresh: (wordIndex: number) => void
   onFlag?: (lyricId: number) => void
   onFlagImage?: (url: string) => void
+  onInputFocus?: () => void
+  onInputBlur?: () => void
   autoFocus?: boolean
   focusTrigger?: number
   debugMode?: boolean
@@ -31,6 +33,8 @@ export default function WordInput({
   onReveal,
   onFlag,
   onFlagImage,
+  onInputFocus,
+  onInputBlur,
   autoFocus = false,
   focusTrigger,
   debugMode = false,
@@ -74,16 +78,6 @@ export default function WordInput({
     }
     prevIsGuessedRef.current = isGuessed
   }, [isGuessed])
-
-  // After the input unmounts (revealReady), iOS closes the keyboard and may reset
-  // scroll to 0. Wait 300ms for the keyboard animation to finish, then correct.
-  useEffect(() => {
-    if (!revealReady || alreadyGuessedOnMount.current || window.innerWidth >= 768) return
-    const t = setTimeout(() => {
-      if (window.scrollY < 40) window.scrollTo({ top: 64, behavior: 'smooth' })
-    }, 300)
-    return () => clearTimeout(t)
-  }, [revealReady])
 
   useEffect(() => {
     if (autoFocus && !isGuessed && inputRef.current) {
@@ -224,7 +218,7 @@ export default function WordInput({
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })
                       if (window.innerWidth < 768) {
-                        requestAnimationFrame(() => window.scrollTo({ top: 64, behavior: 'smooth' }))
+                        onInputFocus?.()
                       }
                     }}
                     onBlur={() => {
@@ -232,7 +226,7 @@ export default function WordInput({
                         if (isGuessed) return
                         setTimeout(() => {
                           if (document.activeElement?.tagName !== 'INPUT') {
-                            window.scrollTo({ top: 0, behavior: 'smooth' })
+                            onInputBlur?.()
                           }
                         }, 150)
                       }

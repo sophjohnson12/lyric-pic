@@ -60,6 +60,7 @@ export default function GamePage() {
   const [deferredFocusIndex, setDeferredFocusIndex] = useState(0)
   const focusInitialized = useRef(false)
   const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
+  const [headerCollapsed, setHeaderCollapsed] = useState(false)
   // Track whether a word input was focused at the start of a swipe gesture
   const hadFocusOnSwipeStart = useRef(false)
   const mobilePanelRef = useRef<HTMLDivElement>(null)
@@ -358,14 +359,16 @@ export default function GamePage() {
 
   return (
     <div className="md:h-auto flex flex-col">
-      <Header
-        artistName={game.artist.name}
-        playedCount={game.playedSongIds.length}
-        totalSongs={game.totalPlayableSongs}
-        onInfo={() => setShowInfo(true)}
-        onHistory={() => setShowHistory(true)}
-        onSkip={() => setShowSkipConfirm(true)}
-      />
+      <div className={`overflow-hidden transition-[max-height] duration-300 ${headerCollapsed && !isMd ? 'max-h-0' : 'max-h-20'}`}>
+        <Header
+          artistName={game.artist.name}
+          playedCount={game.playedSongIds.length}
+          totalSongs={game.totalPlayableSongs}
+          onInfo={() => setShowInfo(true)}
+          onHistory={() => setShowHistory(true)}
+          onSkip={() => setShowSkipConfirm(true)}
+        />
+      </div>
 
       <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 md:overflow-y-visible">
         {/* Mobile: file-tab panel */}
@@ -380,9 +383,6 @@ export default function GamePage() {
                     flushSync(() => scrollToSlide(index))
                     if (wasInputFocused) {
                       mobilePanelRef.current?.querySelector('input')?.focus({ preventScroll: true })
-                      setTimeout(() => {
-                        if (window.scrollY < 40) window.scrollTo({ top: 64, behavior: 'smooth' })
-                      }, 150)
                     }
                   }}
                   className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 ${
@@ -411,6 +411,8 @@ export default function GamePage() {
                 onRefresh={game.refreshImage}
                 onFlag={game.enableLyricFlag ? (lyricId) => flagWord(lyricId) : undefined}
                 onFlagImage={game.enableImageFlag ? (url) => flagImage(url) : undefined}
+                onInputFocus={() => setHeaderCollapsed(true)}
+                onInputBlur={() => setHeaderCollapsed(false)}
                 debugMode={game.enableLyricFlag}
                 autoFocus={false}
                 focusTrigger={0}
