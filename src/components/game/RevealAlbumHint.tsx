@@ -45,9 +45,9 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
       {albumHintRevealed && correctAlbum ? (
         <div
           ref={revealedRef}
-          className="flex items-center gap-2 [will-change:transform]"
+          className="flex items-center gap-2 [will-change:transform] h-12"
         >
-          <AlbumIcon album={correctAlbum} size="lg" />
+          <AlbumIcon album={correctAlbum} size="sm" />
           <div className="flex text-sm sm:text-base rounded-3xl bg-neutral-50/1 backdrop-blur-xs p-1">
             <span className="font-medium text-neutral-700">{correctAlbum.name}</span>
             <span className="ml-1 font-thin text-neutral-600">{correctAlbum.release_year ? `(${correctAlbum.release_year})` : ''}</span>
@@ -57,7 +57,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
         <button
           ref={buttonRef}
           onClick={handleClick}
-          className="p-2 text-primary rounded-3xl text-sm font-medium cursor-pointer flex items-center gap-1"
+          className="h-12 px-2 text-primary rounded-3xl text-sm font-medium cursor-pointer flex items-center gap-1"
         >
           <Lightbulb size={20} />
           Show Album

@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import type { Album } from '../../types/database'
 import AlbumIcon from '../common/AlbumIcon'
+import InlineSvgIcon from '../common/InlineSvgIcon'
 
 interface AlbumButtonsProps {
   albums: Album[]
@@ -108,7 +109,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
       onClick={readonly || !onGuess ? undefined : handleClick}
       disabled={!readonly && (isDisabled || isDepletedOnly)}
       title={album.name}
-      className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border
+      className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border-2
         ${showError
           ? 'bg-error border-error-light'
           : showCorrect
@@ -120,12 +121,19 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
         ${readonly ? 'cursor-default' : 'cursor-pointer disabled:cursor-default'}`
       }
       style={{
-        ...(!suppressInlineColors && album.theme_primary_color ? { backgroundColor: album.theme_primary_color } : {}),
-        ...(!suppressInlineColors && album.theme_secondary_color ? { borderColor: album.theme_secondary_color } : {}),
+        ...(!suppressInlineColors && album.theme_secondary_color ? { backgroundColor: album.theme_secondary_color } : {}),
+        ...(!suppressInlineColors && album.theme_primary_color ? { borderColor: album.theme_primary_color } : {}),
       }}
     >
       {album.image_url !== null
-        ? <img src={album.image_url} alt={album.name} className="w-8 h-8" />
+        ? <InlineSvgIcon
+            src={album.image_url}
+            alt={album.name}
+            className={`w-8 h-8 ${isGrayed ? 'text-neutral-400' : showError || showCorrect ? 'text-white' : ''}`}
+            style={!isGrayed && !showError && !showCorrect && album.theme_primary_color
+              ? { color: album.theme_primary_color }
+              : undefined}
+          />
         : getInitials(album.name)
       }
     </button>
