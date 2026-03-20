@@ -112,9 +112,9 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
         title={album.name}
         className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-sm transition-colors duration-300 shrink-0 border-2
           ${showError
-            ? 'bg-error border-error-light'
+            ? 'bg-error/50 border-error'
             : showCorrect
-              ? 'bg-success border-success-light'
+              ? 'bg-success/50 border-success'
               : isGrayed
                 ? 'bg-neutral-300 border-neutral-200 text-neutral-400'
                 : `${!album.theme_secondary_color ? 'bg-secondary/90' : ''} ${!album.theme_primary_color ? 'border-primary' : ''} ${!isDisabled && !isDepletedOnly ? 'hover:opacity-60' : ''}`
@@ -136,7 +136,7 @@ function AlbumButton({ album, isDisabled, isCorrect, isDepletedOnly, isJustIncor
           ? <InlineSvgIcon
               src={album.image_url}
               alt={album.name}
-              className={`w-8 h-8 ${isGrayed ? 'text-neutral-400' : showError || showCorrect ? 'text-white' : !album.theme_primary_color ? 'text-primary' : ''}`}
+              className={`w-8 h-8 ${isGrayed ? 'text-neutral-400' : showError ? 'text-error' : showCorrect ? 'text-success' : !album.theme_primary_color ? 'text-primary' : ''}`}
               style={!isGrayed && !showError && !showCorrect && album.theme_primary_color
                 ? { color: album.theme_primary_color }
                 : undefined}
