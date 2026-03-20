@@ -22,7 +22,6 @@ interface WordInputProps {
   focusTrigger?: number
   debugMode?: boolean
   revealBehavior?: RevealBehavior
-  mobileMaxWidth?: number | null
 }
 
 export default function WordInput({
@@ -36,7 +35,6 @@ export default function WordInput({
   focusTrigger,
   debugMode = false,
   revealBehavior = 'word_only',
-  mobileMaxWidth,
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
@@ -118,10 +116,7 @@ export default function WordInput({
     'bg-primary hover:bg-primary/80 text-neutral-100 hover:text-white'
 
   return (
-    <div
-      className="w-full max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto"
-      style={mobileMaxWidth != null ? { maxWidth: `${mobileMaxWidth}px` } : undefined}
-    >
+    <div className="w-full max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto">
       <div className="pb-0 w-full">
         <div className="flex flex-col aspect-square rounded-xl overflow-hidden shadow-sm bg-white border-b border-secondary">
           {/* Image Container */}
