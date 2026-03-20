@@ -11,6 +11,7 @@ interface SongModalProps {
   resetKey?: string | number
   correctAlbum?: Album | null
   albumRevealed?: boolean
+  showAlbumFilters?: boolean
 }
 
 export default function SongModal({
@@ -20,6 +21,7 @@ export default function SongModal({
   resetKey,
   correctAlbum,
   albumRevealed,
+  showAlbumFilters,
 }: SongModalProps) {
   const [showModal, setShowModal] = useState(false)
   const [modalSelection, setModalSelection] = useState<{ id: number; name: string } | null>(null)
@@ -46,19 +48,29 @@ export default function SongModal({
       </button>
       {showModal && (
         <Modal showClose={false} onClose={() => setShowModal(false)} showEaseIn={true}>
-          {albumRevealed && correctAlbum && (
+          {albumRevealed && correctAlbum && showAlbumFilters && (
             <div className="flex items-center justify-center mb-3 gap-2">
               <AlbumIcon album={correctAlbum} size="sm" />
-              <h2 className="flex text-xl font-bold text-primary">{correctAlbum.name}</h2>
+              <h2
+                className="font-bold text-primary whitespace-nowrap min-w-0"
+                style={{ fontSize: 'clamp(12px, 4.5vw, 20px)' }}
+              >{correctAlbum.name}</h2>
             </div>
           )}
+            {albumRevealed && correctAlbum && !showAlbumFilters && (
+              <div className="flex items-center gap-1 mb-3">
+                <AlbumIcon album={correctAlbum} size="sm" />
+                <span className="text-sm text-neutral-600 font-semibold">Hint:</span>
+                <span className="text-sm text-neutral-700 font-normal">{correctAlbum.name}</span>
+              </div>
+            )}
           <form onSubmit={(e) => { e.preventDefault(); handleModalGuess() }}>
             <SongWheelPicker
               songs={songs}
               incorrectGuesses={incorrectGuesses}
               visibleCount={5}
               containerFraction={0.8}
-              reservedHeight={albumRevealed && correctAlbum ? 212 : 172}
+              reservedHeight={albumRevealed && correctAlbum && showAlbumFilters ? 212 : 172}
               onSelectionChange={(id, name) =>
                 setModalSelection(id !== null ? { id, name } : null)
               }

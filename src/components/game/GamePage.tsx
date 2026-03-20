@@ -464,6 +464,7 @@ export default function GamePage() {
                   resetKey={`${game.incorrectAlbumIds.length}-${game.albumGuessed}`}
                   correctAlbum={game.correctAlbum}
                   albumRevealed={game.albumGuessed || game.albumHintRevealed}
+                  showAlbumFilters={game.showAlbumFilters}
                 />
               </div>
               <div className="hidden md:block">

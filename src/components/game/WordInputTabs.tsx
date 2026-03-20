@@ -43,14 +43,14 @@ function WordTab({
   return (
     <button
       onClick={() => onTabClick(index)}
-      className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 ${
+      className={`flex-1 text-sm font-semibold h-10 flex items-center justify-center overflow-hidden rounded-t-xl cursor-pointer transition-colors border border-neutral-200 [container-type:inline-size] ${
         isActive
           ? 'bg-white border-b-white text-primary -mb-px relative z-10'
           : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-50 hover:text-neutral-600'
       }`}
     >
       {tabState === 'word' ? (
-        <span ref={wordRef} className="truncate px-1 [will-change:transform]">
+        <span ref={wordRef} className="whitespace-nowrap px-1 [will-change:transform]" style={{ fontSize: 'clamp(9px, 12cqw, 14px)' }}>
           {word.word.toLowerCase()}
         </span>
       ) : (
