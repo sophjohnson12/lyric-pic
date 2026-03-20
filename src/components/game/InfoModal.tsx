@@ -50,7 +50,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
             <p>
               <span className="hidden md:inline">Click </span>
               <span className="inline md:hidden">Tap </span>
-              <span className="text-primary">Show Album </span>for an optional hint.
+              <span className="text-primary">Show Album </span>for a hint.
             </p>
           </div>
         )}
