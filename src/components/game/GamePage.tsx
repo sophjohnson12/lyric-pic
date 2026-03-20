@@ -91,7 +91,7 @@ export default function GamePage() {
             window.visualViewport!.removeEventListener('resize', handler)
             if (!mobilePanelRef.current) return
             const panelTop = mobilePanelRef.current.getBoundingClientRect().top
-            const cardSize = Math.floor(window.visualViewport!.height - panelTop - 20)
+            const cardSize = Math.floor(window.visualViewport!.height - panelTop - 32)
             if (cardSize > 60) setMobileCardSize(cardSize)
           }, 150)
         }
