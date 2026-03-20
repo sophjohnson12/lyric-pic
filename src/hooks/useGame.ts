@@ -455,7 +455,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
         setState((prev) => ({ ...prev, albumGuessed: true, correctAlbum: album }))
 
         if (album) {
-          setTimeout(() => applyAlbumTheme(album, enableBackgroundsRef.current), 500)
+          setTimeout(() => applyAlbumTheme(album, enableBackgroundsRef.current), 600)
           getSongsByAlbum(state.artist!.id, albumId, playedSongIds, maxDifficultyRankRef.current).then((songs) => {
             setFilteredSongs(songs)
           })
