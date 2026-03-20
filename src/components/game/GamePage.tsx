@@ -245,6 +245,24 @@ export default function GamePage() {
     setActiveSlide(0)
   }, [game.currentSong?.id])
 
+  // Compute the max card size for mobile once at mount. window.innerHeight is stable —
+  // it does NOT change when the soft keyboard opens (only visualViewport.height does),
+  // so this value never changes and the card never resizes mid-session.
+  //
+  // Chrome on iOS keeps its address bar at the top and shows an autofill toolbar above
+  // the keyboard (~56px + ~44px = ~100px more than Safari takes). Together, keyboard +
+  // Chrome toolbar ≈ 51.5% of innerHeight on iPhone 14, leaving 48.5% above it.
+  // Subtract overhead (main top padding 12 + tabs 40 + panel padding 20 = 72px).
+  //
+  // Formula: innerHeight × 0.485 − 72
+  //   iPhone 14  Chrome (inner≈738): 738×0.485−72 ≈ 286px  (fits: 286+72=358 ≤ 358px avail)
+  //   iPhone 14  Safari (inner≈734): 734×0.485−72 ≈ 284px  (fits: 284+72=356 ≤ 438px avail)
+  //   iPhone 14+ Chrome (inner≈826): 826×0.485−72 ≈ 329px  (fits: 329+72=401 ≤ 437px avail)
+  const [mobileMaxCardPx] = useState<number | null>(() => {
+    if (window.innerWidth >= 768) return null
+    return Math.max(Math.round(window.innerHeight * 0.485 - 72), 80)
+  })
+
 
 
   if (!levelSlug) {
@@ -399,6 +417,7 @@ export default function GamePage() {
                 autoFocus={false}
                 focusTrigger={0}
                 revealBehavior={revealBehavior}
+                mobileMaxWidth={mobileMaxCardPx}
               />
             )}
           </div>
