@@ -23,7 +23,7 @@ function getInitials(name: string): string {
 export default function AlbumIcon({ album, size = 'sm' }: AlbumIconProps) {
   const isLg = size === 'lg'
   return (
-    <div className="bg-neutral-50 rounded-lg">
+    <div className="inline-flex shrink-0 bg-neutral-50 rounded-lg">
       <div
         className={`${isLg ? 'w-12 h-12' : 'w-7 h-7'} rounded-lg flex items-center justify-center text-primary shrink-0 overflow-hidden ${!album.theme_secondary_color ? 'bg-secondary/50' : ''}`}
         style={{

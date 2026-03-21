@@ -37,7 +37,10 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
             : <CircleX size={60} className="text-error drop-shadow-md" />
           }
         </div>
-        <h2 className="text-xl md:text-2xl font-bold text-primary mb-4 mx-auto">{message}</h2>
+        <h2
+          className="font-bold text-primary mb-4 mx-auto"
+          style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
+        >{message}</h2>
         <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
           <p className="text-md md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
           <p className={"text-sm mb-2 md:mb-4 italic"}>
