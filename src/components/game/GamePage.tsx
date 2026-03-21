@@ -105,7 +105,13 @@ export default function GamePage() {
           vpResizeHandlerRef.current = null
           if (!mobilePanelRef.current) return
           const panelTop = mobilePanelRef.current.getBoundingClientRect().top
-          const cardSize = Math.floor(window.visualViewport!.height - panelTop - 32)
+          // The pointerup scroll to headerHeight may not have fired yet (e.g. the
+          // user is still holding their finger down when the debounce expires). If
+          // scrollY < headerHeight the header is still on-screen, making panelTop
+          // larger than it will be after the scroll. Subtract the pending scroll
+          // amount so the card isn't measured too small by ~headerHeight pixels.
+          const pendingScroll = Math.max(0, headerHeight - window.scrollY)
+          const cardSize = Math.floor(window.visualViewport!.height - (panelTop - pendingScroll) - 32)
           // React bails out if the value hasn't changed, so no explicit check needed
           if (cardSize > 60) setMobileCardSize(cardSize)
         }, 150)
