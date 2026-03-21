@@ -26,6 +26,7 @@ interface WordInputProps {
   onImageIndexChange?: (index: number) => void
   mobileCardSize?: number | null
   onInputFocus?: () => void
+  onInputBlur?: () => void
 }
 
 export default function WordInput({
@@ -43,6 +44,7 @@ export default function WordInput({
   onImageIndexChange,
   mobileCardSize,
   onInputFocus,
+  onInputBlur,
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
@@ -226,6 +228,7 @@ export default function WordInput({
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
+                    onBlur={() => onInputBlur?.()}
                     onPointerDown={(e) => {
                       e.preventDefault()
                       inputRef.current?.focus({ preventScroll: true })

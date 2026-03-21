@@ -63,6 +63,7 @@ export default function GamePage() {
   const [isMd, setIsMd] = useState(() => window.matchMedia('(min-width: 768px)').matches)
   const [mobileCardSize, setMobileCardSize] = useState<number | null>(null)
   const cardSizeInitialized = useRef(false)
+  const vpResizeHandlerRef = useRef<(() => void) | null>(null)
   // Track whether a word input was focused at the start of a swipe gesture
   const hadFocusOnSwipeStart = useRef(false)
   const mobilePanelRef = useRef<HTMLDivElement>(null)
@@ -79,34 +80,47 @@ export default function GamePage() {
     const headerEl = document.querySelector<HTMLElement>('header')
     const headerHeight = Math.ceil(headerEl?.getBoundingClientRect().height ?? 64)
 
-    if (!cardSizeInitialized.current) {
-      cardSizeInitialized.current = true
-      // Wait for pointerup (finger lift) then add 50ms to also clear the click event
-      // that fires right after. setTimeout(0) isn't enough when the user holds their
-      // finger — the page shifts while they're still down, and click then lands on
-      // whatever element slid up into position (e.g. an album button).
-      window.addEventListener('pointerup', () => {
-        setTimeout(() => window.scrollTo({ top: headerHeight, behavior: 'instant' }), 50)
-      }, { once: true, passive: true })
+    // First tap: instant scroll so panelTop is settled before keyboard fully opens.
+    // Subsequent taps: smooth scroll. Both wait for pointerup + 50ms to let the
+    // click event that iOS fires right after pointerup clear before the page shifts,
+    // preventing ghost clicks on album buttons when the user holds the input down.
+    const scrollBehavior = cardSizeInitialized.current ? 'smooth' : 'instant'
+    if (!cardSizeInitialized.current) cardSizeInitialized.current = true
+    window.addEventListener('pointerup', () => {
+      setTimeout(() => window.scrollTo({ top: headerHeight, behavior: scrollBehavior }), 50)
+    }, { once: true, passive: true })
 
-      if (window.visualViewport && mobilePanelRef.current) {
-        let debounceTimer: ReturnType<typeof setTimeout>
-        const handler = () => {
-          clearTimeout(debounceTimer)
-          debounceTimer = setTimeout(() => {
-            window.visualViewport!.removeEventListener('resize', handler)
-            if (!mobilePanelRef.current) return
-            const panelTop = mobilePanelRef.current.getBoundingClientRect().top
-            const cardSize = Math.floor(window.visualViewport!.height - panelTop - 32)
-            if (cardSize > 60) setMobileCardSize(cardSize)
-          }, 150)
-        }
-        window.visualViewport.addEventListener('resize', handler)
+    // Re-run the size calculation every focus so changes in keyboard height
+    // (e.g. emoji keyboard, orientation) are picked up. Remove any in-flight
+    // listener from a previous focus first to avoid stacking handlers.
+    if (window.visualViewport) {
+      if (vpResizeHandlerRef.current) {
+        window.visualViewport.removeEventListener('resize', vpResizeHandlerRef.current)
       }
-    } else {
-      window.addEventListener('pointerup', () => {
-        setTimeout(() => window.scrollTo({ top: headerHeight, behavior: 'smooth' }), 50)
-      }, { once: true, passive: true })
+      let debounceTimer: ReturnType<typeof setTimeout>
+      const handler = () => {
+        clearTimeout(debounceTimer)
+        debounceTimer = setTimeout(() => {
+          window.visualViewport!.removeEventListener('resize', handler)
+          vpResizeHandlerRef.current = null
+          if (!mobilePanelRef.current) return
+          const panelTop = mobilePanelRef.current.getBoundingClientRect().top
+          const cardSize = Math.floor(window.visualViewport!.height - panelTop - 32)
+          // React bails out if the value hasn't changed, so no explicit check needed
+          if (cardSize > 60) setMobileCardSize(cardSize)
+        }, 150)
+      }
+      vpResizeHandlerRef.current = handler
+      window.visualViewport.addEventListener('resize', handler)
+    }
+  }
+
+  const handleInputBlur = () => {
+    // Remove the resize listener immediately on blur so it doesn't fire when
+    // the keyboard dismisses (keyboard close also triggers a visualViewport resize).
+    if (window.visualViewport && vpResizeHandlerRef.current) {
+      window.visualViewport.removeEventListener('resize', vpResizeHandlerRef.current)
+      vpResizeHandlerRef.current = null
     }
   }
 
@@ -447,6 +461,7 @@ export default function GamePage() {
                 onImageIndexChange={(idx) => setSavedImageIndices((prev) => ({ ...prev, [activeSlide]: idx }))}
                 mobileCardSize={mobileCardSize}
                 onInputFocus={handleInputFocus}
+                onInputBlur={handleInputBlur}
               />
             )}
           </div>
