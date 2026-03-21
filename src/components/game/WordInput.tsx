@@ -50,6 +50,7 @@ export default function WordInput({
   const [showImageFlagConfirm, setShowImageFlagConfirm] = useState(false)
   const [flaggedImageUrls, setFlaggedImageUrls] = useState<Set<string>>(new Set())
   const [lockState, setLockState] = useState<LockState>('locked')
+  const [isPending, setIsPending] = useState(false)
   const [lockScope, animateLock] = useAnimate()
   const [activeImageIndex, setActiveImageIndex] = useState(initialImageIndex)
   const inputWasFocused = useRef(false)
@@ -90,8 +91,10 @@ export default function WordInput({
   }, [autoFocus, focusTrigger])
 
   const submitGuess = async () => {
-
+    if (isPending) return
+    setIsPending(true)
     const result = await onGuess(wordIndex, inputValue)
+    setIsPending(false)
     if (result === 'correct' || result === 'incorrect' || result === 'invalid' || result === 'already_guessed') {
       setInputValue('')
     }
@@ -237,6 +240,8 @@ export default function WordInput({
                   type="button"
                   onPointerDown={(e) => { inputWasFocused.current = document.activeElement === inputRef.current; e.preventDefault() }}
                   onClick={async () => { await submitGuess(); if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true }) }}
+                  animate={isPending ? { opacity: [1, 0.45, 1] } : { opacity: 1 }}
+                  transition={isPending ? { repeat: Infinity, duration: 0.75, ease: 'easeInOut' } : { duration: 0.15 }}
                   className={`group h-full flex items-center justify-center z-10 px-3 rounded-br-xl border-t border-x border-secondary transition-colors cursor-pointer ${lockBgClass}`}
                 >
                   <AnimatePresence mode="wait">
