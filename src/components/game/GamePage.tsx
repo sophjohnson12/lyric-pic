@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { flushSync } from 'react-dom'
-import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import { parseLevelSlug } from '../../types/game'
 import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
@@ -24,7 +24,6 @@ import { flagWord, flagImage } from '../../services/supabase'
 export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
   const navigate = useNavigate()
-  const location = useLocation()
   const loadMessage = localStorage.getItem(LOAD_MESSAGE_KEY)
   const levelSlug = parseLevelSlug(rawDifficulty)
 
@@ -32,15 +31,11 @@ export default function GamePage() {
 
   const game = useGame(artistSlug || '', levelSlug, revealBehavior)
 
-  const fromDifficulty = !!(location.state as any)?.fromDifficulty
-  const fromLevelSwitch = localStorage.getItem(SHOW_INFO_KEY) === 'true'
-  const [showInfo, setShowInfo] = useState(fromDifficulty || fromLevelSwitch)
+  const showInfoOnLoad = localStorage.getItem(SHOW_INFO_KEY) === 'true'
+  const [showInfo, setShowInfo] = useState(showInfoOnLoad)
 
   useEffect(() => {
-    if (fromDifficulty) {
-      window.history.replaceState({}, '')
-    }
-    if (fromLevelSwitch) {
+    if (showInfoOnLoad) {
       localStorage.removeItem(SHOW_INFO_KEY)
     }
   }, [])
