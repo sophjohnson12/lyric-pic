@@ -35,19 +35,9 @@ export interface Album {
   created_at: string
 }
 
-export interface AlbumImport {
-  id: number
-  artist_id: number
-  name: string
-  album_type: string | null
-  canonical_album_id: number | null
-  created_at: string
-}
-
 export interface Song {
   id: number
   artist_id: number
-  album_import_id: number | null
   album_id: number | null
   name: string
   track_number: number | null

@@ -269,31 +269,6 @@ export async function getAdminPlayableAlbumIds(artistId: number): Promise<Set<nu
   return new Set((data as { id: number }[]).map((r) => r.id))
 }
 
-export interface AdminAlbumImportRow {
-  id: number
-  name: string
-  album_type: string | null
-  song_count: number
-}
-
-export async function getAlbumImports(artistId: number): Promise<AdminAlbumImportRow[]> {
-  const { data, error } = await supabase
-    .from('album_import')
-    .select('id, name, album_type')
-    .eq('artist_id', artistId)
-    .order('name')
-  if (error) throw error
-
-  const rows: AdminAlbumImportRow[] = []
-  for (const a of data) {
-    const { count } = await supabase
-      .from('song')
-      .select('*', { count: 'exact', head: true })
-      .eq('album_import_id', a.id)
-    rows.push({ ...a, song_count: count ?? 0 })
-  }
-  return rows
-}
 
 export async function getAdminAlbumById(id: number) {
   const { data, error } = await supabase

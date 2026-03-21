@@ -51,7 +51,7 @@ Lyric Pic is a music lyric guessing game. Players are shown images representing 
 
 ### Database Tables
 
-Core tables: `artist`, `album`, `song`, `lyric`, `song_lyric`, `song_line`, `song_lyric_line`, `artist_lyric`, `album_import`, `load_status`, `blocklist_reason`. Interfaces in `src/types/database.ts`.
+Core tables: `artist`, `album`, `song`, `lyric`, `song_lyric`, `song_line`, `song_lyric_line`, `artist_lyric`, `load_status`, `blocklist_reason`. Interfaces in `src/types/database.ts`.
 
 Key relationships: Songs belong to albums and artists. `song_lyric` is the junction between songs and lyrics with occurrence counts and `is_selectable` flag. `song_line` stores each non-empty, non-header line of a song's lyrics (`line_index` is 0-based among stored lines; `has_title = true` if the line contains the song title). `song_lyric_line` links each `song_lyric` to the `song_line`(s) where that word appears. Deletion order must be FK-safe: `song_lyric_line` first, then `song_lyric` and `song_line`.
 
