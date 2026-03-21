@@ -39,6 +39,12 @@ export default function GamePage() {
       localStorage.removeItem(SHOW_INFO_KEY)
     }
   }, [])
+
+  useEffect(() => {
+    if (game.allSongsPlayed) {
+      setShowInfo(false)
+    }
+  }, [game.allSongsPlayed])
   const [showHistory, setShowHistory] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
   const [showFailedModal, setShowFailedModal] = useState(false)

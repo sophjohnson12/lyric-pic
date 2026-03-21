@@ -60,7 +60,7 @@ export default function Header({
           <button
             onClick={skipDisabled ? undefined : onSkip}
             disabled={skipDisabled}
-            className={`group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border border-primary text-primary ${skipDisabled ? 'bg-neutral-200 cursor-default' : 'bg-neutral-50 hover:bg-white cursor-pointer'}`}
+            className={`group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border ${skipDisabled ? 'text-neutral-400 bg-neutral-300 border-neutral-200 cursor-default' : 'text-primary bg-neutral-50 border-primary hover:bg-white cursor-pointer'}`}
           >
             <SkipForward size={24} className={skipDisabled ? '' : 'transition-transform group-hover:scale-110'} />
           </button>
