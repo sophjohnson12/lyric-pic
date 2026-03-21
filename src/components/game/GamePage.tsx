@@ -360,7 +360,7 @@ export default function GamePage() {
             levelSlug={levelSlug}
             fanbaseName={game.artist?.fanbase_name ?? null}
             totalPlayableSongs={game.totalPlayableSongs}
-            confettiColors={game.albums.map((a) => a.theme_primary_color).filter((c): c is string => !!c)}
+            confettiColors={game.albums.flatMap((a) => [a.theme_primary_color, a.theme_secondary_color]).filter((c): c is string => !!c)}
             onChooseLevel={() => navigate(`/${artistSlug}`)}
             onShowHistory={() => setShowHistory(true)}
           />
