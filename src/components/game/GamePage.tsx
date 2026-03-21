@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import { parseLevelSlug } from '../../types/game'
-import { LOAD_MESSAGE_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
+import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import type { RevealBehavior } from './SettingsModal'
 import Header from '../layout/Header'
@@ -33,11 +33,15 @@ export default function GamePage() {
   const game = useGame(artistSlug || '', levelSlug, revealBehavior)
 
   const fromDifficulty = !!(location.state as any)?.fromDifficulty
-  const [showInfo, setShowInfo] = useState(fromDifficulty)
+  const fromLevelSwitch = localStorage.getItem(SHOW_INFO_KEY) === 'true'
+  const [showInfo, setShowInfo] = useState(fromDifficulty || fromLevelSwitch)
 
   useEffect(() => {
     if (fromDifficulty) {
       window.history.replaceState({}, '')
+    }
+    if (fromLevelSwitch) {
+      localStorage.removeItem(SHOW_INFO_KEY)
     }
   }, [])
   const [showHistory, setShowHistory] = useState(false)

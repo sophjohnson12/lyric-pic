@@ -4,7 +4,7 @@ import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { getPlayedSongNames } from '../../services/supabase'
-import { LOAD_MESSAGE_KEY } from '../../utils/constants'
+import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY } from '../../utils/constants'
 import type { GameLevel, RevealBehavior } from '../../types/game'
 
 export type { RevealBehavior }
@@ -60,6 +60,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     } else {
       localStorage.removeItem(LOAD_MESSAGE_KEY)
     }
+    localStorage.setItem(SHOW_INFO_KEY, 'true')
     window.location.href = `/${artistSlug}/${slug}`
   }
 
