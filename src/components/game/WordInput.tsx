@@ -130,7 +130,7 @@ export default function WordInput({
 
   return (
     <div
-      className="w-full max-md:min-w-[160px] max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto max-md:transition-[max-width] max-md:duration-300 max-md:ease-out max-md:[will-change:transform]"
+      className="w-full max-md:min-w-[160px] sm:max-md:min-w-[240px] max-md:max-w-[calc(52lvh-83px)] max-md:mx-auto max-md:transition-[max-width] max-md:duration-300 max-md:ease-out max-md:[will-change:transform]"
       style={mobileCardSize != null ? { maxWidth: mobileCardSize } : undefined}
     >
       <div className="pb-0 w-full">
