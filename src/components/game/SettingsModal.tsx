@@ -67,85 +67,90 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
   return (
     <Modal onClose={onClose} showEaseIn={true}>
       <div className="text-sm text-neutral-600">
-        <h2 className="text-xl font-bold text-primary mb-4">Settings & Stats</h2>
-
-        <h3 className="text-base font-semibold text-neutral-800 tracking-wide mb-2 flex items-center gap-1">
-          Reveal Behavior
-        </h3>
-        <div className="flex gap-6 mb-6">
-          {(['full_lyric', 'word_only'] as const).map((value) => (
-            <label key={value} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="revealBehavior"
-                value={value}
-                checked={revealBehavior === value}
-                onChange={() => onRevealBehaviorChange(value)}
-                className="accent-primary cursor-pointer"
-              />
-              <span>
-                {value === 'word_only' ? 'Word Only' : 'Full Lyric'}
-              </span>
-            </label>
-          ))}
-        </div>
-
-        <h3 className="text-base font-semibold text-neutral-800 tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
-        <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
-          {levels.map((level) => (
-            <button
-              key={level.id}
-              onClick={() => handleLevelChange(level.slug)}
-              className={`flex-1 py-2 min-h-12 flex flex-col items-center justify-center text-base border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
-                level.slug === levelSlug
-                  ? 'bg-primary text-white'
-                  : 'text-primary hover:bg-secondary/50'
-              }`}
-            >
-              <h3>{level.name}</h3>
-              {levelSongCounts[level.id] != null && (
-                <span className={`text-tiny font-normal ${
-                  level.slug === levelSlug
-                    ? 'text-white'
-                    : 'text-neutral-600'
+        <h2 className="text-xl font-bold text-primary mb-1">Settings & Stats</h2>
+        <div className="space-y-3">
+          <div>
+            <h3 className="text-base font-semibold text-neutral-800 mb-1">
+              Reveal Behavior
+            </h3>
+            <div className="flex gap-6">
+              {(['full_lyric', 'word_only'] as const).map((value) => (
+                <label key={value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="revealBehavior"
+                    value={value}
+                    checked={revealBehavior === value}
+                    onChange={() => onRevealBehaviorChange(value)}
+                    className="accent-primary cursor-pointer"
+                  />
+                  <span>
+                    {value === 'word_only' ? 'Word Only' : 'Full Lyric'}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-neutral-800 mb-1">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
+            <div className="flex rounded-lg overflow-hidden border border-primary">
+              {levels.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => handleLevelChange(level.slug)}
+                  className={`flex-1 py-2 min-h-12 flex flex-col items-center justify-center text-base border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
+                    level.slug === levelSlug
+                      ? 'bg-primary text-white'
+                      : 'text-primary hover:bg-secondary/50'
                   }`}
                 >
-                  {level.id === levels[levels.length - 1]?.id
-                    ? `All Songs`
-                    : `Top ${levelSongCounts[level.id]} Songs`}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <h3 className="text-base font-semibold text-neutral-800 tracking-wide mb-2">Game History</h3>
-        <div className="mb-2">
-          <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
-        </div>
-        {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
-          <ul className="space-y-1 mb-4">
-            {loading
-              ? playedSongIds.map((id) => (
-                  <li key={id} className="text-sm h-5 w-full rounded bg-neutral-200 animate-pulse" />
-                ))
-              : songNames.map((name) => (
-                  <li key={name}>
-                    {name}
-                  </li>
-                ))}
-          </ul>
-        )}
-        {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
-          <div className="flex items-center justify-center ">
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="w-full md:w-auto py-2 px-4 h-12 font-medium text-sm text-error border border-error rounded-lg hover:bg-error/20 cursor-pointer"
-            >
-              Clear {currentLevelName} History
-            </button>
+                  <h3>{level.name}</h3>
+                  {levelSongCounts[level.id] != null && (
+                    <span className={`text-tiny font-normal tracking-normal ${
+                      level.slug === levelSlug
+                        ? 'text-white'
+                        : 'text-neutral-600'
+                      }`}
+                    >
+                      {level.id === levels[levels.length - 1]?.id
+                        ? `All Songs`
+                        : `Top ${levelSongCounts[level.id]} Songs`}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+          <div>
+            <h3 className="text-base font-semibold text-neutral-800 mb-1">Game History</h3>
+            <div className="mb-2">
+              <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
+            </div>
+            {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
+              <ul className="space-y-1 mb-4">
+                {loading
+                  ? playedSongIds.map((id) => (
+                      <li key={id} className="text-sm h-5 w-full rounded bg-neutral-200 animate-pulse" />
+                    ))
+                  : songNames.map((name) => (
+                      <li key={name}>
+                        {name}
+                      </li>
+                    ))}
+              </ul>
+            )}
+            {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
+              <div className="flex items-center justify-center ">
+                <button
+                  onClick={() => setShowConfirm(true)}
+                  className="w-full md:w-auto py-2 px-4 h-12 font-medium text-sm text-error border border-error rounded-lg hover:bg-error/20 cursor-pointer"
+                >
+                  Clear {currentLevelName} History
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
         {showConfirm && (
           <ConfirmPopup
             title={`Clear ${currentLevelName} History?`}

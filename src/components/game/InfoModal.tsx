@@ -16,8 +16,8 @@ interface InfoModalProps {
 export default function InfoModal({ minSongLyricCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose} showEaseIn={true}>
-      <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
-      <div className="space-y-4 text-sm text-neutral-600">
+      <h2 className="text-xl font-bold text-primary mb-1">How to Play</h2>
+      <div className="space-y-3 text-sm text-neutral-600">
         <div>
           <h3 className="font-semibold text-base text-neutral-800 mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
           <p>
@@ -67,7 +67,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
             <span> Play all {songCount} songs!</span>
           </p>
           <ul className="mt-1 space-y-1">
-            <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/> Manage levels, settings, and game history</li>
+            <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/> Manage levels and game history</li>
             <li className="flex items-center"><SkipForward size={15} strokeWidth={3} className="mr-2 text-primary"/>  Skip song</li>
           </ul>
         </div>
