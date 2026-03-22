@@ -62,9 +62,9 @@ function GuessCircle({ index, isFlipped }: {
         />
         {/* Back Side (Number/Used) */}
         <div
-          className={`absolute inset-0 w-full h-full rounded-full flex items-center justify-center text-white font-bold [backface-visibility:hidden] [transform:rotateY(180deg)] transition-colors duration-500 border ${showError ? 'bg-error border-error-light' : 'bg-primary border-secondary'}`}
+          className={`absolute inset-0 w-full h-full rounded-full flex items-center justify-center text-white font-semibold [backface-visibility:hidden] [transform:rotateY(180deg)] transition-colors duration-500 border ${showError ? 'bg-error border-error-light' : 'bg-primary border-secondary'}`}
         >
-          {index + 1}
+          <span className="leading-none -translate-y-px">{index + 1}</span>
         </div>
       </motion.div>
     </div>
