@@ -127,7 +127,7 @@ export default function SongWheelPicker({
       />
       {items.length === 0 ? (
         <div
-          className="w-full flex items-center justify-center text-neutral-400 text-sm"
+          className="w-full flex items-center justify-center text-neutral-400 text-base"
           style={{ height: containerHeight }}
         >
           No songs found
@@ -187,7 +187,7 @@ export default function SongWheelPicker({
                     }
                   }}
                 >
-                  <span className="truncate max-w-full text-sm">{item.name}</span>
+                  <span className="truncate max-w-full text-base">{item.name}</span>
                 </button>
               ))}
             </div>
