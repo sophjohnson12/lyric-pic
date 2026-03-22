@@ -30,7 +30,7 @@ export default function Header({
         <Link to={`/${artistSlug}`} className="flex flex-col justify-center">
           <h1 className="text-xl text-primary leading-tight font-semibold tracking-wide">LYRIC PIC</h1>
           {artistName && (
-            <p className="text-xs text-neutral-500 leading-none">{artistName}</p>
+            <h3 className="text-xs text-neutral-500 leading-none">{artistName}</h3>
           )}
         </Link>
 
