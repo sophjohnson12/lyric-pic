@@ -34,11 +34,6 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         {showAlbumFilters && (
           <div>
             <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">2. Guess the Album</h3>
-            <p>
-              <span className="hidden md:inline">Click </span>
-              <span className="inline md:hidden">Tap </span>
-              until you guess the album.
-            </p>
             <div className="mt-1">
               {albums.length > 0 && <AlbumButtons albums={albums} readonly list />}
             </div>
@@ -55,7 +50,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
           </div>
         )}
         <div>
-          <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">3. Guess the Song</h3>
+          <h3 className="font-semibold text-neutral-800 mb-1">3. Guess the Song</h3>
           <p>
             <span className="hidden md:inline">Click </span>
             <span className="inline md:hidden">Tap </span>
