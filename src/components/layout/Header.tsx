@@ -27,16 +27,12 @@ export default function Header({
   return (
     <header className="bg-neutral-50 top-0 z-50 px-4 py-2 min-w-2xs shadow-sm">
       <div className="sm:max-w-7/8 mx-auto flex items-center justify-between">
-        <div className="flex flex-col justify-center">
-          <h1 className="text-xl text-primary leading-tight">
-            <Link to={`/${artistSlug}`}>LYRIC PIC</Link>
-          </h1>
+        <Link to={`/${artistSlug}`} className="flex flex-col justify-center">
+          <h1 className="text-xl text-primary leading-tight font-semibold">LYRIC PIC</h1>
           {artistName && (
-            <p className="text-xs text-neutral-500 leading-none">
-              {artistName}
-            </p>
+            <p className="text-xs text-neutral-500 leading-none">{artistName}</p>
           )}
-        </div>
+        </Link>
 
         <div className="hidden md:flex flex-1 mx-8 max-w-md mt-5">
           <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
