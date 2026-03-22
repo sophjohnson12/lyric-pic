@@ -317,7 +317,7 @@ export default function GamePage() {
 
   if (game.loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         {loadMessage && (
           <p className="text-neutral-600 font-medium text-center max-w-xs px-4 font-base">{loadMessage}</p>
@@ -328,7 +328,7 @@ export default function GamePage() {
 
   if (game.artist && !game.artist.is_selectable) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="min-h-dvh flex items-center justify-center p-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-primary mb-2 tracking-wide">
             Coming Soon
@@ -404,7 +404,7 @@ export default function GamePage() {
 
   if (!game.currentSong || !game.artist) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="text-center">
           <div className="text-neutral-500 mb-4">Something went wrong loading a song.</div>
           <button
