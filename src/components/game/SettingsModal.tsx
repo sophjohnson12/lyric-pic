@@ -125,7 +125,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
               <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
             </div>
             {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
-              <ul className="space-y-1 mb-4">
+              <ul className="space-y-1">
                 {loading
                   ? playedSongIds.map((id) => (
                       <li key={id} className="text-sm h-5 w-full rounded bg-neutral-200 animate-pulse" />
@@ -137,6 +137,8 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
                     ))}
               </ul>
             )}
+          </div>
+          <div>
             {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
               <div className="flex items-center justify-center ">
                 <button

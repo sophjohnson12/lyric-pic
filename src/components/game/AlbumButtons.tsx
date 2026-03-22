@@ -196,7 +196,7 @@ export default function AlbumButtons({
 
   if (list) {
     return (
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
         {albums.map((album) => (
           <div key={album.id} className="flex items-center gap-2 text-xs text-neutral-600">
             <AlbumIcon album={album} />
