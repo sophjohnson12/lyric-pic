@@ -47,7 +47,7 @@ export default function SongModal({
       <button
         ref={triggerRef}
         onClick={() => setShowModal(true)}
-        className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-base font-semibold
+        className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-lg font-semibold
                    hover:text-white hover:opacity-90 cursor-pointer border border-secondary
                    flex items-center gap-1"
       >
