@@ -42,8 +42,8 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
           style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
         >{message}</h2>
         <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
-          <p className="text-lg md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
-          <p className={"text-base mb-2 md:mb-4 italic"}>
+          <p className="text-lg md:text-xl font-bold text-neutral-800">{songDisplay}</p>
+          <p className={"text-sm mb-2 md:mb-4 italic"}>
             
             <span className="font-medium text-neutral-700">{album ? album.name : 'Single'}</span>
             <span className="ml-1 font-thin text-neutral-600">{album && album.release_year ? `(${album.release_year})` : ''}</span>
