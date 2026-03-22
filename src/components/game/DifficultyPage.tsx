@@ -30,6 +30,12 @@ export default function DifficultyPage() {
       setLevels(lvls)
       await document.fonts.ready
       await document.fonts.load('700 1em Playfair Display')
+      await new Promise<void>((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve()
+        img.onerror = () => resolve()
+        img.src = '/lyric-pic-logo.svg'
+      })
       setLoading(false)
     }
     load().catch(() => setLoading(false))
