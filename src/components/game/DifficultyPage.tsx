@@ -60,7 +60,7 @@ export default function DifficultyPage() {
       {artist?.name && (
         <h2 className="text-neutral-500 mb-6 text-xl">{artist.name}</h2>
       )}
-        <p className="text-lg text-neutral-800 font-normal mb-3 text-center">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
+        <p className="text-lg text-neutral-800 font-medium mb-3 text-center">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
       {levels.length === 0 ? (
         <p className="text-neutral-500 text-sm">No levels available yet.</p>
       ) : (
@@ -73,7 +73,7 @@ export default function DifficultyPage() {
             >
               <h2 className="text-xl">{level.name}</h2>
               {level.description && (
-                <p className="text-sm text-neutral-600 font-normal">{level.description}</p>
+                <p className="text-base text-neutral-600 font-normal">{level.description}</p>
               )}
             </button>
           ))}
