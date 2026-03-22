@@ -71,7 +71,7 @@ export default function LevelComplete({
             ? `Congratulations, you've officially graduated from ${levelName}${fanbaseSuffix}!`
             : `Congratulations! You've proven your ${levelName}${fanbaseSuffix} status.`}
         </h2>
-        <p className="text-neutral-500 mb-6">
+        <p className="text-neutral-800 mb-6">
           {hasHigherLevel
             ? `You've played ${songPhrase}. Go to the next level to keep playing.`
             : `You've played ${songPhrase}. Clear your history to play again.`}
