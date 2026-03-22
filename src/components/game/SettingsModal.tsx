@@ -96,7 +96,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             <button
               key={level.id}
               onClick={() => handleLevelChange(level.slug)}
-              className={`flex-1 py-2 min-h-12 flex flex-col items-center justify-center text-sm border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
+              className={`flex-1 py-2 min-h-12 flex flex-col items-center justify-center text-base border-r border-primary last:border-r-0 font-semibold transition-colors cursor-pointer ${
                 level.slug === levelSlug
                   ? 'bg-primary text-white'
                   : 'text-primary hover:bg-secondary/50'
