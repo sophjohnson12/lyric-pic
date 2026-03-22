@@ -64,7 +64,7 @@ function GuessCircle({ index, isFlipped }: {
         <div
           className={`absolute inset-0 w-full h-full rounded-full flex items-center justify-center text-white font-semibold [backface-visibility:hidden] [transform:rotateY(180deg)] transition-colors duration-500 border ${showError ? 'bg-error border-error-light' : 'bg-primary border-secondary'}`}
         >
-          <span className="leading-none -translate-y-px">{index + 1}</span>
+          <span className="leading-none -translate-y-[1.25px]">{index + 1}</span>
         </div>
       </motion.div>
     </div>
