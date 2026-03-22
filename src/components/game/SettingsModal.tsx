@@ -68,7 +68,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     <Modal onClose={onClose} showEaseIn={true}>
       <div className="text-base text-neutral-600">
         <h2 className="tracking-wide text-xl font-bold text-primary mb-1">Settings & Stats</h2>
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           <div>
             <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Reveal Behavior</h3>
             <div className="flex gap-6">
