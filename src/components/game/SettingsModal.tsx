@@ -69,7 +69,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       <div className="text-sm text-neutral-600">
         <h2 className="text-xl font-bold text-primary mb-4">Settings & Stats</h2>
 
-        <h3 className="text-sm font-semibold text-neutral-800 tracking-wide mb-2 flex items-center gap-1">
+        <h3 className="text-base font-semibold text-neutral-800 tracking-wide mb-2 flex items-center gap-1">
           Reveal Behavior
         </h3>
         <div className="flex gap-6 mb-6">
@@ -90,7 +90,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
           ))}
         </div>
 
-        <h3 className="text-sm font-semibold text-neutral-800 tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
+        <h3 className="text-base font-semibold text-neutral-800 tracking-wide mb-2">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
         <div className="flex rounded-lg overflow-hidden border border-primary mb-6">
           {levels.map((level) => (
             <button
@@ -119,7 +119,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
           ))}
         </div>
 
-        <h3 className="text-sm font-semibold text-neutral-800 tracking-wide mb-2">Game History</h3>
+        <h3 className="text-base font-semibold text-neutral-800 tracking-wide mb-2">Game History</h3>
         <div className="mb-2">
           <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
         </div>
