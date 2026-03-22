@@ -320,7 +320,7 @@ export default function GamePage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         {loadMessage && (
-          <p className="text-neutral-600 font-medium text-center max-w-xs px-4">{loadMessage}</p>
+          <p className="text-neutral-600 font-medium text-center max-w-xs px-4 font-base">{loadMessage}</p>
         )}
       </div>
     )
