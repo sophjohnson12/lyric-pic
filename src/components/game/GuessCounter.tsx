@@ -76,7 +76,7 @@ export default function GuessCounter({ guessMessage, guessCount, allowedCount }:
     <div className="flex items-center justify-center py-2 w-full">
       <div className="flex flex-row items-center justify-center">
         <div className="flex bg-neutral-50/1 backdrop-blur-xs rounded-3xl p-1 items-center">
-          <div className="text-xs text-neutral-600 text-center font-medium min-w-0 shrink">
+          <div className="text-xs text-neutral-600 text-center min-w-0 shrink">
             {guessMessage || "Guesses:"}
           </div>
           <div className="flex flex-row gap-1.5 flex-shrink-0 pl-1.5">

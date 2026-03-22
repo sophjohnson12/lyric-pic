@@ -13,7 +13,7 @@ export default function ProgressBar({ playedCount, totalSongs }: ProgressBarProp
           style={{ width: `${progressPercentage}%` }}
         />
       </div>
-      <div className="text-xs text-neutral-600 text-center font-medium">
+      <div className="text-xs text-neutral-600 text-center">
         {playedCount} / {totalSongs} {totalSongs === 1 ? 'song' : 'songs'}
       </div>
     </div>

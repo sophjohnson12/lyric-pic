@@ -106,7 +106,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
                 >
                   <h3>{level.name}</h3>
                   {levelSongCounts[level.id] != null && (
-                    <span className={`text-tiny font-normal tracking-normal ${
+                    <span className={`text-xs font-normal tracking-normal ${
                       level.slug === levelSlug
                         ? 'text-white'
                         : 'text-neutral-600'
