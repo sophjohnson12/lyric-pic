@@ -234,7 +234,7 @@ export default function WordInput({
                       inputRef.current?.focus({ preventScroll: true })
                       onInputFocus?.()
                     }}
-                    className="w-full h-full px-2 text-neutral-800 placeholder-neutral-600 text-base rounded-bl-xl border-t border-l border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
+                    className="w-full h-full px-2 text-neutral-950 placeholder-neutral-600 text-base rounded-bl-xl border-t border-l border-secondary appearance-none [-webkit-appearance:none] max-sm:focus:outline-none max-sm:focus:shadow-none"
                     placeholder="Guess the word..."
                   />
                 </form>

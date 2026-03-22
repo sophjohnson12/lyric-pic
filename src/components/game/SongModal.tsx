@@ -47,7 +47,7 @@ export default function SongModal({
       <button
         ref={triggerRef}
         onClick={() => setShowModal(true)}
-        className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-base font-medium
+        className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-base font-semibold
                    hover:text-white hover:opacity-90 cursor-pointer border border-secondary
                    flex items-center gap-1"
       >
@@ -89,14 +89,14 @@ export default function SongModal({
               <button
                 type="button"
                 onClick={closeModal}
-                className="h-12 flex-1 px-4 py-2 rounded-lg border border-neutral-200 text-neutral-800 text-base font-medium hover:bg-black/10 transition-colors cursor-pointer"
+                className="h-12 flex-1 px-4 py-2 rounded-lg border border-neutral-200 text-neutral-800 text-base font-normal hover:bg-black/10 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!modalSelection}
-                className="h-12 flex-1 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-medium
+                className="h-12 flex-1 px-4 py-2 bg-primary text-neutral-100 rounded-lg text-base font-semibold
                 border border-secondary cursor-pointer hover:opacity-90 hover:text-white
                 disabled:cursor-default disabled:hover:opacity-100 disabled:hover:text-neutral-100 disabled:bg-primary/30"
               >

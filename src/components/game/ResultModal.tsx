@@ -64,7 +64,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
         <button
           ref={buttonRef}
           onClick={onNext}
-          className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-medium hover:opacity-90 cursor-pointer"
+          className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer"
         >
           Next Song
         </button>

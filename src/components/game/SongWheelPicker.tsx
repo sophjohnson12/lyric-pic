@@ -109,7 +109,7 @@ export default function SongWheelPicker({
 
   const getItemClass = (index: number) => {
     const diff = Math.abs(index - effectiveIndex)
-    if (diff === 0) return 'opacity-100 font-medium text-primary'
+    if (diff === 0) return 'opacity-100 font-semibold text-primary'
     if (diff === 1) return 'opacity-50 text-neutral-800'
     return 'opacity-20 text-neutral-800'
   }
@@ -122,8 +122,8 @@ export default function SongWheelPicker({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={`Search ${filteredSongs.length} songs...`}
-        className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm text-neutral-800
-                   placeholder-neutral-400 text-base border border-secondary mb-3"
+        className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm text-neutral-950
+                   placeholder-neutral-600 text-base border border-secondary mb-3"
       />
       {items.length === 0 ? (
         <div
