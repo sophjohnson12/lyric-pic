@@ -27,14 +27,14 @@ export default function Header({
   return (
     <header className="bg-neutral-50 top-0 z-50 px-4 py-2 min-w-2xs shadow-sm">
       <div className="sm:max-w-7/8 mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-primary">
-            <Link to={`/${artistSlug}`}>Lyric Pic</Link>
+        <div className="flex flex-col justify-center">
+          <h1 className="text-xl text-primary leading-tight">
+            <Link to={`/${artistSlug}`}>LYRIC PIC</Link>
           </h1>
           {artistName && (
-            <span className="text-xs text-gray-600 hidden sm:inline mt-1">
+            <p className="text-xs text-neutral-500 leading-none">
               {artistName}
-            </span>
+            </p>
           )}
         </div>
 

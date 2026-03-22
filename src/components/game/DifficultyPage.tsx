@@ -29,7 +29,7 @@ export default function DifficultyPage() {
       const lvls = await getArtistLevels(a.id)
       setLevels(lvls)
       await document.fonts.ready
-      await document.fonts.load('700 1em Quicksand')
+      await document.fonts.load('700 1em Playfair Display')
       setLoading(false)
     }
     load().catch(() => setLoading(false))
@@ -56,11 +56,11 @@ export default function DifficultyPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <h1 className="text-3xl font-bold text-primary mb-2">Lyric Pic</h1>
+      <img src="/lyric-pic-logo.svg" alt="Lyric Pic" className="h-48 w-auto mb-2" />
       {artist?.name && (
-        <p className="text-neutral-500 mb-10 text-sm">{artist.name}</p>
+        <h2 className="text-neutral-500 mb-10 text-xl">{artist.name}</h2>
       )}
-      <h2 className="text-lg font-semibold text-neutral-800 mb-6">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</h2>
+      <p className="text-lg text-neutral-800 mb-6">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
       {levels.length === 0 ? (
         <p className="text-neutral-500 text-sm">No levels available yet.</p>
       ) : (
@@ -71,7 +71,7 @@ export default function DifficultyPage() {
               onClick={() => handleSelect(level)}
               className="items-center justify-between px-6 py-4 border-primary border text-primary rounded-xl font-semibold hover:bg-secondary/50 transition-opacity cursor-pointer"
             >
-              <h2 className="text-xl font-bold">{level.name}</h2>
+              <h2 className="text-xl">{level.name}</h2>
               {level.description && (
                 <p className="text-sm font-normal opacity-75 text-neutral-800">{level.description}</p>
               )}
