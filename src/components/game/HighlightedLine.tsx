@@ -3,6 +3,7 @@ import { useState, useRef, useLayoutEffect } from 'react'
 interface HighlightedLineProps {
   text: string
   word: string
+  wordClassName?: string
 }
 
 function fixOrphanedQuote(text: string): string {
@@ -58,7 +59,7 @@ function truncateToHalf(text: string, word: string): string {
   }
 }
 
-export default function HighlightedLine({ text, word }: HighlightedLineProps) {
+export default function HighlightedLine({ text, word, wordClassName = 'font-bold' }: HighlightedLineProps) {
   const displayText = fixOrphanedQuote(text)
   const [truncatedText, setTruncatedText] = useState<string | null>(null)
   const wrapperRef = useRef<HTMLSpanElement>(null)
@@ -85,8 +86,8 @@ export default function HighlightedLine({ text, word }: HighlightedLineProps) {
   return (
     <span ref={wrapperRef}>
       {parts.map((part, i) =>
-        i % 2 === 1 ? 
-        <span className="font-bold underline" key={i}>{part}</span> : 
+        i % 2 === 1 ?
+        <span className={`${wordClassName} underline`} key={i}>{part}</span> :
         <span key={i}>{part}</span>
       )}
     </span>

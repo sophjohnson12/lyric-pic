@@ -67,12 +67,10 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
   return (
     <Modal onClose={onClose} showEaseIn={true}>
       <div className="text-base text-neutral-600">
-        <h2 className="text-xl font-bold text-primary mb-1">Settings & Stats</h2>
+        <h2 className="tracking-wide text-xl font-bold text-primary mb-1">Settings & Stats</h2>
         <div className="space-y-3">
           <div>
-            <h3 className="text-base font-semibold text-neutral-800 mb-1">
-              Reveal Behavior
-            </h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Reveal Behavior</h3>
             <div className="flex gap-6">
               {(['full_lyric', 'word_only'] as const).map((value) => (
                 <label key={value} className="flex items-center gap-2 cursor-pointer">
@@ -92,7 +90,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             </div>
           </div>
           <div>
-            <h3 className="text-base font-semibold text-neutral-800 mb-1">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">{fanbaseName ? `${fanbaseName} ` : ''}Level</h3>
             <div className="flex rounded-lg overflow-hidden border border-primary">
               {levels.map((level) => (
                 <button
@@ -104,7 +102,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
                       : 'text-primary hover:bg-secondary/50'
                   }`}
                 >
-                  <h3>{level.name}</h3>
+                  <h3 className="tracking-wide">{level.name}</h3>
                   {levelSongCounts[level.id] != null && (
                     <span className={`text-xs font-normal tracking-normal ${
                       level.slug === levelSlug
@@ -122,7 +120,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             </div>
           </div>
           <div>
-            <h3 className="text-base font-semibold text-neutral-800 mb-1">Game History</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Game History</h3>
             <div className="mb-2">
               <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
             </div>

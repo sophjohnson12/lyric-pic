@@ -28,7 +28,7 @@ export default function Header({
     <header className="bg-neutral-50 top-0 z-50 px-4 py-2 min-w-2xs shadow-sm">
       <div className="sm:max-w-7/8 mx-auto flex items-center justify-between">
         <Link to={`/${artistSlug}`} className="flex flex-col justify-center">
-          <h1 className="text-xl text-primary leading-tight font-semibold">LYRIC PIC</h1>
+          <h1 className="text-xl text-primary leading-tight font-semibold tracking-wide">LYRIC PIC</h1>
           {artistName && (
             <p className="text-xs text-neutral-500 leading-none">{artistName}</p>
           )}

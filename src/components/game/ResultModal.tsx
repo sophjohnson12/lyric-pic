@@ -38,11 +38,11 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
           }
         </div>
         <h2
-          className="font-bold text-primary mb-4 mx-auto"
+          className="font-bold text-primary mb-4 mx-auto tracking-wide"
           style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
         >{message}</h2>
         <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
-          <p className="text-lg md:text-xl font-bold text-neutral-800">{songDisplay}</p>
+          <p className="text-lg md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
           <p className={"text-sm mb-2 md:mb-4 italic"}>
             
             <span className="font-medium text-neutral-700">{album ? album.name : 'Single'}</span>
@@ -52,7 +52,7 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
             <div className="text-center space-y-2 md:space-y-3">
               {lyricsWithLines.map((pw, i) => (
                 <p key={i} className="text-base text-neutral-800">
-                  <HighlightedLine text={pw.lineText!} word={pw.word} />
+                  <HighlightedLine text={pw.lineText!} word={pw.word} wordClassName="font-semibold" />
                 </p>
               ))}
             </div>

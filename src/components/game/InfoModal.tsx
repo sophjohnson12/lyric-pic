@@ -16,10 +16,10 @@ interface InfoModalProps {
 export default function InfoModal({ minSongLyricCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose} showEaseIn={true}>
-      <h2 className="text-xl font-bold text-primary mb-1">How to Play</h2>
+      <h2 className="text-xl font-bold text-primary mb-1 tracking-wide">How to Play</h2>
       <div className="space-y-3 text-base text-neutral-600">
         <div>
-          <h3 className="font-semibold text-base text-neutral-800 mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
+          <h3 className="font-semibold text-neutral-800 mb-1 tracking-wide">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
           <p>
             {minSongLyricCount === 1 ? 'The tab shows' : 'Each tab shows'} a word from the song.
             <span className="hidden md:inline"> Click </span>
@@ -33,7 +33,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         </div>
         {showAlbumFilters && (
           <div>
-            <h3 className="font-semibold text-base text-neutral-800 mb-1">2. Guess the Album</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">2. Guess the Album</h3>
             <p>
               <span className="hidden md:inline">Click </span>
               <span className="inline md:hidden">Tap </span>
@@ -46,7 +46,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         )}
         {!showAlbumFilters && (
           <div>
-            <h3 className="font-semibold text-base text-neutral-800 mb-1">2. Show the Album</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">2. Show the Album</h3>
             <p>
               <span className="hidden md:inline">Click </span>
               <span className="inline md:hidden">Tap </span>
@@ -55,7 +55,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
           </div>
         )}
         <div>
-          <h3 className="font-semibold text-base text-neutral-800 mb-1">3. Guess the Song</h3>
+          <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">3. Guess the Song</h3>
           <p>
             <span className="hidden md:inline">Click </span>
             <span className="inline md:hidden">Tap </span>
