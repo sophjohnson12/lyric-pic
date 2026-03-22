@@ -24,7 +24,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
             {minSongLyricCount === 1 ? 'The tab shows' : 'Each tab shows'} a word from the song.
             <span className="hidden md:inline"> Click </span>
             <span className="inline md:hidden"> Swipe </span>
-            through the images for clues. Type a word and press Enter for unlimited attempts.
+            through the images for clues. Type and press Enter for unlimited attempts.
           </p>
           <ul className="mt-1 space-y-1">
             <li className="flex items-center"><KeyRound size={15} strokeWidth={3} className="mr-2 text-primary"/> Reveal correct word</li>
@@ -59,8 +59,8 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
           <p>
             <span className="hidden md:inline">Click </span>
             <span className="inline md:hidden">Tap </span>
-              <span className="text-primary font-semibold"> Guess Song </span>
-              to open the song picker. You have {guessCount} chances to select a song and
+              <span className="text-primary font-semibold"> Guess Song</span>
+              . You have {guessCount} chances to select a song and
             <span className="hidden md:inline"> click </span>
             <span className="inline md:hidden"> press </span>
             Submit.
