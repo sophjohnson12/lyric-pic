@@ -17,7 +17,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
   return (
     <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary mb-1">How to Play</h2>
-      <div className="space-y-3 text-sm text-neutral-600">
+      <div className="space-y-3 text-base text-neutral-600">
         <div>
           <h3 className="font-semibold text-base text-neutral-800 mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
           <p>
