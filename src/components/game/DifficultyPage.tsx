@@ -55,12 +55,12 @@ export default function DifficultyPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+    <div className="h-screen overflow-y-auto flex flex-col items-center justify-center px-4">
       <img src="/lyric-pic-logo.svg" alt="Lyric Pic" className="h-48 w-auto mb-2" />
       {artist?.name && (
-        <h2 className="text-neutral-500 mb-10 text-xl">{artist.name}</h2>
+        <h2 className="text-neutral-500 mb-6 text-xl">{artist.name}</h2>
       )}
-      <p className="text-lg text-neutral-800 mb-6">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
+      <p className="text-lg text-neutral-800 mb-3">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
       {levels.length === 0 ? (
         <p className="text-neutral-500 text-sm">No levels available yet.</p>
       ) : (
