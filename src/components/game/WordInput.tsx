@@ -167,7 +167,7 @@ export default function WordInput({
                     onReveal(wordIndex)
                     if (window.innerWidth < 640 && inputWasFocused.current) inputRef.current?.focus({ preventScroll: true })
                   }}
-                  className="absolute top-2 right-2 z-10 w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 rounded-full cursor-pointer transition-colors [will-change:transform]"
+                  className="absolute top-2 right-2 z-10 w-12 h-12 md:w-10 md:h-10 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 rounded-full cursor-pointer transition-colors [will-change:transform]"
                   title="Reveal answer"
                   type="button"
                 >
@@ -183,7 +183,7 @@ export default function WordInput({
                   onClick={() => { if (!currentImageFlagged) setShowImageFlagConfirm(true) }}
                   onPointerDown={(e) => e.preventDefault()}
                   disabled={currentImageFlagged}
-                  className={`group w-12 h-12 md:w-auto md:h-auto md:p-2 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
+                  className={`group w-12 h-12 md:w-10 md:h-10 flex items-center justify-center text-neutral-700 bg-white/80 hover:text-neutral-800 hover:bg-white/90 transition-colors rounded-full hover:cursor-pointer ${currentImageFlagged ? 'opacity-40 cursor-default' : ''}`}
                   title={currentImageFlagged ? 'Flagged' : 'Flag this image'}
                 >
                   <Flag size={24} className={`drop-shadow-md transition-transform ${currentImageFlagged ? '' : 'group-hover:scale-110'}`} />
