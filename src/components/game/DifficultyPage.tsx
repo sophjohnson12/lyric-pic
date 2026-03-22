@@ -56,11 +56,11 @@ export default function DifficultyPage() {
 
   return (
     <div className="h-screen overflow-y-auto flex flex-col items-center justify-center px-4">
-      <img src="/lyric-pic-logo.svg" alt="Lyric Pic" className="h-48 w-auto mb-2" />
+      <img src="/lyric-pic-logo.svg" alt="Lyric Pic" className="w-50 h-auto mb-2 max-w-3/5" />
       {artist?.name && (
         <h2 className="text-neutral-500 mb-6 text-xl">{artist.name}</h2>
       )}
-      <p className="text-lg text-neutral-800 mb-3">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
+        <p className="text-lg text-neutral-800 font-normal mb-3 text-center">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
       {levels.length === 0 ? (
         <p className="text-neutral-500 text-sm">No levels available yet.</p>
       ) : (
@@ -69,11 +69,11 @@ export default function DifficultyPage() {
             <button
               key={level.id}
               onClick={() => handleSelect(level)}
-              className="items-center justify-between px-6 py-4 border-primary border text-primary rounded-xl font-semibold hover:bg-secondary/50 transition-opacity cursor-pointer"
+              className="items-center justify-between px-6 py-3 md:py-4 border-primary border text-primary rounded-2xl font-semibold hover:bg-secondary/50 transition-opacity cursor-pointer"
             >
               <h2 className="text-xl">{level.name}</h2>
               {level.description && (
-                <p className="text-sm font-normal opacity-75 text-neutral-800">{level.description}</p>
+                <p className="text-sm text-neutral-600 font-normal">{level.description}</p>
               )}
             </button>
           ))}

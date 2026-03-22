@@ -19,7 +19,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
       <h2 className="text-xl font-bold text-primary mb-4">How to Play</h2>
       <div className="space-y-4 text-sm text-neutral-600">
         <div>
-          <p className="font-semibold text-neutral-800">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</p>
+          <h3 className="font-semibold text-neutral-800 mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
           <p>
             {minSongLyricCount === 1 ? 'The tab shows' : 'Each tab shows'} a word from the song.
             <span className="hidden md:inline"> Click </span>
@@ -33,7 +33,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         </div>
         {showAlbumFilters && (
           <div>
-            <p className="font-semibold text-neutral-800">2. Guess the Album</p>
+            <h3 className="font-semibold text-neutral-800 mb-1">2. Guess the Album</h3>
             <p>
               <span className="hidden md:inline">Click </span>
               <span className="inline md:hidden">Tap </span>
@@ -46,7 +46,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         )}
         {!showAlbumFilters && (
           <div>
-            <p className="font-semibold text-neutral-800">2. Show Album</p>
+            <h3 className="font-semibold text-neutral-800 mb-1">2. Show the Album</h3>
             <p>
               <span className="hidden md:inline">Click </span>
               <span className="inline md:hidden">Tap </span>
@@ -55,7 +55,7 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
           </div>
         )}
         <div>
-          <p className="font-semibold text-neutral-800">3. Guess the Song</p>
+          <h3 className="font-semibold text-neutral-800 mb-1">3. Guess the Song</h3>
           <p>
             <span className="hidden md:inline">Click </span>
             <span className="inline md:hidden">Tap </span>
