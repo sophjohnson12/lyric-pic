@@ -131,7 +131,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
                       <li key={id} className="text-sm h-5 w-full rounded bg-neutral-200 animate-pulse" />
                     ))
                   : songNames.map((name) => (
-                      <li key={name}>
+                      <li key={name} className="text-sm">
                         {name}
                       </li>
                     ))}
