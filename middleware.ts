@@ -33,7 +33,7 @@ export default async function middleware(request: Request): Promise<Response | v
     const artist = artists[0]
     let html = await indexRes.text()
 
-    const title = `${artist.name} · Lyric Pic`
+    const title = `${artist.name} - Lyric Pic`
     const description = `Guess ${artist.name} lyrics from images. A fun visual word puzzle game.`
     const canonicalUrl = `https://playlyricpic.com/${artist.slug}`
 
