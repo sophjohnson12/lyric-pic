@@ -131,6 +131,8 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState(3)
   const [minSongLyricCount, setMinSongLyricCount] = useState(3)
+  const [minImageCount, setMinImageCount] = useState(3)
+  const [maxImageCount, setMaxImageCount] = useState(5)
 
   const [levels, setLevels] = useState<GameLevel[]>([])
   const [levelSongCounts, setLevelSongCounts] = useState<Record<number, number>>({})
@@ -266,6 +268,8 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
           setEnableLyricFlag(config.enable_lyric_flag)
           setEnableImageFlag(config.enable_image_flag)
           maxImageCountRef.current = config.max_image_count
+          setMinImageCount(config.min_image_count ?? 3)
+          setMaxImageCount(config.max_image_count ?? 5)
           setMaxGuessCount(config.max_guess_count)
           puzzleWordCountRef.current = config.min_song_lyric_count
           setMinSongLyricCount(config.min_song_lyric_count)
@@ -574,6 +578,8 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     enableImageFlag,
     maxGuessCount,
     minSongLyricCount,
+    minImageCount,
+    maxImageCount,
     songFailed: !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount,
     guessWord,
     revealWord,

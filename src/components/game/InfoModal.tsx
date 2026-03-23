@@ -5,6 +5,8 @@ import AlbumButtons from './AlbumButtons'
 
 interface InfoModalProps {
   minSongLyricCount: number
+  minImageCount: number
+  maxImageCount: number
   guessCount: number
   songCount: number
   albums: Album[]
@@ -13,7 +15,7 @@ interface InfoModalProps {
   onClose: () => void
 }
 
-export default function InfoModal({ minSongLyricCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, onClose }: InfoModalProps) {
+export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary mb-1 tracking-wide">How to Play</h2>
@@ -21,10 +23,16 @@ export default function InfoModal({ minSongLyricCount, guessCount, songCount, al
         <div>
           <h3 className="font-semibold text-neutral-800 tracking-wide mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
           <p className="mb-1">
-            {minSongLyricCount === 1 ? 'The tab shows' : 'Each tab shows'} a word from the song.
-            <span className="hidden md:inline"> Click </span>
-            <span className="inline md:hidden"> Swipe </span>
-            through the images for clues. Type and press Enter for unlimited attempts.
+            <span className="inline md:hidden">
+              {minSongLyricCount === 1 ? 'The tab' : 'Each tab'} has {minImageCount}–{maxImageCount} pictures that represent a word from the song.
+              Swipe to see all pictures then press Enter to submit your guess.
+              You have unlimited attempts!
+            </span>
+            <span className="hidden md:inline">
+              {minSongLyricCount === 1 ? 'The box' : 'Each box'} has {minImageCount}–{maxImageCount} pictures that represent a word from the song.
+              Click the arrows to see all pictures then press Enter to submit your guess.
+              You have unlimited attempts!
+            </span>
           </p>
           <ul>
             <li className="flex items-center"><KeyRound size={15} strokeWidth={3} className="mr-2 text-primary"/>Reveal correct word</li>

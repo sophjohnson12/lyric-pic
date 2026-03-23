@@ -374,6 +374,8 @@ export default function GamePage() {
         {showInfo && (
           <InfoModal
             minSongLyricCount={game.minSongLyricCount}
+            minImageCount={game.minImageCount}
+            maxImageCount={game.maxImageCount}
             guessCount={game.maxGuessCount}
             songCount={game.totalPlayableSongs}
             albums={game.albums}
@@ -586,6 +588,8 @@ export default function GamePage() {
       {showInfo && (
         <InfoModal
           minSongLyricCount={game.minSongLyricCount}
+          minImageCount={game.minImageCount}
+          maxImageCount={game.maxImageCount}
           guessCount={game.maxGuessCount}
           songCount={game.totalPlayableSongs}
           albums={game.albums}
