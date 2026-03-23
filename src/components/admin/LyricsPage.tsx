@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams, useLocation } from 'react-router-dom'
+import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-dom'
 import { Check, Pencil, Flag, Ban } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
@@ -14,11 +14,13 @@ import {
   bulkBlocklistLyrics,
   getBlocklistReasons,
   deleteUnusedLyrics,
+  createLyric,
 } from '../../services/adminService'
 import type { AdminAllLyricRow } from '../../services/adminService'
 
 export default function LyricsPage() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const [data, setData] = useState<AdminAllLyricRow[]>([])
@@ -41,6 +43,9 @@ export default function LyricsPage() {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [deleteUnusedConfirm, setDeleteUnusedConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newLyricWord, setNewLyricWord] = useState('')
+  const [creatingLyric, setCreatingLyric] = useState(false)
 
   useEffect(() => {
     setBreadcrumbs([{ label: 'All Lyrics' }])
@@ -162,6 +167,19 @@ export default function LyricsPage() {
     }
   }
 
+  async function handleCreateLyric() {
+    const word = newLyricWord.trim()
+    if (!word) return
+    setCreatingLyric(true)
+    try {
+      const id = await createLyric(word)
+      navigate(`/admin/lyrics/${id}`)
+    } catch (err) {
+      showToast(`Error: ${err instanceof Error ? err.message : 'Failed to create lyric'}`)
+      setCreatingLyric(false)
+    }
+  }
+
   function handleToggleSelect(key: string | number) {
     setSelectedIds((prev) => {
       const next = new Set(prev)
@@ -186,6 +204,12 @@ export default function LyricsPage() {
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4">
         <h1 className="text-2xl font-bold">All Lyrics</h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => { setNewLyricWord(''); setShowCreateModal(true) }}
+            className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
+          >
+            Add Lyric
+          </button>
           <button
             onClick={() => setDeleteUnusedConfirm(true)}
             disabled={deleting}
@@ -407,6 +431,38 @@ export default function LyricsPage() {
               className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer"
             >
               Blocklist
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {showCreateModal && (
+        <Modal onClose={() => setShowCreateModal(false)}>
+          <h2 className="text-lg font-bold mb-4">Add Lyric</h2>
+          <label className="block text-sm font-semibold mb-1">Word *</label>
+          <input
+            type="text"
+            placeholder="e.g. sunshine"
+            value={newLyricWord}
+            onChange={(e) => setNewLyricWord(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateLyric()}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-base sm:text-sm mb-6"
+            autoFocus
+          />
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowCreateModal(false)}
+              className="bg-gray-200 text-neutral-800 px-4 py-2 rounded-lg font-semibold hover:opacity-90 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreateLyric}
+              disabled={!newLyricWord.trim() || creatingLyric}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+            >
+              {creatingLyric && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+              Create
             </button>
           </div>
         </Modal>

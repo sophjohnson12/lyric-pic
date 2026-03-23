@@ -1346,6 +1346,18 @@ export async function getLyricSongs(lyricId: number): Promise<AdminLyricSongRow[
   }))
 }
 
+export async function createLyric(word: string): Promise<number> {
+  const trimmed = word.trim().toLowerCase()
+  const stem = porterStem(trimmed)
+  const { data, error } = await supabase
+    .from('lyric')
+    .insert({ root_word: trimmed, stem, created_at: new Date().toISOString() })
+    .select('id')
+    .single()
+  if (error) throw error
+  return (data as { id: number }).id
+}
+
 export async function getLyricById(lyricId: number): Promise<AdminLyricRow | null> {
   const { data, error } = await supabase
     .from('lyric')
