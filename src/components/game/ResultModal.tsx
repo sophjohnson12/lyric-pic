@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { CircleCheck, CircleX } from 'lucide-react'
+import { CircleCheck, CircleX, Share } from 'lucide-react'
 import Modal from '../common/Modal'
-import type { Song, Album } from '../../types/database'
+import type { Song, Album, Artist } from '../../types/database'
 import type { PuzzleWord } from '../../types/game'
 import HighlightedLine from './HighlightedLine'
 
@@ -10,11 +10,12 @@ interface ResultModalProps {
   message: string
   song: Song
   album: Album | null
+  artist?: Artist | null
   puzzleWords: PuzzleWord[]
   onNext: () => void
 }
 
-export default function ResultModal({ correct, message, song, album, puzzleWords, onNext }: ResultModalProps) {
+export default function ResultModal({ correct, message, song, album, artist, puzzleWords, onNext }: ResultModalProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -27,6 +28,29 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
     : song.name
 
   const lyricsWithLines = puzzleWords.filter(pw => pw.lineText)
+
+  const handleShare = async () => {
+    const wordLine = puzzleWords.map(pw => pw.word).join(' + ') + ' = ' + (correct ? '✅' : '❌')
+    const verb = correct ? 'guessed' : "couldn't guess"
+    const artistName = artist?.name ?? 'the artist'
+    const slug = artist?.slug ?? ''
+    const punctuation = correct ? '!' : '.'
+    const text = `${wordLine}\n\nI ${verb} the ${artistName} song${punctuation} Can you? Play Lyric Pic for more songs.\n\nplaylyricpic.com/${slug}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ text })
+        return
+      } catch {
+        // fall through to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      // clipboard unavailable — silently ignore
+    }
+  }
 
   return (
     <Modal showClose={false} showEaseIn={true}>
@@ -61,6 +85,13 @@ export default function ResultModal({ correct, message, song, album, puzzleWords
         {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink mb-4 px-4">
           We'll keep this one in the queue so you can try again later.
         </div>}
+        <button
+          onClick={handleShare}
+          className="h-12 px-2 text-primary rounded-3xl text-base font-medium cursor-pointer flex items-center gap-1 mb-1 transition-transform hover:scale-110"
+        >
+          <Share size={20} />
+          Share
+        </button>
         <button
           ref={buttonRef}
           onClick={onNext}
