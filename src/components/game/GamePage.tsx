@@ -381,6 +381,7 @@ export default function GamePage() {
             albums={game.albums}
             showAlbumFilters={game.showAlbumFilters}
             showFlagIcon={game.enableLyricFlag}
+            levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
             onClose={() => setShowInfo(false)}
           />
         )}
@@ -595,6 +596,7 @@ export default function GamePage() {
           albums={game.albums}
           showAlbumFilters={game.showAlbumFilters}
           showFlagIcon={game.enableLyricFlag}
+          levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
           onClose={() => setShowInfo(false)}
         />
       )}
