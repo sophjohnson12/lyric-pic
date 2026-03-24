@@ -65,7 +65,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
           className="font-bold text-primary mb-4 mx-auto tracking-wide"
           style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
         >{message}</h2>
-        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
+        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-2 w-full">
           <p className="text-lg md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
           <p className={"text-sm mb-2 md:mb-4 italic"}>
             
@@ -82,12 +82,12 @@ export default function ResultModal({ correct, message, song, album, artist, puz
             </div>
           )}
         </div>
-        {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink mb-4 px-4">
+        {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink my-2 px-4">
           We'll keep this one in the queue so you can try again later.
         </div>}
         <button
           onClick={handleShare}
-          className="h-12 px-2 text-primary rounded-3xl text-base font-medium cursor-pointer flex items-center gap-1 mb-1 transition-transform hover:scale-110"
+          className="h-12 px-2 text-primary rounded-3xl text-base font-medium cursor-pointer flex items-center gap-1 mb-2 transition-transform hover:scale-110"
         >
           <Share size={20} />
           Share
