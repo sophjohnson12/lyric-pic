@@ -62,6 +62,11 @@ export default function GamePage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [activeSlide, setActiveSlide] = useState(0)
   const [savedImageIndices, setSavedImageIndices] = useState<Record<number, number>>({})
+  const [lastSongId, setLastSongId] = useState<string | undefined>(game.currentSong?.id)
+  if (game.currentSong?.id !== lastSongId) {
+    setLastSongId(game.currentSong?.id)
+    setSavedImageIndices({})
+  }
   // Deferred focus index: immediate on first load, 500ms delayed on guess/reveal
   const [deferredFocusIndex, setDeferredFocusIndex] = useState(0)
   const focusInitialized = useRef(false)
@@ -306,7 +311,6 @@ export default function GamePage() {
   // Reset to first word tab when song changes
   useEffect(() => {
     setActiveSlide(0)
-    setSavedImageIndices({})
   }, [game.currentSong?.id])
 
 
