@@ -34,7 +34,7 @@ export default function DifficultyPage() {
         const img = new Image()
         img.onload = () => resolve()
         img.onerror = () => resolve()
-        img.src = '/lyric-pic-logo.svg'
+        img.src = '/lyric-pic-icon.svg'
       })
       setLoading(false)
     }
@@ -62,7 +62,7 @@ export default function DifficultyPage() {
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
-      <img src="/lyric-pic-logo.svg" alt="Lyric Pic" width={313} height={249} className="w-50 h-auto mb-2 max-w-3/5" />
+      <img src="/lyric-pic-icon.svg" alt="Lyric Pic" width={313} height={249} className="w-50 h-auto mb-2 max-w-3/5" />
       {artist?.name && (
         <h2 className="text-neutral-500 mb-6 text-xl tracking-wide">{artist.name}</h2>
       )}
