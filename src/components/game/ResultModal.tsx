@@ -19,7 +19,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const id = setTimeout(() => buttonRef.current?.focus(), 100)
+    const id = setTimeout(() => buttonRef.current?.focus(), 300)
     return () => clearTimeout(id)
   }, [])
 
