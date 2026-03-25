@@ -130,7 +130,7 @@ export default function SongWheelPicker({
           className="w-full flex items-center justify-center text-neutral-400 text-base"
           style={{ height: containerHeight }}
         >
-          No songs found
+          No songs found.
         </div>
       ) : (
         <div className="relative w-full" style={{ height: containerHeight }}>
