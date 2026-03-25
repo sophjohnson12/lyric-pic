@@ -18,6 +18,17 @@ export default function ImageDisplay({ imageUrls, onIndexChange, initialIndex = 
     }
   }, [])
 
+  // Reset scroll to position 0 when the image set changes (e.g. new song loaded while
+  // this component stays mounted). Skip the first run since mount handles initialIndex above.
+  const prevImageUrlsRef = useRef(imageUrls)
+  useEffect(() => {
+    const prev = prevImageUrlsRef.current
+    prevImageUrlsRef.current = imageUrls
+    if (prev === imageUrls) return
+    setActiveIndex(0)
+    scrollRef.current?.scrollTo({ left: 0 })
+  }, [imageUrls])
+
   const goTo = (index: number) => {
     const next = Math.max(0, Math.min(index, imageUrls.length - 1))
     if (scrollRef.current) {

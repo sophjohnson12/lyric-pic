@@ -62,7 +62,7 @@ export default function GamePage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [activeSlide, setActiveSlide] = useState(0)
   const [savedImageIndices, setSavedImageIndices] = useState<Record<number, number>>({})
-  const [lastSongId, setLastSongId] = useState<string | undefined>(game.currentSong?.id)
+  const [lastSongId, setLastSongId] = useState<number | undefined>(game.currentSong?.id)
   if (game.currentSong?.id !== lastSongId) {
     setLastSongId(game.currentSong?.id)
     setSavedImageIndices({})
