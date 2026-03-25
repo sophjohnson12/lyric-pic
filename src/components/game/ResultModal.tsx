@@ -35,18 +35,19 @@ export default function ResultModal({ correct, message, song, album, artist, puz
     const artistName = artist?.name ?? 'the artist'
     const slug = artist?.slug ?? ''
     const punctuation = correct ? '!' : '.'
-    const text = `${wordLine}\n\nI ${verb} the ${artistName} song${punctuation} Can you? Play Lyric Pic for more songs.\n\nplaylyricpic.com/${slug}`
+    const url = `https://playlyricpic.com/${slug}`
+    const text = `${wordLine}\n\nI ${verb} the ${artistName} song${punctuation} Can you? Play Lyric Pic for more songs.`
 
     if (navigator.share) {
       try {
-        await navigator.share({ text })
+        await navigator.share({ text, url })
         return
       } catch {
         // fall through to clipboard
       }
     }
     try {
-      await navigator.clipboard.writeText(text)
+      await navigator.clipboard.writeText(`${text}\n\n${url}`)
     } catch {
       // clipboard unavailable — silently ignore
     }
