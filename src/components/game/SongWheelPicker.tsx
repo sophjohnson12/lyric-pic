@@ -173,6 +173,13 @@ export default function SongWheelPicker({
                   type="button"
                   className={`w-full flex items-center justify-center text-center px-4 transition-opacity duration-150 max-sm:focus:outline-none ${getItemClass(index)}`}
                   style={{ height: itemHeight, scrollSnapAlign: 'center' }}
+                  onClick={() => {
+                    if (containerRef.current) {
+                      containerRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' })
+                    }
+                    setSelectedIndex(index)
+                    onSelectionChange?.(item.id, item.name)
+                  }}
                   onFocus={() => {
                     if (containerRef.current) {
                       containerRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' })
