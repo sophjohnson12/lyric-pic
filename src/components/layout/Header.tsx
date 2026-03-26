@@ -1,6 +1,7 @@
 import { Info, Sliders, SkipForward } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import ProgressBar from '../common/ProgressBar';
+import LogoIcon from '../common/LogoIcon';
 
 interface HeaderProps {
   artistName: string | null
@@ -26,12 +27,17 @@ export default function Header({
 
   return (
     <header className="bg-neutral-50 top-0 z-50 px-4 py-2 min-w-2xs shadow-sm">
-      <div className="sm:max-w-7/8 mx-auto flex items-center justify-between">
+      <div className="sm:max-w-7/8 mx-auto flex justify-between">
         <Link to={`/${artistSlug}`} className="flex flex-col justify-center">
-          <h1 className="text-xl text-primary leading-tight font-semibold tracking-wide">LYRIC PIC</h1>
-          {artistName && (
-            <h3 className="text-xs text-neutral-500 leading-none">{artistName}</h3>
-          )}
+          <div className="flex gap-3 items-center">
+            <LogoIcon className="h-12 w-12 hidden sm:inline text-primary" />
+            <div>
+              <h1 className="text-xl text-primary leading-tight font-semibold tracking-wide">LYRIC PIC</h1>
+              {artistName && (
+                <h3 className="text-xs text-neutral-500 leading-none pb-1">{artistName}</h3>
+              )}
+            </div>
+          </div>
         </Link>
 
         <div className="hidden md:flex flex-1 mx-8 max-w-md mt-5">

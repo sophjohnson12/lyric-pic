@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import Confetti from 'react-confetti'
 import type { GameLevel } from '../../types/game'
+import ShareButton from '../common/ShareButton'
 
 interface LevelCompleteProps {
   levels: GameLevel[]
   levelSlug: string
   fanbaseName: string | null
   totalPlayableSongs: number
+  artistName: string
+  artistSlug: string
   confettiColors?: string[]
   onChooseLevel: () => void
   onShowHistory: () => void
@@ -17,6 +20,8 @@ export default function LevelComplete({
   levelSlug,
   fanbaseName,
   totalPlayableSongs,
+  artistName,
+  artistSlug,
   confettiColors,
   onChooseLevel,
   onShowHistory,
@@ -35,7 +40,11 @@ export default function LevelComplete({
 
   const levelName = currentLevel?.name ?? ''
   const fanbaseSuffix = fanbaseName ? ` ${fanbaseName}` : ''
-  const songPhrase = totalPlayableSongs === 1 ? 'the only song' : `all ${totalPlayableSongs} songs`
+  const songCount = totalPlayableSongs === 1 ? 'the only' : `all ${totalPlayableSongs}`
+  const songs = totalPlayableSongs === 1 ? 'song' : `songs`
+
+  const shareUrl = `https://playlyricpic.com/${artistSlug}`
+  const shareText = `Just guessed ${songCount} ${artistName} ${songs} on Lyric Pic. 🎉 Your turn to prove your ${fanbaseName} status!`
 
   const isSmall = dimensions.width < 640
   const cannonY = dimensions.height * (isSmall ? 0.33 : 0.5)
@@ -66,16 +75,19 @@ export default function LevelComplete({
         initialVelocityY={{ min: isSmall ? -10 : -18, max: isSmall ? -3 : -6 }}
       />
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-primary mb-3 tracking-wide">
+        <h2 className="text-2xl font-bold text-primary mb-5 tracking-wide">
           {hasHigherLevel
             ? `Congratulations, you've officially graduated from ${levelName}${fanbaseSuffix}!`
             : `Congratulations! You've proven your ${levelName}${fanbaseSuffix} status.`}
         </h2>
-        <p className="text-neutral-800 mb-6">
+        <p className="text-neutral-800 mb-2">
           {hasHigherLevel
-            ? `You've played ${songPhrase}. Go to the next level to keep playing.`
-            : `You've played ${songPhrase}. Clear your history to play again.`}
+            ? `You've played ${songCount} ${songs}. Go to the next level to keep playing.`
+            : `You've played ${songCount} ${songs}. Clear your history to play again.`}
         </p>
+        <div className="flex justify-center mb-3">
+          <ShareButton text={shareText} url={shareUrl} />
+        </div>
         {hasHigherLevel ? (
           <button
             onClick={onChooseLevel}

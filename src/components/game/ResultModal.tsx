@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
-import { CircleCheck, CircleX, Share } from 'lucide-react'
+import { CircleCheck, CircleX } from 'lucide-react'
 import Modal from '../common/Modal'
+import ShareButton from '../common/ShareButton'
 import type { Song, Album, Artist } from '../../types/database'
 import type { PuzzleWord } from '../../types/game'
 import HighlightedLine from './HighlightedLine'
@@ -29,29 +30,11 @@ export default function ResultModal({ correct, message, song, album, artist, puz
 
   const lyricsWithLines = puzzleWords.filter(pw => pw.lineText)
 
-  const handleShare = async () => {
-    const wordLine = puzzleWords.map(pw => pw.word).join(' + ') + ' = ' + (correct ? '✅' : '❌')
-    const verb = correct ? 'guessed' : "couldn't guess"
-    const artistName = artist?.name ?? 'the artist'
-    const slug = artist?.slug ?? ''
-    const punctuation = correct ? '!' : '.'
-    const url = `https://playlyricpic.com/${slug}`
-    const text = `${wordLine}\n\nI ${verb} the ${artistName} song${punctuation} Can you? Play Lyric Pic for more songs.`
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ text, url })
-        return
-      } catch {
-        // fall through to clipboard
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(`${text}\n\n${url}`)
-    } catch {
-      // clipboard unavailable — silently ignore
-    }
-  }
+  const wordLine = puzzleWords.map(pw => pw.word).join(' + ') + ' = ' + (correct ? '✅' : '❌')
+  const result = correct ? 'I got it. 😎' : 'I couldn\'t. 😢'
+  const artistName = artist?.name ?? 'the artist'
+  const shareUrl = `https://playlyricpic.com/${artist?.slug ?? ''}`
+  const shareText = `${wordLine}\n\nCan you guess this ${artistName} song? ${result} Play Lyric Pic for more songs!`
 
   return (
     <Modal showClose={false} showEaseIn={true}>
@@ -69,7 +52,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
         <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-2 w-full">
           <p className="text-lg md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
           <p className={"text-sm mb-2 md:mb-4 italic"}>
-            
+
             <span className="font-medium text-neutral-700">{album ? album.name : 'Single'}</span>
             <span className="ml-1 font-thin text-neutral-600">{album && album.release_year ? `(${album.release_year})` : ''}</span>
           </p>
@@ -86,13 +69,9 @@ export default function ResultModal({ correct, message, song, album, artist, puz
         {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink my-2 px-4">
           We'll keep this one in the queue so you can try again later.
         </div>}
-        <button
-          onClick={handleShare}
-          className="h-12 px-2 text-primary rounded-3xl text-base font-medium cursor-pointer flex items-center gap-1 mb-2 transition-transform hover:scale-110"
-        >
-          <Share size={20} />
-          Share
-        </button>
+        <div className="mb-2">
+          <ShareButton text={shareText} url={shareUrl} />
+        </div>
         <button
           ref={buttonRef}
           onClick={onNext}
