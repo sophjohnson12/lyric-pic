@@ -145,6 +145,20 @@ export interface Level {
   updated_at: string | null
 }
 
+export interface MapElement {
+  id: number
+  name: string
+  display_name: string
+  url: string
+  x_percent: number
+  y_percent: number
+  width_percent: number
+  song_id: number | null
+  song_line_id: number | null
+  artist_id: number
+  created_at: string
+}
+
 export interface AppConfig {
   id: true
   theme_primary_color: string

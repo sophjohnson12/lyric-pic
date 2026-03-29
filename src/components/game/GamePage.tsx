@@ -319,6 +319,10 @@ export default function GamePage() {
     return <Navigate to={`/${artistSlug}`} replace />
   }
 
+  if (game.levels.length > 0 && !game.levels.some((l) => l.slug === levelSlug)) {
+    return <Navigate to={`/${artistSlug}`} replace />
+  }
+
   if (game.loading) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-4">

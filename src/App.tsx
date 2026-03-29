@@ -25,8 +25,11 @@ import SettingsPage from './components/admin/SettingsPage'
 import DifficultyRanksPage from './components/admin/DifficultyRanksPage'
 import ArtistLevelsPage from './components/admin/ArtistLevelsPage'
 import LevelFormPage from './components/admin/LevelFormPage'
+import ArtistMapElementsPage from './components/admin/ArtistMapElementsPage'
+import MapElementFormPage from './components/admin/MapElementFormPage'
 import CopywriterCorner from './components/admin/CopywriterCorner'
 import UploadImagePage from './components/admin/UploadImagePage'
+import MapPage from './components/game/MapPage'
 
 export default function App() {
   return (
@@ -46,6 +49,8 @@ export default function App() {
           <Route path="artists/:artistId/levels" element={<ArtistLevelsPage />} />
           <Route path="artists/:artistId/levels/new" element={<LevelFormPage />} />
           <Route path="artists/:artistId/levels/:id" element={<LevelFormPage />} />
+          <Route path="artists/:artistId/map-elements" element={<ArtistMapElementsPage />} />
+          <Route path="artists/:artistId/map-elements/:id" element={<MapElementFormPage />} />
           <Route path="artists/:artistId/difficulty" element={<DifficultyRanksPage />} />
           <Route path="artists/:artistId/songs" element={<ArtistSongsPage />} />
           <Route path="artists/:artistId/songs/new" element={<SongFormPage />} />
@@ -66,6 +71,7 @@ export default function App() {
           <Route path="copywriter" element={<CopywriterCorner />} />
         </Route>
         <Route path="/:artistSlug" element={<DifficultyPage />} />
+        <Route path="/:artistSlug/map" element={<MapPage />} />
         <Route path="/:artistSlug/:difficulty" element={<GamePage />} />
       </Routes>
     </BrowserRouter>

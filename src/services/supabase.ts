@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Artist, Album, Song, AppConfig } from '../types/database'
+import type { Artist, Album, Song, AppConfig, MapElement } from '../types/database'
 import type { WordWithStats, PexelsImage, GameLevel } from '../types/game'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -253,6 +253,15 @@ export async function saveLyricImages(lyricId: number, images: PexelsImage[]): P
   } catch (err) {
     console.error('Failed to save lyric images:', err)
   }
+}
+
+export async function getMapElements(artistId: number): Promise<MapElement[]> {
+  const { data, error } = await supabase
+    .from('map_element')
+    .select('*')
+    .eq('artist_id', artistId)
+  if (error) throw error
+  return data ?? []
 }
 
 export async function getAppConfig(): Promise<AppConfig | null> {

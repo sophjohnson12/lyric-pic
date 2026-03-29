@@ -134,6 +134,14 @@ export default function ArtistsPage() {
             ),
           },
           {
+            header: 'Map Items',
+            accessor: (a) => (
+              <Link to={`/admin/artists/${a.id}/map-elements`} state={{ backUrl: '/admin' + location.search }} className="text-primary hover:underline">
+                {a.map_element_count}
+              </Link>
+            ),
+          },
+          {
             header: 'Needs Reset?',
             accessor: (a) => a.needs_reset
               ? <TriangleAlert size={20} className="text-yellow-500 drop-shadow-md" />

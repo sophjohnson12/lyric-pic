@@ -131,6 +131,7 @@ export interface AdminArtistRow {
   level_count: number
   album_count: number
   song_count: number
+  map_element_count: number
   needs_reset: boolean
 }
 
@@ -154,10 +155,11 @@ export async function getAdminArtists(): Promise<AdminArtistRow[]> {
         needsResetQuery = needsResetQuery.not('refreshed_at', 'is', null)
       }
 
-      const [{ count: levelCount }, { count: albumCount }, { count: songCount }, { count: needsResetCount }] = await Promise.all([
+      const [{ count: levelCount }, { count: albumCount }, { count: songCount }, { count: mapElementCount }, { count: needsResetCount }] = await Promise.all([
         supabase.from('level').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
         supabase.from('playable_album').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
         supabase.from('playable_song').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
+        supabase.from('map_element').select('*', { count: 'exact', head: true }).eq('artist_id', a.id),
         needsResetQuery,
       ])
 
@@ -166,6 +168,7 @@ export async function getAdminArtists(): Promise<AdminArtistRow[]> {
         level_count: levelCount ?? 0,
         album_count: albumCount ?? 0,
         song_count: songCount ?? 0,
+        map_element_count: mapElementCount ?? 0,
         needs_reset: (needsResetCount ?? 0) > 0,
       }
     }),
@@ -2721,6 +2724,92 @@ export async function updateLevel(id: number, data: Omit<LevelFormData, 'artist_
 export async function deleteLevel(id: number): Promise<void> {
   const { error } = await supabase.from('level').delete().eq('id', id)
   if (error) throw error
+}
+
+// ─── Map Elements ─────────────────────────────────────────
+
+export interface AdminMapElementRow {
+  id: number
+  name: string
+  display_name: string
+  url: string
+  x_percent: number
+  y_percent: number
+  width_percent: number
+  song_id: number | null
+  song_line_id: number | null
+  song_name: string | null
+}
+
+export async function getAdminMapElements(artistId: number): Promise<AdminMapElementRow[]> {
+  const { data, error } = await supabase
+    .from('map_element')
+    .select('id, name, display_name, url, x_percent, y_percent, width_percent, song_id, song_line_id, song(name)')
+    .eq('artist_id', artistId)
+    .order('name')
+  if (error) throw error
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    song_name: row.song?.name ?? null,
+    song: undefined,
+  }))
+}
+
+export async function getMapElementById(id: number): Promise<AdminMapElementRow & { artist_id: number }> {
+  const { data, error } = await supabase
+    .from('map_element')
+    .select('id, artist_id, name, display_name, url, x_percent, y_percent, width_percent, song_id, song_line_id, song(name)')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return { ...data, song_name: (data as any).song?.name ?? null }
+}
+
+export interface MapElementFormData {
+  display_name: string
+  url: string
+  x_percent: number
+  y_percent: number
+  width_percent: number
+  song_id: number | null
+  song_line_id: number | null
+}
+
+export async function updateMapElement(id: number, data: MapElementFormData): Promise<void> {
+  const { error } = await supabase
+    .from('map_element')
+    .update(data)
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function uploadMapElementImage(file: File, name: string): Promise<string> {
+  const { error } = await supabase.storage
+    .from('map_elements')
+    .upload(`${name}.png`, file, { contentType: 'image/png', upsert: true })
+  if (error) throw error
+  const { data } = supabase.storage.from('map_elements').getPublicUrl(`${name}.png`)
+  return data.publicUrl
+}
+
+export async function getPlayableSongsForDropdown(artistId: number): Promise<{ id: number; name: string }[]> {
+  const { data, error } = await supabase
+    .from('playable_song')
+    .select('id, name')
+    .eq('artist_id', artistId)
+    .order('name')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getSongLinesForDropdown(songId: number): Promise<{ id: number; line_index: number; text: string }[]> {
+  const { data, error } = await supabase
+    .from('song_line')
+    .select('id, line_index, text')
+    .eq('song_id', songId)
+    .order('line_index')
+  if (error) throw error
+  return data ?? []
 }
 
 // ─── Copywriter Corner ────────────────────────────────────

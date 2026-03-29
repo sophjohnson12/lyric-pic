@@ -20,7 +20,7 @@ Lyric Pic is a music lyric guessing game. Players are shown images representing 
 
 ### Key Architectural Patterns
 
-**Routing** (`src/App.tsx`): React Router v7. Admin routes are nested under `/admin` wrapped in `ProtectedRoute` + `AdminLayout`. The game is served at `/:artistSlug` (dynamic slug).
+**Routing** (`src/App.tsx`): React Router v7. Admin routes are nested under `/admin` wrapped in `ProtectedRoute` + `AdminLayout`. The game is served at `/:artistSlug` (dynamic slug). `/:artistSlug/map` renders the visual map page (`MapPage`). `/:artistSlug/:difficulty` renders `GamePage`, which redirects to `/:artistSlug` if the difficulty segment doesn't match any of the artist's level slugs.
 
 **Game State** (`src/hooks/useGame.ts`): Complex custom hook managing the full game lifecycle — song loading, puzzle word selection, guessing, album/song identification. Tracks played songs in localStorage to avoid repeats.
 
@@ -51,7 +51,9 @@ Lyric Pic is a music lyric guessing game. Players are shown images representing 
 
 ### Database Tables
 
-Core tables: `artist`, `album`, `song`, `lyric`, `song_lyric`, `song_line`, `song_lyric_line`, `artist_lyric`, `load_status`, `blocklist_reason`. Interfaces in `src/types/database.ts`.
+Core tables: `artist`, `album`, `song`, `lyric`, `song_lyric`, `song_line`, `song_lyric_line`, `artist_lyric`, `load_status`, `blocklist_reason`, `map_element`. Interfaces in `src/types/database.ts`.
+
+`map_element` stores positioned PNG images for the visual map page (`/:artistSlug/map`). Each row has `artist_id`, `name` (storage key, read-only), `display_name`, `url`, `x_percent`, `y_percent`, `width_percent`, and optional `song_id` / `song_line_id` links. Images are stored in the `map_elements` Supabase Storage bucket as `[name].png`. Elements without a `song_id` render below those with one (`z-index: 0` vs `1`). Admin management: Artists list → Map Items count → `ArtistMapElementsPage` → `MapElementFormPage` (edit only, no create/delete).
 
 Key relationships: Songs belong to albums and artists. `song_lyric` is the junction between songs and lyrics with occurrence counts and `is_selectable` flag. `song_line` stores each non-empty, non-header line of a song's lyrics (`line_index` is 0-based among stored lines; `has_title = true` if the line contains the song title). `song_lyric_line` links each `song_lyric` to the `song_line`(s) where that word appears. Deletion order must be FK-safe: `song_lyric_line` first, then `song_lyric` and `song_line`.
 
