@@ -5,7 +5,7 @@ import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services
 import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
-import Header from '../layout/Header'
+import MapHeader from '../layout/MapHeader'
 import Tooltip from '../common/Tooltip'
 import RevealLandmarkModal from './RevealLandmarkModal'
 import type { MapElementDetails } from '../../types/database'
@@ -37,7 +37,6 @@ function getLockTooltipText(element: MapElementDetails, levels: GameLevel[]): st
 export default function MapPage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const { applyArtistTheme, clearBackground } = useTheme()
-  const [artistName, setArtistName] = useState<string | null>(null)
   const [elements, setElements] = useState<MapElementDetails[]>([])
   const [levels, setLevels] = useState<GameLevel[]>([])
   const [dataLoading, setDataLoading] = useState(true)
@@ -60,7 +59,6 @@ export default function MapPage() {
     async function load() {
       const artist = await getArtistBySlug(artistSlug!)
       applyArtistTheme(artist)
-      setArtistName(artist.name)
       const [els, fetchedLevels] = await Promise.all([
         getMapElements(artist.id),
         getArtistLevels(artist.id),
@@ -137,15 +135,9 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col h-dvh">
-      <Header
-        artistName={artistName}
-        playedCount={revealedIds.length}
-        totalSongs={elements.filter((el) => el.song_id !== null).length}
-        progressLabel="landmarks"
-        onInfo={() => {}}
-        onHistory={() => {}}
-        onSkip={() => {}}
-        hideControls={true}
+      <MapHeader
+        revealedCount={revealedIds.length}
+        totalLandmarks={elements.filter((el) => el.song_id !== null).length}
       />
       {showSpinner && (
         <div className="flex-1 flex items-center justify-center">

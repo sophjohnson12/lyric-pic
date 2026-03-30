@@ -1,10 +1,9 @@
 interface ProgressBarProps {
   playedCount: number
   totalSongs: number
-  label?: string
 }
 
-export default function ProgressBar({ playedCount, totalSongs, label = 'songs' }: ProgressBarProps) {
+export default function ProgressBar({ playedCount, totalSongs }: ProgressBarProps) {
   const progressPercentage = totalSongs > 0 ? (playedCount / totalSongs) * 100 : 0
   return (
     <div className="flex flex-col gap-1 w-full">
@@ -15,7 +14,7 @@ export default function ProgressBar({ playedCount, totalSongs, label = 'songs' }
         />
       </div>
       <div className="text-xs text-neutral-600 text-center">
-        {playedCount} / {totalSongs} {label}
+        {playedCount} / {totalSongs} {totalSongs === 1 ? 'song' : 'songs'}
       </div>
     </div>
   )
