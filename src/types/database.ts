@@ -159,6 +159,14 @@ export interface MapElement {
   created_at: string
 }
 
+export interface MapElementDetails extends MapElement {
+  song_name: string | null
+  album_name: string | null
+  album_primary_color: string | null
+  album_secondary_color: string | null
+  line_text: string | null
+}
+
 export interface AppConfig {
   id: true
   theme_primary_color: string

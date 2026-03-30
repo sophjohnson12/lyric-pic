@@ -6,7 +6,7 @@ interface HighlightedLineProps {
   wordClassName?: string
 }
 
-function fixOrphanedQuote(text: string): string {
+export function fixOrphanedQuote(text: string): string {
   const count = (text.match(/"/g) || []).length
   if (count !== 1) return text
   const idx = text.indexOf('"')

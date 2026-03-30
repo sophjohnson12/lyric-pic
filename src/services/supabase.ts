@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Artist, Album, Song, AppConfig, MapElement } from '../types/database'
+import type { Artist, Album, Song, AppConfig, MapElementDetails } from '../types/database'
 import type { WordWithStats, PexelsImage, GameLevel } from '../types/game'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -255,13 +255,22 @@ export async function saveLyricImages(lyricId: number, images: PexelsImage[]): P
   }
 }
 
-export async function getMapElements(artistId: number): Promise<MapElement[]> {
+export async function getMapElements(artistId: number): Promise<MapElementDetails[]> {
   const { data, error } = await supabase
     .from('map_element')
-    .select('*')
+    .select('*, song:song_id(name, album:album_id(name, theme_primary_color, theme_secondary_color)), song_line:song_line_id(text)')
     .eq('artist_id', artistId)
   if (error) throw error
-  return data ?? []
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    song_name: row.song?.name ?? null,
+    album_name: row.song?.album?.name ?? null,
+    album_primary_color: row.song?.album?.theme_primary_color ?? null,
+    album_secondary_color: row.song?.album?.theme_secondary_color ?? null,
+    line_text: row.song_line?.text ?? null,
+    song: undefined,
+    song_line: undefined,
+  }))
 }
 
 export async function getAppConfig(): Promise<AppConfig | null> {
