@@ -258,7 +258,7 @@ export async function saveLyricImages(lyricId: number, images: PexelsImage[]): P
 export async function getMapElements(artistId: number): Promise<MapElementDetails[]> {
   const { data, error } = await supabase
     .from('map_element')
-    .select('*, song:song_id(name, album:album_id(name, theme_primary_color, theme_secondary_color)), song_line:song_line_id(text)')
+    .select('*, song:song_id(name, difficulty_rank, album:album_id(name, theme_primary_color, theme_secondary_color)), song_line:song_line_id(text)')
     .eq('artist_id', artistId)
   if (error) throw error
   return (data ?? []).map((row: any) => ({
@@ -268,6 +268,7 @@ export async function getMapElements(artistId: number): Promise<MapElementDetail
     album_primary_color: row.song?.album?.theme_primary_color ?? null,
     album_secondary_color: row.song?.album?.theme_secondary_color ?? null,
     line_text: row.song_line?.text ?? null,
+    song_difficulty_rank: row.song?.difficulty_rank ?? null,
     song: undefined,
     song_line: undefined,
   }))

@@ -1,9 +1,14 @@
-import { useState, useEffect, useLayoutEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import { getArtistBySlug, getMapElements } from '../../services/supabase'
+import { Lock } from 'lucide-react'
+import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
+import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
+import Tooltip from '../common/Tooltip'
 import type { MapElementDetails } from '../../types/database'
+import type { GameLevel } from '../../types/game'
+import { REVEALED_LANDMARKS_KEY_PREFIX } from '../../utils/constants'
 
 function hexToRgba(hex: string | null, opacity: number): string | null {
   if (!hex) return null
@@ -15,14 +20,32 @@ function hexToRgba(hex: string | null, opacity: number): string | null {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`
 }
 
+function getLockTooltipText(element: MapElementDetails, levels: GameLevel[]): string {
+  const rank = element.song_difficulty_rank ?? 1
+  const qualifying = levels.filter((l) => l.max_difficulty_rank >= rank)
+  if (qualifying.length === 0) return 'Play to Unlock'
+  const names = qualifying.map((l) => l.name)
+  if (names.length === 1) return `Play ${names[0]} to Unlock`
+  if (names.length === 2) return `Play ${names[0]} or ${names[1]} to Unlock`
+  const last = names[names.length - 1]
+  const rest = names.slice(0, -1)
+  return `Play ${rest.join(', ')}, or ${last} to Unlock`
+}
+
 export default function MapPage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const { applyArtistTheme, clearBackground } = useTheme()
   const [elements, setElements] = useState<MapElementDetails[]>([])
+  const [levels, setLevels] = useState<GameLevel[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [imagesLoadedCount, setImagesLoadedCount] = useState(0)
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
+  const [revealedIds] = useLocalStorage<number[]>(
+    `${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`,
+    []
+  )
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     clearBackground()
@@ -33,8 +56,12 @@ export default function MapPage() {
     async function load() {
       const artist = await getArtistBySlug(artistSlug!)
       applyArtistTheme(artist)
-      const els = await getMapElements(artist.id)
+      const [els, fetchedLevels] = await Promise.all([
+        getMapElements(artist.id),
+        getArtistLevels(artist.id),
+      ])
       setElements(els)
+      setLevels(fetchedLevels)
       setDataLoading(false)
     }
     load().catch(() => setDataLoading(false))
@@ -42,6 +69,13 @@ export default function MapPage() {
 
   const allImagesLoaded = elements.length === 0 || imagesLoadedCount >= elements.length
   const showSpinner = dataLoading || !allImagesLoaded
+
+  useEffect(() => {
+    if (showSpinner || !scrollContainerRef.current) return
+    const el = scrollContainerRef.current
+    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+  }, [showSpinner])
 
   return (
     <>
@@ -52,12 +86,14 @@ export default function MapPage() {
       )}
       {!dataLoading && (
         <div
-          className={`w-full overflow-x-hidden md:flex md:justify-center${showSpinner ? ' invisible absolute' : ''}`}
+          ref={scrollContainerRef}
+          className={`h-dvh overflow-auto md:flex md:justify-center${showSpinner ? ' invisible absolute' : ''}`}
           onClick={() => setTappedId(null)}
         >
-          <div className="relative w-full md:w-auto md:h-dvh" style={{ aspectRatio: '2855 / 3570' }}>
+          <div className="relative w-[300vw] md:w-auto md:h-dvh" style={{ aspectRatio: '2855 / 3570' }}>
             {elements.map((element) => {
               const hasInfo = element.song_id !== null
+              const isLocked = hasInfo && !revealedIds.includes(element.id)
               const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id)
 
               return (
@@ -82,55 +118,41 @@ export default function MapPage() {
                     src={element.url}
                     alt={element.display_name}
                     className="w-full h-auto"
-                    style={{ filter: 'brightness(120%)' }}
+                    style={{ filter: isLocked ? 'brightness(0%)' : 'brightness(120%)' }}
                     onLoad={() => setImagesLoadedCount((c) => c + 1)}
                     onError={() => setImagesLoadedCount((c) => c + 1)}
                   />
-                  {tooltipVisible && (
+                  {isLocked && (
                     <div
-                      className="absolute z-20 pointer-events-none flex flex-col items-center"
-                      style={{
-                        bottom: '50%',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: 'clamp(150px, 20vw, 280px)',
-                      }}
+                      className="absolute pointer-events-none"
+                      style={{ zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                     >
-                      <div
-                        className="relative rounded-lg shadow-xl overflow-hidden w-full"
-                        style={{ border: `1px solid ${element.album_primary_color ?? 'var(--color-theme-primary)'}` }}
-                      >
-                        {/* Opaque neutral backing so tooltip is never fully see-through */}
-                        <div className="absolute inset-0 bg-neutral-50" />
-                        {/* Semi-transparent album secondary color overlay */}
-                        {element.album_secondary_color && (
-                          <div
-                            className="absolute inset-0"
-                            style={{ backgroundColor: hexToRgba(element.album_secondary_color, 0.5) ?? undefined }}
-                          />
-                        )}
-                        {/* Content */}
-                        <div className="relative z-10 p-3 text-center">
-                          <p className="font-semibold text-neutral-800 text-sm leading-tight">{element.song_name}</p>
-                          <p className="text-xs italic text-neutral-600 mt-0.5">{element.album_name}</p>
-                          {element.line_text && (
-                            <p
-                              className="text-xs text-neutral-700 mt-2 pt-2"
-                              style={{ borderTop: `1px solid ${hexToRgba(element.album_primary_color, 0.2) ?? 'var(--color-theme-primary)'}` }}
-                            >
-                              {fixOrphanedQuote(element.line_text)}
-                            </p>
-                          )}
-                        </div>
+                      <div className="h-12 w-12 rounded-full bg-primary border-2 border-secondary flex items-center justify-center">
+                        <Lock size={20} className="text-white" />
                       </div>
-                      <div style={{
-                        width: 0,
-                        height: 0,
-                        borderLeft: '9px solid transparent',
-                        borderRight: '9px solid transparent',
-                        borderTop: `9px solid ${element.album_primary_color ?? 'var(--color-theme-primary)'}`,
-                      }} />
                     </div>
+                  )}
+                  {tooltipVisible && isLocked && (
+                    <Tooltip borderColor="var(--color-theme-primary)">
+                      <p className="text-sm font-medium text-neutral-700">{getLockTooltipText(element, levels)}</p>
+                    </Tooltip>
+                  )}
+                  {tooltipVisible && !isLocked && (
+                    <Tooltip
+                      borderColor={element.album_primary_color ?? 'var(--color-theme-primary)'}
+                      overlayColor={hexToRgba(element.album_secondary_color, 0.5) || undefined}
+                    >
+                      <p className="font-semibold text-neutral-800 text-sm leading-tight">{element.song_name}</p>
+                      <p className="text-xs italic text-neutral-600 mt-0.5">{element.album_name}</p>
+                      {element.line_text && (
+                        <p
+                          className="text-xs text-neutral-700 mt-2 pt-2"
+                          style={{ borderTop: `1px solid ${hexToRgba(element.album_primary_color, 0.2) ?? 'var(--color-theme-primary)'}` }}
+                        >
+                          {fixOrphanedQuote(element.line_text)}
+                        </p>
+                      )}
+                    </Tooltip>
                   )}
                 </div>
               )

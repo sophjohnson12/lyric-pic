@@ -165,6 +165,7 @@ export interface MapElementDetails extends MapElement {
   album_primary_color: string | null
   album_secondary_color: string | null
   line_text: string | null
+  song_difficulty_rank: number | null
 }
 
 export interface AppConfig {
