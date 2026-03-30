@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { Lock } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
@@ -6,9 +6,10 @@ import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
 import Tooltip from '../common/Tooltip'
+import RevealLandmarkModal from './RevealLandmarkModal'
 import type { MapElementDetails } from '../../types/database'
 import type { GameLevel } from '../../types/game'
-import { REVEALED_LANDMARKS_KEY_PREFIX } from '../../utils/constants'
+import { REVEALED_LANDMARKS_KEY_PREFIX, LOCAL_STORAGE_KEY_PREFIX } from '../../utils/constants'
 
 function hexToRgba(hex: string | null, opacity: number): string | null {
   if (!hex) return null
@@ -41,7 +42,8 @@ export default function MapPage() {
   const [imagesLoadedCount, setImagesLoadedCount] = useState(0)
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
-  const [revealedIds] = useLocalStorage<number[]>(
+  const [modalOpen, setModalOpen] = useState(false)
+  const [revealedIds, setRevealedIds] = useLocalStorage<number[]>(
     `${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`,
     []
   )
@@ -77,6 +79,59 @@ export default function MapPage() {
     el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
   }, [showSpinner])
 
+  // Union of all played song IDs — reads both the current level-specific keys and the
+  // legacy key (written before levels were introduced: lyricpic_played_songs_<slug>).
+  const allPlayedSongIds = useMemo(() => {
+    const ids = new Set<number>()
+    const readKey = (key: string) => {
+      try {
+        const stored = window.localStorage.getItem(key)
+        if (stored) (JSON.parse(stored) as number[]).forEach((id) => ids.add(id))
+      } catch {}
+    }
+    // Level-specific keys
+    for (const level of levels) {
+      readKey(`${LOCAL_STORAGE_KEY_PREFIX}${artistSlug}_level_${level.slug}`)
+    }
+    return ids
+  }, [levels, artistSlug])
+
+  // An element is eligible once its specific linked song has been played
+  const eligibleElements = useMemo(
+    () =>
+      elements.filter(
+        (el) => el.song_id !== null && !revealedIds.includes(el.id) && allPlayedSongIds.has(el.song_id)
+      ),
+    [elements, revealedIds, allPlayedSongIds]
+  )
+
+  const elementToReveal = eligibleElements[0] ?? null
+
+  // Up to 2 random distractors: other locked elements not yet revealed
+  const distractors = useMemo(() => {
+    if (!elementToReveal) return []
+    const pool = elements.filter(
+      (el) => el.song_id !== null && !revealedIds.includes(el.id) && el.id !== elementToReveal.id
+    )
+    return [...pool].sort(() => Math.random() - 0.5).slice(0, 2)
+  }, [elementToReveal, elements, revealedIds])
+
+  function handleReveal(id: number) {
+    setRevealedIds((prev) => [...prev, id])
+    const el = elements.find((e) => e.id === id)
+    if (el && scrollContainerRef.current) {
+      const container = scrollContainerRef.current
+      const mapWidth = container.scrollWidth
+      const mapHeight = container.scrollHeight
+      const targetLeft =
+        (el.x_percent / 100) * mapWidth -
+        container.clientWidth / 2 +
+        ((el.width_percent / 100) * mapWidth) / 2
+      const targetTop = (el.y_percent / 100) * mapHeight - container.clientHeight / 2
+      container.scrollTo({ left: Math.max(0, targetLeft), top: Math.max(0, targetTop), behavior: 'smooth' })
+    }
+  }
+
   return (
     <>
       {showSpinner && (
@@ -87,10 +142,10 @@ export default function MapPage() {
       {!dataLoading && (
         <div
           ref={scrollContainerRef}
-          className={`h-dvh overflow-auto md:flex md:justify-center${showSpinner ? ' invisible absolute' : ''}`}
+          className={`h-dvh overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
           onClick={() => setTappedId(null)}
         >
-          <div className="relative w-[300vw] md:w-auto md:h-dvh" style={{ aspectRatio: '2855 / 3570' }}>
+          <div className="relative w-[300vw] md:w-full" style={{ aspectRatio: '2855 / 3570' }}>
             {elements.map((element) => {
               const hasInfo = element.song_id !== null
               const isLocked = hasInfo && !revealedIds.includes(element.id)
@@ -118,7 +173,10 @@ export default function MapPage() {
                     src={element.url}
                     alt={element.display_name}
                     className="w-full h-auto"
-                    style={{ filter: isLocked ? 'brightness(0%)' : 'brightness(120%)' }}
+                    style={{
+                      filter: isLocked ? 'brightness(0%)' : 'brightness(120%)',
+                      transition: 'filter 0.6s ease',
+                    }}
                     onLoad={() => setImagesLoadedCount((c) => c + 1)}
                     onError={() => setImagesLoadedCount((c) => c + 1)}
                   />
@@ -159,6 +217,24 @@ export default function MapPage() {
             })}
           </div>
         </div>
+      )}
+
+      {!showSpinner && elementToReveal && (
+        <button
+          onClick={() => setModalOpen(true)}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-primary text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-lg hover:opacity-90 transition-opacity [will-change:transform]"
+        >
+          Reveal Next Landmark
+        </button>
+      )}
+
+      {modalOpen && elementToReveal && (
+        <RevealLandmarkModal
+          element={elementToReveal}
+          distractors={distractors}
+          onReveal={handleReveal}
+          onClose={() => setModalOpen(false)}
+        />
       )}
     </>
   )
