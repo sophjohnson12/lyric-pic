@@ -143,25 +143,29 @@ export default function RevealLandmarkModal({ element, distractors, onReveal, on
 
   return (
     <Modal onClose={onClose} showEaseIn>
-      <div className="pt-1">
-        <p className="font-semibold text-neutral-800 text-base leading-tight">{element.song_name}</p>
-        <p className="text-xs italic text-neutral-600 mt-0.5">{element.album_name}</p>
-        <div className="flex gap-3 justify-center mt-4">
-          {choices.map((choice) => (
-            <ChoiceCard
-              key={choice.id}
-              ref={(h) => {
-                cardRefs.current[choice.id] = h
-              }}
-              element={choice}
-              incorrect={incorrectIds.includes(choice.id)}
-              resolved={resolved}
-              showCorrect={correctId === choice.id}
-              onClick={() => handleChoiceClick(choice.id)}
-            />
-          ))}
-        </div>
-        <p className="text-xs text-neutral-500 mt-4 mb-1">Which landmark is from this song?</p>
+      <div className="pt-1 text-center">
+        <h2
+          className="font-bold text-primary mb-2 mx-auto tracking-wide text-xl"
+        >{element.song_name}</h2>
+        <p className={"text-sm mb-2 md:mb-4 italic"}>{element.album_name}</p>
+        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-2 w-full">
+          <div className="flex gap-3 justify-center mt-4">
+            {choices.map((choice) => (
+              <ChoiceCard
+                key={choice.id}
+                ref={(h) => {
+                  cardRefs.current[choice.id] = h
+                }}
+                element={choice}
+                incorrect={incorrectIds.includes(choice.id)}
+                resolved={resolved}
+                showCorrect={correctId === choice.id}
+                onClick={() => handleChoiceClick(choice.id)}
+              />
+            ))}
+          </div>
+         </div> 
+        <p className="text-base text-neutral-800 mt-4 mb-1">Which landmark is from this song?</p>
       </div>
     </Modal>
   )

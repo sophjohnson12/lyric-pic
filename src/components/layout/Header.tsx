@@ -7,21 +7,25 @@ interface HeaderProps {
   artistName: string | null
   playedCount: number
   totalSongs: number
+  progressLabel?: string | null
   onInfo: () => void
   onHistory: () => void
   onSkip: () => void
   skipDisabled?: boolean
   onChangeDifficulty?: () => void
+  hideControls?: boolean
 }
 
 export default function Header({
   artistName,
   playedCount,
   totalSongs,
+  progressLabel,
   onInfo,
   onHistory,
   onSkip,
   skipDisabled = false,
+  hideControls = false,
 }: HeaderProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
 
@@ -41,32 +45,34 @@ export default function Header({
         </Link>
 
         <div className="hidden md:flex flex-1 mx-8 max-w-md mt-5">
-          <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
+          <ProgressBar playedCount={playedCount} totalSongs={totalSongs} label={progressLabel ?? undefined} />
         </div>
 
-        <div className="flex items-center md:gap-2 text-neutral-600">
-          <button
-            onClick={onInfo}
-            className="group h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
-            title="How to play"
-          >
-            <Info size={20} className="transition-transform group-hover:scale-110" />
-          </button>
-          <button
-            onClick={onHistory}
-            className="group h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
-            title="Song history"
-          >
-            <Sliders size={20} className="transition-transform group-hover:scale-110" />
-          </button>
-          <button
-            onClick={skipDisabled ? undefined : onSkip}
-            disabled={skipDisabled}
-            className={`group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border ${skipDisabled ? 'text-neutral-400 bg-neutral-300 border-neutral-200 cursor-default' : 'text-primary bg-neutral-50 border-primary hover:bg-white cursor-pointer'}`}
-          >
-            <SkipForward size={24} className={skipDisabled ? '' : 'transition-transform group-hover:scale-110'} />
-          </button>
-        </div>
+        {!hideControls && (
+          <div className="flex items-center md:gap-2 text-neutral-600">
+            <button
+              onClick={onInfo}
+              className="group h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
+              title="How to play"
+            >
+              <Info size={20} className="transition-transform group-hover:scale-110" />
+            </button>
+            <button
+              onClick={onHistory}
+              className="group h-12 w-12 md:h-auto md:w-auto flex items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
+              title="Song history"
+            >
+              <Sliders size={20} className="transition-transform group-hover:scale-110" />
+            </button>
+            <button
+              onClick={skipDisabled ? undefined : onSkip}
+              disabled={skipDisabled}
+              className={`group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border ${skipDisabled ? 'text-neutral-400 bg-neutral-300 border-neutral-200 cursor-default' : 'text-primary bg-neutral-50 border-primary hover:bg-white cursor-pointer'}`}
+            >
+              <SkipForward size={24} className={skipDisabled ? '' : 'transition-transform group-hover:scale-110'} />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   )

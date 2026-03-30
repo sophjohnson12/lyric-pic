@@ -1,10 +1,11 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { Lock } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
+import Header from '../layout/Header'
 import Tooltip from '../common/Tooltip'
 import RevealLandmarkModal from './RevealLandmarkModal'
 import type { MapElementDetails } from '../../types/database'
@@ -36,6 +37,7 @@ function getLockTooltipText(element: MapElementDetails, levels: GameLevel[]): st
 export default function MapPage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const { applyArtistTheme, clearBackground } = useTheme()
+  const [artistName, setArtistName] = useState<string | null>(null)
   const [elements, setElements] = useState<MapElementDetails[]>([])
   const [levels, setLevels] = useState<GameLevel[]>([])
   const [dataLoading, setDataLoading] = useState(true)
@@ -58,6 +60,7 @@ export default function MapPage() {
     async function load() {
       const artist = await getArtistBySlug(artistSlug!)
       applyArtistTheme(artist)
+      setArtistName(artist.name)
       const [els, fetchedLevels] = await Promise.all([
         getMapElements(artist.id),
         getArtistLevels(artist.id),
@@ -133,16 +136,26 @@ export default function MapPage() {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-dvh">
+      <Header
+        artistName={artistName}
+        playedCount={revealedIds.length}
+        totalSongs={elements.filter((el) => el.song_id !== null).length}
+        progressLabel="landmarks"
+        onInfo={() => {}}
+        onHistory={() => {}}
+        onSkip={() => {}}
+        hideControls={true}
+      />
       {showSpinner && (
-        <div className="min-h-dvh flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {!dataLoading && (
         <div
           ref={scrollContainerRef}
-          className={`h-dvh overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
+          className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
           onClick={() => setTappedId(null)}
         >
           <div className="relative w-[300vw] md:w-full" style={{ aspectRatio: '2855 / 3570' }}>
@@ -185,8 +198,10 @@ export default function MapPage() {
                       className="absolute pointer-events-none"
                       style={{ zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                     >
-                      <div className="h-12 w-12 rounded-full bg-primary border-2 border-secondary flex items-center justify-center">
-                        <Lock size={20} className="text-white" />
+                      <div className="h-12 w-12 rounded-full bg-primary border-2 border-secondary flex items-center justify-center gap-[2px]">
+                        {[...Array(element.song_difficulty_rank ?? 1)].map((_, index) => (
+                          <Star size={12} className="text-white" key={index} fill="white"/>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -236,6 +251,6 @@ export default function MapPage() {
           onClose={() => setModalOpen(false)}
         />
       )}
-    </>
+    </div>
   )
 }
