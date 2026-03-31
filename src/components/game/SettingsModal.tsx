@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import ConfirmPopup from '../common/ConfirmPopup'
@@ -26,6 +26,7 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, levelSongCounts, fanbaseName, artistLoadMessage, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
+  const navigate = useNavigate()
   const [songNames, setSongNames] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -69,6 +70,17 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       <div className="text-base text-neutral-600">
         <h2 className="tracking-wide text-xl font-bold text-primary mb-1">Settings & Stats</h2>
         <div className="space-y-2 md:space-y-3">
+          <div>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Landmarks</h3>
+            <div>
+              <button
+                onClick={() => { onClose(); navigate(`/${artistSlug}/map?level=${levelSlug}`) }}
+                className="w-full md:w-auto py-2 px-4 h-12 font-medium text-sm text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+              >
+                View Map
+              </button>
+            </div>
+          </div>
           <div>
             <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Reveal Behavior</h3>
             <div className="flex gap-6">
@@ -120,7 +132,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             </div>
           </div>
           <div>
-            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Game History</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Level History</h3>
             <div className="mb-2">
               <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
             </div>

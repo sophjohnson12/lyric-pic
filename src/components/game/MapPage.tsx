@@ -6,6 +6,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
 import MapHeader from '../layout/MapHeader'
+import MapModal from './MapModal'
 import MapFloatingAction from './MapFloatingAction'
 import Tooltip from '../common/Tooltip'
 import RevealLandmarkModal from './RevealLandmarkModal'
@@ -50,6 +51,7 @@ export default function MapPage() {
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [mapModalOpen, setMapModalOpen] = useState(false)
   const [revealedIds, setRevealedIds] = useLocalStorage<number[]>(
     `${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`,
     []
@@ -165,9 +167,8 @@ export default function MapPage() {
   return (
     <div className="flex flex-col h-dvh">
       <MapHeader
-        revealedCount={revealedIds.length}
-        totalLandmarks={elements.filter((el) => el.song_id !== null).length}
         onBack={() => navigate(gameUrl)}
+        onMapInfo={() => setMapModalOpen(true)}
       />
       {showSpinner && (
         <div className="flex-1 max-md:pt-16 flex items-center justify-center">
@@ -266,13 +267,13 @@ export default function MapPage() {
         activeElement ? (
           <MapFloatingAction
             buttonText="Place a Landmark"
-            messageText={`${eligibleElements.length} discovered landmark${eligibleElements.length === 1 ? '' : 's'} to place!`}
+            messageText={`${eligibleElements.length} ready to place!`}
             onClick={() => setModalOpen(true)}
           />
         ) : undiscoveredCount > 0 ? (
           <MapFloatingAction
             buttonText="Return to Game"
-            messageText={`${undiscoveredCount} more landmark${undiscoveredCount === 1 ? '' : 's'} to discover.`}
+            messageText={`${undiscoveredCount} landmark${undiscoveredCount === 1 ? '' : 's'} to discover.`}
             onClick={() => navigate(gameUrl)}
           />
         ) : null
@@ -284,6 +285,13 @@ export default function MapPage() {
           distractors={distractors}
           onReveal={handleReveal}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+      {mapModalOpen && (
+        <MapModal
+          revealedCount={revealedIds.length}
+          totalLandmarks={elements.filter((el) => el.song_id !== null).length}
+          onClose={() => setMapModalOpen(false)}
         />
       )}
     </div>
