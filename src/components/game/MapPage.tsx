@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
@@ -38,6 +38,10 @@ function getLockTooltipText(element: MapElementDetails, levels: GameLevel[]): st
 export default function MapPage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const levelParam = searchParams.get('level')
+  const songIdParam = searchParams.get('song_id')
+  const gameUrl = levelParam ? `/${artistSlug}/${levelParam}` : `/${artistSlug}`
   const { applyArtistTheme, clearBackground } = useTheme()
   const [elements, setElements] = useState<MapElementDetails[]>([])
   const [levels, setLevels] = useState<GameLevel[]>([])
@@ -110,6 +114,16 @@ export default function MapPage() {
 
   const elementToReveal = eligibleElements[0] ?? null
 
+  const autoRevealElement = useMemo(() => {
+    if (!songIdParam) return null
+    const songId = parseInt(songIdParam, 10)
+    if (isNaN(songId)) return null
+    if (!allPlayedSongIds.has(songId)) return null
+    return elements.find((el) => el.song_id === songId && !revealedIds.includes(el.id)) ?? null
+  }, [songIdParam, elements, revealedIds, allPlayedSongIds])
+
+  const activeElement = autoRevealElement ?? elementToReveal
+
   const undiscoveredCount = useMemo(
     () => elements.filter((el) => el.song_id !== null && !revealedIds.includes(el.id)).length,
     [elements, revealedIds]
@@ -117,12 +131,20 @@ export default function MapPage() {
 
   // Up to 2 random distractors: other locked elements not yet revealed
   const distractors = useMemo(() => {
-    if (!elementToReveal) return []
+    if (!activeElement) return []
     const pool = elements.filter(
-      (el) => el.song_id !== null && !revealedIds.includes(el.id) && el.id !== elementToReveal.id
+      (el) => el.song_id !== null && !revealedIds.includes(el.id) && el.id !== activeElement.id
     )
     return [...pool].sort(() => Math.random() - 0.5).slice(0, 2)
-  }, [elementToReveal, elements, revealedIds])
+  }, [activeElement, elements, revealedIds])
+
+  const hasAutoLaunchedRef = useRef(false)
+  useEffect(() => {
+    if (hasAutoLaunchedRef.current) return
+    if (showSpinner || !autoRevealElement) return
+    hasAutoLaunchedRef.current = true
+    setModalOpen(true)
+  }, [showSpinner, autoRevealElement])
 
   function handleReveal(id: number) {
     setRevealedIds((prev) => [...prev, id])
@@ -145,6 +167,7 @@ export default function MapPage() {
       <MapHeader
         revealedCount={revealedIds.length}
         totalLandmarks={elements.filter((el) => el.song_id !== null).length}
+        onBack={() => navigate(gameUrl)}
       />
       {showSpinner && (
         <div className="flex-1 max-md:pt-16 flex items-center justify-center">
@@ -238,7 +261,7 @@ export default function MapPage() {
       )}
 
       {!showSpinner && (
-        elementToReveal ? (
+        activeElement ? (
           <MapFloatingAction
             buttonText="Place a Landmark"
             messageText={`${eligibleElements.length} discovered landmark${eligibleElements.length === 1 ? '' : 's'} to place!`}
@@ -248,14 +271,14 @@ export default function MapPage() {
           <MapFloatingAction
             buttonText="Return to Game"
             messageText={`${undiscoveredCount} undiscovered landmark${undiscoveredCount === 1 ? '' : 's'} await.`}
-            onClick={() => navigate(`/${artistSlug}`)}
+            onClick={() => navigate(gameUrl)}
           />
         ) : null
       )}
 
-      {modalOpen && elementToReveal && (
+      {modalOpen && activeElement && (
         <RevealLandmarkModal
-          element={elementToReveal}
+          element={activeElement}
           distractors={distractors}
           onReveal={handleReveal}
           onClose={() => setModalOpen(false)}
