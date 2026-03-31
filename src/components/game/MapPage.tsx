@@ -207,8 +207,10 @@ export default function MapPage() {
                   <img
                     src={element.url}
                     alt={element.display_name}
-                    className="w-full h-auto"
+                    className="w-full h-auto select-none"
+                    draggable={false}
                     style={{
+                      WebkitTouchCallout: 'none',
                       filter: isLocked ? 'brightness(0%)' : 'brightness(120%)',
                       transition: 'filter 0.6s ease',
                     }}
