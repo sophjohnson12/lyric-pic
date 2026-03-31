@@ -7,8 +7,8 @@ interface MapFloatingActionProps {
 export default function MapFloatingAction({ buttonText, messageText, onClick }: MapFloatingActionProps) {
   return (
     <>
-      <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-30 w-fit bg-neutral-50/1 backdrop-blur-lg rounded-3xl p-1">
-        <div className="text-xs text-neutral-600 whitespace-nowrap">
+      <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-30 w-fit bg-neutral-50/25 backdrop-blur-3xl rounded-3xl p-1">
+        <div className="text-xs text-neutral-800 whitespace-nowrap">
           {messageText}
         </div>
       </div>
