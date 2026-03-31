@@ -272,7 +272,7 @@ export default function MapPage() {
         ) : undiscoveredCount > 0 ? (
           <MapFloatingAction
             buttonText="Return to Game"
-            messageText={`${undiscoveredCount} landmark${undiscoveredCount === 1 ? '' : 's'} to discover.`}
+            messageText={`${undiscoveredCount} more landmark${undiscoveredCount === 1 ? '' : 's'} to discover.`}
             onClick={() => navigate(gameUrl)}
           />
         ) : null
