@@ -4,6 +4,16 @@ interface TooltipProps {
   children: React.ReactNode
 }
 
+function caretFill(overlayColor?: string): string {
+  const base = 250 // neutral-50 = #fafafa = rgb(250, 250, 250)
+  if (!overlayColor) return `rgb(${base}, ${base}, ${base})`
+  const match = overlayColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/)
+  if (!match) return `rgb(${base}, ${base}, ${base})`
+  const r = parseInt(match[1]), g = parseInt(match[2]), b = parseInt(match[3])
+  const a = match[4] ? parseFloat(match[4]) : 1
+  return `rgb(${Math.round(r * a + base * (1 - a))}, ${Math.round(g * a + base * (1 - a))}, ${Math.round(b * a + base * (1 - a))})`
+}
+
 export default function Tooltip({ borderColor = 'var(--color-theme-primary)', overlayColor, children }: TooltipProps) {
   return (
     <div
@@ -35,7 +45,7 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
           width: 0, height: 0,
           borderLeft: '9px solid transparent',
           borderRight: '9px solid transparent',
-          borderTop: '9px solid #fafafa',
+          borderTop: `9px solid ${caretFill(overlayColor)}`,
         }} />
       </div>
     </div>

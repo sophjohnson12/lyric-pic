@@ -198,10 +198,12 @@ export default function MapPage() {
                       style={{ zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                     >
                       <div className="relative h-12 w-12">
-                        <div className="absolute inset-0 rounded-full bg-neutral-50 shadow-sm border-2 border-primary flex items-center justify-center gap-[1px]">
-                          {[...Array(element.song_difficulty_rank ?? 1)].map((_, index) => (
-                            <Star size={13} className="text-primary" key={index} fill="currentColor"/>
-                          ))}
+                        <div className="absolute inset-0 rounded-full bg-neutral-50">
+                          <div className="absolute inset-0 rounded-full bg-secondary/50 shadow-sm border-2 border-primary flex items-center justify-center gap-[1px]">
+                            {[...Array(element.song_difficulty_rank ?? 1)].map((_, index) => (
+                              <Star size={13} className="text-primary" key={index} fill="currentColor"/>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
