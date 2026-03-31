@@ -8,7 +8,7 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
   return (
     <div
       className="absolute z-20 pointer-events-none flex flex-col items-center"
-      style={{ bottom: '50%', left: '50%', transform: 'translateX(-50%)', width: 'clamp(150px, 20vw, 280px)' }}
+      style={{ bottom: 'calc(50% + 11px)', left: '50%', transform: 'translateX(-50%)', width: 'clamp(150px, 20vw, 280px)' }}
     >
       <div
         className="relative rounded-lg shadow-xl overflow-hidden w-full"
@@ -20,13 +20,24 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
           {children}
         </div>
       </div>
-      <div style={{
-        width: 0,
-        height: 0,
-        borderLeft: '9px solid transparent',
-        borderRight: '9px solid transparent',
-        borderTop: `9px solid ${borderColor}`,
-      }} />
+      <div style={{ position: 'relative', width: 0, height: 0, marginTop: -1, zIndex: 1 }}>
+        <div style={{
+          position: 'absolute',
+          top: 0, left: -11,
+          width: 0, height: 0,
+          borderLeft: '11px solid transparent',
+          borderRight: '11px solid transparent',
+          borderTop: `11px solid ${borderColor}`,
+        }} />
+        <div style={{
+          position: 'absolute',
+          top: 0, left: -9,
+          width: 0, height: 0,
+          borderLeft: '9px solid transparent',
+          borderRight: '9px solid transparent',
+          borderTop: '9px solid #fafafa',
+        }} />
+      </div>
     </div>
   )
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
 import MapHeader from '../layout/MapHeader'
+import MapFloatingAction from './MapFloatingAction'
 import Tooltip from '../common/Tooltip'
 import RevealLandmarkModal from './RevealLandmarkModal'
 import type { MapElementDetails } from '../../types/database'
@@ -36,6 +37,7 @@ function getLockTooltipText(element: MapElementDetails, levels: GameLevel[]): st
 
 export default function MapPage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
+  const navigate = useNavigate()
   const { applyArtistTheme, clearBackground } = useTheme()
   const [elements, setElements] = useState<MapElementDetails[]>([])
   const [levels, setLevels] = useState<GameLevel[]>([])
@@ -108,6 +110,11 @@ export default function MapPage() {
 
   const elementToReveal = eligibleElements[0] ?? null
 
+  const undiscoveredCount = useMemo(
+    () => elements.filter((el) => el.song_id !== null && !revealedIds.includes(el.id)).length,
+    [elements, revealedIds]
+  )
+
   // Up to 2 random distractors: other locked elements not yet revealed
   const distractors = useMemo(() => {
     if (!elementToReveal) return []
@@ -140,14 +147,14 @@ export default function MapPage() {
         totalLandmarks={elements.filter((el) => el.song_id !== null).length}
       />
       {showSpinner && (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 max-md:pt-16 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {!dataLoading && (
         <div
           ref={scrollContainerRef}
-          className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
+          className={`flex-1 max-md:pt-16 overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
           onClick={() => setTappedId(null)}
         >
           <div className="relative w-[300vw] md:w-full" style={{ aspectRatio: '2855 / 3570' }}>
@@ -190,16 +197,18 @@ export default function MapPage() {
                       className="absolute pointer-events-none"
                       style={{ zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                     >
-                      <div className="h-12 w-12 rounded-full bg-primary border-2 border-secondary flex items-center justify-center gap-[2px]">
-                        {[...Array(element.song_difficulty_rank ?? 1)].map((_, index) => (
-                          <Star size={12} className="text-white" key={index} fill="white"/>
-                        ))}
+                      <div className="relative h-12 w-12">
+                        <div className="absolute inset-0 rounded-full bg-neutral-50 shadow-sm border-2 border-primary flex items-center justify-center gap-[1px]">
+                          {[...Array(element.song_difficulty_rank ?? 1)].map((_, index) => (
+                            <Star size={13} className="text-primary" key={index} fill="currentColor"/>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
                   {tooltipVisible && isLocked && (
                     <Tooltip borderColor="var(--color-theme-primary)">
-                      <p className="text-sm font-medium text-neutral-700">{getLockTooltipText(element, levels)}</p>
+                      <p className="text-xs font-medium text-neutral-700">{getLockTooltipText(element, levels)}</p>
                     </Tooltip>
                   )}
                   {tooltipVisible && !isLocked && (
@@ -226,13 +235,20 @@ export default function MapPage() {
         </div>
       )}
 
-      {!showSpinner && elementToReveal && (
-        <button
-          onClick={() => setModalOpen(true)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-primary text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-lg hover:opacity-90 transition-opacity [will-change:transform]"
-        >
-          Reveal Next Landmark
-        </button>
+      {!showSpinner && (
+        elementToReveal ? (
+          <MapFloatingAction
+            buttonText="Place a Landmark"
+            messageText={`${eligibleElements.length} discovered landmark${eligibleElements.length === 1 ? '' : 's'} to place!`}
+            onClick={() => setModalOpen(true)}
+          />
+        ) : undiscoveredCount > 0 ? (
+          <MapFloatingAction
+            buttonText="Return to Game"
+            messageText={`${undiscoveredCount} undiscovered landmark${undiscoveredCount === 1 ? '' : 's'} await.`}
+            onClick={() => navigate(`/${artistSlug}`)}
+          />
+        ) : null
       )}
 
       {modalOpen && elementToReveal && (
