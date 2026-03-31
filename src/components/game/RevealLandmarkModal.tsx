@@ -145,10 +145,17 @@ export default function RevealLandmarkModal({ element, distractors, onReveal, on
     <Modal onClose={onClose} showEaseIn>
       <div className="pt-1 text-center">
         <h2
-          className="font-bold text-primary mb-2 mx-auto tracking-wide text-xl"
+          className="font-bold mb-2 mx-auto tracking-wide text-xl"
+          style={{ color: element.album_primary_color ?? undefined }}
         >{element.song_name}</h2>
         <p className={"text-sm mb-2 md:mb-4 italic"}>{element.album_name}</p>
-        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-2 w-full">
+        <div
+          className="rounded-lg border p-4 md:p-6 mb-2 w-full"
+          style={{
+            backgroundColor: element.album_secondary_color ? `${element.album_secondary_color}80` : undefined,
+            borderColor: element.album_primary_color ?? undefined,
+          }}
+        >
           <div className="flex gap-3 justify-center mt-4">
             {choices.map((choice) => (
               <ChoiceCard
