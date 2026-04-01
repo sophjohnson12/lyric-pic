@@ -330,11 +330,9 @@ export default function MapPage() {
                         style={{ zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                       >
                         <div className="h-12 w-12 flex items-center justify-center">
-                          <div className="relative h-8 w-8">
-                            <div className="absolute inset-0 rounded-full bg-neutral-50" />
-                            <div className="absolute inset-0 rounded-full bg-secondary/50 shadow-sm border-1 border-primary flex items-center justify-center">
-                              <Lock size={16} className="text-primary" />
-                            </div>
+                          <div className="absolute inset-0 rounded-full bg-neutral-50" />
+                          <div className="absolute inset-0 rounded-full bg-secondary/50 shadow-sm border-1 border-primary flex items-center justify-center">
+                              <Lock size={20} className="text-primary" />
                           </div>
                         </div>
                       </div>
