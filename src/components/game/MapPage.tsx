@@ -57,6 +57,7 @@ export default function MapPage() {
     src: string
     fromRect: DOMRect
     phase: 'growing' | 'shrinking'
+    id: number
   } | null>(null)
   const [revealedIds, setRevealedIds] = useLocalStorage<number[]>(
     `${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`,
@@ -184,7 +185,7 @@ export default function MapPage() {
   }
 
   function handleLiftOff(src: string, fromRect: DOMRect) {
-    setRevealOverlay({ src, fromRect, phase: 'growing' })
+    setRevealOverlay({ src, fromRect, phase: 'growing', id: pendingRevealId.current! })
   }
 
   useEffect(() => {
@@ -324,7 +325,7 @@ export default function MapPage() {
                       onLoad={() => setImagesLoadedCount((c) => c + 1)}
                       onError={() => setImagesLoadedCount((c) => c + 1)}
                     />
-                    {isLocked && (
+                    {isLocked && revealOverlay?.id !== element.id && (
                       <div
                         className="absolute pointer-events-none"
                         style={{ zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
