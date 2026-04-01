@@ -6,6 +6,7 @@ import ConfirmPopup from '../common/ConfirmPopup'
 import { getPlayedSongNames } from '../../services/supabase'
 import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY } from '../../utils/constants'
 import type { GameLevel, RevealBehavior } from '../../types/game'
+import { Map } from 'lucide-react';
 
 export type { RevealBehavior }
 
@@ -75,7 +76,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
             <div>
               <button
                 onClick={() => { onClose(); navigate(`/${artistSlug}/map?level=${levelSlug}`) }}
-                className="w-full md:w-auto py-2 px-4 h-12 font-medium text-sm text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                className="w-full md:w-auto py-2 px-4 h-12 font-medium text-base text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"  
               >
                 View Map
               </button>
@@ -155,7 +156,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
               <div className="flex items-center justify-center">
                 <button
                   onClick={() => setShowConfirm(true)}
-                  className="w-full md:w-auto py-2 px-4 h-12 font-medium text-sm text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                  className="w-full md:w-auto py-2 px-4 h-12 font-medium text-base text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
                 >
                   Clear {currentLevelName} History
                 </button>
