@@ -39,11 +39,6 @@ export default function Header({
             </div>
           </div>
         </Link>
-
-        <div className="hidden md:flex flex-1 mx-8 max-w-md mt-5">
-          <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
-        </div>
-
         <div className="flex items-center md:gap-2 text-neutral-600">
           <button
             onClick={onInfo}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Star } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
@@ -24,16 +24,16 @@ function hexToRgba(hex: string | null, opacity: number): string | null {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`
 }
 
-function getLockTooltipText(element: MapElementDetails, levels: GameLevel[]): string {
+function getLevelNames(element: MapElementDetails, levels: GameLevel[]): string {
   const rank = element.song_difficulty_rank ?? 1
   const qualifying = levels.filter((l) => l.max_difficulty_rank >= rank)
-  if (qualifying.length === 0) return 'Play to Unlock'
+  if (qualifying.length === 0) return ''
   const names = qualifying.map((l) => l.name)
-  if (names.length === 1) return `Play ${names[0]} to Unlock`
-  if (names.length === 2) return `Play ${names[0]} or ${names[1]} to Unlock`
+  if (names.length === 1) return names[0]
+  if (names.length === 2) return `${names[0]} or ${names[1]}`
   const last = names[names.length - 1]
   const rest = names.slice(0, -1)
-  return `Play ${rest.join(', ')}, or ${last} to Unlock`
+  return `${rest.join(', ')}, or ${last}`
 }
 
 export default function MapPage() {
@@ -199,8 +199,8 @@ export default function MapPage() {
                   }}
                   onMouseEnter={() => hasInfo && setHoveredId(element.id)}
                   onMouseLeave={() => setHoveredId(null)}
-                  onClick={(e) => {
-                    if (!hasInfo) return
+                  onPointerUp={(e) => {
+                    if (!hasInfo || e.pointerType !== 'touch') return
                     e.stopPropagation()
                     setTappedId(tappedId === element.id ? null : element.id)
                   }}
@@ -223,12 +223,11 @@ export default function MapPage() {
                       className="absolute pointer-events-none"
                       style={{ zIndex: 2, top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                     >
-                      <div className="relative h-12 w-12">
-                        <div className="absolute inset-0 rounded-full bg-neutral-50">
-                          <div className="absolute inset-0 rounded-full bg-secondary/50 shadow-sm border-2 border-primary flex items-center justify-center gap-[1px]">
-                            {[...Array(element.song_difficulty_rank ?? 1)].map((_, index) => (
-                              <Star size={13} className="text-primary" key={index} fill="currentColor"/>
-                            ))}
+                      <div className="h-12 w-12 flex items-center justify-center">
+                        <div className="relative h-8 w-8">
+                          <div className="absolute inset-0 rounded-full bg-neutral-50" />
+                          <div className="absolute inset-0 rounded-full bg-secondary/50 shadow-sm border-1 border-primary flex items-center justify-center">
+                            <Lock size={16} className="text-primary" />
                           </div>
                         </div>
                       </div>
@@ -236,7 +235,11 @@ export default function MapPage() {
                   )}
                   {tooltipVisible && isLocked && (
                     <Tooltip borderColor="var(--color-theme-primary)">
-                      <p className="text-xs font-medium text-neutral-700">{getLockTooltipText(element, levels)}</p>
+                      <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark!</p>
+                      <p className="text-xs mt-1">
+                        <span className="text-neutral-600 font-semibold">Level: </span>
+                        <span className="text-neutral-700 font-normal">{getLevelNames(element, levels)}</span>
+                      </p>
                     </Tooltip>
                   )}
                   {tooltipVisible && !isLocked && (

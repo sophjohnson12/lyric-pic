@@ -1,4 +1,4 @@
-import { SkipBack, Map } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 interface MapHeaderProps {
   onBack: () => void
@@ -13,16 +13,12 @@ export default function MapHeader({ onBack, onMapInfo }: MapHeaderProps) {
           onClick={() => onBack()}
           className="group self-center h-12 w-14 md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border text-primary bg-neutral-50 border-primary hover:bg-white cursor-pointer"
         >
-          <SkipBack size={24} className="transition-transform group-hover:scale-110" />
+          <ArrowLeft size={24} className="transition-transform group-hover:scale-110" />
         </button>
         <div className="flex items-center text-neutral-600">
-          <button
-            onClick={onMapInfo}
-            className="group h-12 w-12 md:h-auto md:w-auto flex items-center justify-center md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
-            title="Map info"
-          >
-            <Map size={20} className="transition-transform group-hover:scale-110" />
-          </button>
+          <div className="text-xs text-neutral-600 text-center">
+            10 / 52 landmarks
+          </div>
         </div>
       </div>
     </header>
