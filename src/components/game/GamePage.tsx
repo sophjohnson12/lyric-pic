@@ -353,8 +353,6 @@ export default function GamePage() {
       <div className="min-h-screen flex flex-col">
         <Header
           artistName={game.artist?.name || null}
-          playedCount={game.playedSongIds.length}
-          totalSongs={game.totalPlayableSongs}
           onInfo={() => setShowInfo(true)}
           onHistory={() => setShowHistory(true)}
           onSkip={() => {}}
@@ -438,8 +436,6 @@ export default function GamePage() {
     <div className="md:h-auto flex flex-col max-md:min-h-[calc(100lvh+64px)]">
       <Header
         artistName={game.artist.name}
-        playedCount={game.playedSongIds.length}
-        totalSongs={game.totalPlayableSongs}
         onInfo={() => setShowInfo(true)}
         onHistory={() => setShowHistory(true)}
         onSkip={() => setShowSkipConfirm(true)}

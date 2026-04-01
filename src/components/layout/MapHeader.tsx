@@ -1,11 +1,13 @@
 import { ArrowLeft } from 'lucide-react'
+import ProgressBar from '../common/ProgressBar'
 
 interface MapHeaderProps {
   onBack: () => void
-  onMapInfo: () => void
+  revealedLandmarks: number
+  totalLandmarks: number
 }
 
-export default function MapHeader({ onBack, onMapInfo }: MapHeaderProps) {
+export default function MapHeader({ onBack, revealedLandmarks, totalLandmarks }: MapHeaderProps) {
   return (
     <header className="bg-neutral-50 top-0 z-50 px-4 py-2 min-w-2xs shadow-sm h-16 max-md:fixed max-md:inset-x-0">
       <div className="sm:max-w-7/8 mx-auto flex items-center justify-between h-full">
@@ -15,10 +17,13 @@ export default function MapHeader({ onBack, onMapInfo }: MapHeaderProps) {
         >
           <ArrowLeft size={24} className="transition-transform group-hover:scale-110" />
         </button>
-        <div className="flex items-center text-neutral-600">
-          <div className="text-xs text-neutral-600 text-center">
-            10 / 52 landmarks
-          </div>
+        <div className="w-36">
+          <ProgressBar
+            playedCount={revealedLandmarks}
+            totalSongs={totalLandmarks}
+            noun="landmark"
+            showTextOnly={true}
+          />
         </div>
       </div>
     </header>

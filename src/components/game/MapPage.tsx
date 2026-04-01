@@ -6,7 +6,6 @@ import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
 import MapHeader from '../layout/MapHeader'
-import MapModal from './MapModal'
 import MapFloatingAction from './MapFloatingAction'
 import Tooltip from '../common/Tooltip'
 import RevealLandmarkModal from './RevealLandmarkModal'
@@ -51,7 +50,6 @@ export default function MapPage() {
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [mapModalOpen, setMapModalOpen] = useState(false)
   const [revealedIds, setRevealedIds] = useLocalStorage<number[]>(
     `${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`,
     []
@@ -166,19 +164,22 @@ export default function MapPage() {
 
   return (
     <div className="flex flex-col h-dvh">
-      <MapHeader
-        onBack={() => navigate(gameUrl)}
-        onMapInfo={() => setMapModalOpen(true)}
-      />
+      {!showSpinner && (
+        <MapHeader
+          onBack={() => navigate(gameUrl)}
+          revealedLandmarks={revealedIds.length}
+          totalLandmarks={elements.filter((el) => el.song_id !== null).length}
+        />
+      )}
       {showSpinner && (
-        <div className="flex-1 max-md:pt-16 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       {!dataLoading && (
         <div
           ref={scrollContainerRef}
-          className={`flex-1 max-md:pt-16 overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
+          className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
           onClick={() => setTappedId(null)}
         >
           <div className="relative w-[300vw] md:w-full" style={{ aspectRatio: '2855 / 3570' }}>
@@ -288,13 +289,6 @@ export default function MapPage() {
           distractors={distractors}
           onReveal={handleReveal}
           onClose={() => setModalOpen(false)}
-        />
-      )}
-      {mapModalOpen && (
-        <MapModal
-          revealedCount={revealedIds.length}
-          totalLandmarks={elements.filter((el) => el.song_id !== null).length}
-          onClose={() => setMapModalOpen(false)}
         />
       )}
     </div>

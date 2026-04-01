@@ -1,12 +1,9 @@
 import { Info, Sliders, SkipForward } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import ProgressBar from '../common/ProgressBar';
 import LogoIcon from '../common/LogoIcon';
 
 interface HeaderProps {
   artistName: string | null
-  playedCount: number
-  totalSongs: number
   onInfo: () => void
   onHistory: () => void
   onSkip: () => void
@@ -16,8 +13,6 @@ interface HeaderProps {
 
 export default function Header({
   artistName,
-  playedCount,
-  totalSongs,
   onInfo,
   onHistory,
   onSkip,

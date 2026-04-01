@@ -152,10 +152,10 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
           </div>
           <div>
             {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
-              <div className="flex items-center justify-center ">
+              <div className="flex items-center justify-center">
                 <button
                   onClick={() => setShowConfirm(true)}
-                  className="w-full md:w-auto py-2 px-4 h-12 font-medium text-sm text-error border border-error rounded-lg hover:bg-error/20 cursor-pointer"
+                  className="w-full md:w-auto py-2 px-4 h-12 font-medium text-sm text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
                 >
                   Clear {currentLevelName} History
                 </button>
