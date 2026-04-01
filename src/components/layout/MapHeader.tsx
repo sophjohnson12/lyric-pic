@@ -1,5 +1,4 @@
 import { ArrowLeft } from 'lucide-react'
-import ProgressBar from '../common/ProgressBar'
 
 interface MapHeaderProps {
   onBack: () => void
@@ -17,13 +16,8 @@ export default function MapHeader({ onBack, revealedLandmarks, totalLandmarks }:
         >
           <ArrowLeft size={24} className="transition-transform group-hover:scale-110" />
         </button>
-        <div className="w-36">
-          <ProgressBar
-            playedCount={revealedLandmarks}
-            totalSongs={totalLandmarks}
-            noun="landmark"
-            showTextOnly={true}
-          />
+        <div className="text-base text-neutral-800 text-center w-36">
+          {revealedLandmarks} / {totalLandmarks} {totalLandmarks === 1 ? "landmark" : "landmarks"}
         </div>
       </div>
     </header>
