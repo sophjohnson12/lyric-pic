@@ -6,22 +6,25 @@ import type { MapElementDetails } from '../../types/database'
 
 export interface ChoiceCardHandle {
   shakeError: () => Promise<void>
-  growCorrect: () => Promise<void>
+  slideTo: (dx: number) => Promise<void>
+  getDivRect: () => DOMRect
+  getImageRect: () => DOMRect
 }
 
 interface ChoiceCardProps {
   element: MapElementDetails
   incorrect: boolean
   resolved: boolean
-  showCorrect: boolean
+  isCorrect: boolean
   onClick: () => void
 }
 
 const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function ChoiceCard(
-  { element, incorrect, resolved, showCorrect, onClick },
+  { element, incorrect, resolved, isCorrect, onClick },
   ref
 ) {
   const divRef = useRef<HTMLDivElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
   const [showError, setShowError] = useState(false)
 
   useImperativeHandle(ref, () => ({
@@ -51,11 +54,11 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
         }
       })
     },
-    growCorrect() {
+    slideTo(dx: number) {
       return new Promise<void>((resolve) => {
         const anim = divRef.current?.animate(
-          [{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }],
-          { duration: 400, easing: 'ease-in-out' }
+          [{ transform: 'translateX(0)' }, { transform: `translateX(${dx}px)` }],
+          { duration: 350, easing: 'ease-in-out', fill: 'forwards' }
         )
         if (anim) {
           anim.addEventListener('finish', () => resolve())
@@ -64,29 +67,34 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
         }
       })
     },
+    getDivRect() {
+      return divRef.current?.getBoundingClientRect() ?? new DOMRect()
+    },
+    getImageRect() {
+      return imgRef.current?.getBoundingClientRect() ?? new DOMRect()
+    },
   }))
 
   function handleClick() {
-    if (incorrect || resolved || showError || showCorrect) return
+    if (incorrect || resolved || showError) return
     onClick()
   }
 
   let borderClass = 'border-neutral-200'
   let bgClass = 'bg-neutral-50'
   let cursorClass = 'cursor-pointer'
-  let opacityClass = ''
+  let imgOpacityClass = ''
 
   if (showError) {
     borderClass = 'border-error'
     bgClass = 'bg-error/50'
-  } else if (showCorrect) {
-    borderClass = 'border-success'
-    bgClass = 'bg-success/50'
-  } else if (incorrect || resolved) {
+  } else if (incorrect || (resolved && !isCorrect)) {
     borderClass = 'border-neutral-200'
     bgClass = 'bg-neutral-300'
     cursorClass = 'cursor-default'
-    opacityClass = 'opacity-50'
+    imgOpacityClass = 'opacity-50'
+  } else if (resolved && isCorrect) {
+    cursorClass = 'cursor-default'
   }
 
   return (
@@ -97,26 +105,28 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
       tabIndex={incorrect || resolved ? -1 : 0}
       onClick={handleClick}
       onKeyDown={(e) => e.key === 'Enter' && handleClick()}
-      className={`w-28 h-28 rounded-lg border-2 overflow-hidden [will-change:transform] ${bgClass} ${borderClass} ${cursorClass} ${opacityClass}`}
+      className={`w-28 h-28 rounded-lg border-2 overflow-hidden [will-change:transform] ${bgClass} ${borderClass} ${cursorClass}`}
     >
       <img
+        ref={imgRef}
         src={element.url}
         alt={element.display_name}
-        className="w-full h-full object-contain p-1"
+        className={`w-full h-full object-contain p-1 [will-change:transform] ${imgOpacityClass}`}
         style={{ filter: 'brightness(120%)' }}
       />
     </div>
   )
 })
 
-interface RevealLandmarkModalProps {
+export interface MapLandmarkModalProps {
   element: MapElementDetails
   distractors: MapElementDetails[]
-  onReveal: (id: number) => void
+  onReveal: (id: number) => Promise<void>
+  onLiftOff: (src: string, fromRect: DOMRect) => void
   onClose: () => void
 }
 
-export default function RevealLandmarkModal({ element, distractors, onReveal, onClose }: RevealLandmarkModalProps) {
+export default function MapLandmarkModal({ element, distractors, onReveal, onLiftOff, onClose }: MapLandmarkModalProps) {
   const [incorrectIds, setIncorrectIds] = useState<number[]>([])
   const [resolved, setResolved] = useState(false)
   const [correctId, setCorrectId] = useState<number | null>(null)
@@ -124,20 +134,49 @@ export default function RevealLandmarkModal({ element, distractors, onReveal, on
 
   const [choices] = useState(() => [...[element, ...distractors]].sort(() => Math.random() - 0.5))
 
+  async function triggerCorrect() {
+    const handle = cardRefs.current[element.id]
+    if (!handle) return
+
+    // Mark correct card and gray out the others
+    setCorrectId(element.id)
+    setResolved(true)
+
+    // Swap correct card to the center position if needed (only for 3 choices)
+    const correctIndex = choices.findIndex((c) => c.id === element.id)
+    if (choices.length === 3 && correctIndex !== 1) {
+      const centerHandle = cardRefs.current[choices[1].id]
+      if (centerHandle) {
+        const correctRect = handle.getDivRect()
+        const centerRect = centerHandle.getDivRect()
+        const dx = centerRect.left - correctRect.left
+        await Promise.all([handle.slideTo(dx), centerHandle.slideTo(-dx)])
+      }
+    }
+
+    // Scroll + zoom to the landmark on the map (modal stays visible throughout)
+    await onReveal(element.id)
+
+    // Liftoff: hand the image position to MapPage and close the modal
+    const fromRect = handle.getImageRect()
+    onLiftOff(element.url, fromRect)
+    onClose()
+  }
+
   async function handleChoiceClick(choiceId: number) {
     if (resolved) return
     const handle = cardRefs.current[choiceId]
     if (!handle) return
 
     if (choiceId === element.id) {
-      await handle.growCorrect()
-      setCorrectId(choiceId)
-      setResolved(true)
-      onReveal(element.id)
-      onClose()
+      await triggerCorrect()
     } else {
       await handle.shakeError()
-      setIncorrectIds((prev) => [...prev, choiceId])
+      const newIncorrectIds = [...incorrectIds, choiceId]
+      setIncorrectIds(newIncorrectIds)
+      if (choices.length - newIncorrectIds.length === 1) {
+        await triggerCorrect()
+      }
     }
   }
 
@@ -148,7 +187,7 @@ export default function RevealLandmarkModal({ element, distractors, onReveal, on
           className="font-bold mb-2 mx-auto tracking-wide text-xl"
           style={{ color: element.album_primary_color ?? undefined }}
         >{element.song_name}</h2>
-        <p className={"text-sm mb-2 md:mb-4 italic"}>{element.album_name}</p>
+        <p className="text-sm mb-2 md:mb-4 italic">{element.album_name}</p>
         <div
           className="rounded-lg border p-4 md:p-6 mb-2 w-full"
           style={{
@@ -166,12 +205,12 @@ export default function RevealLandmarkModal({ element, distractors, onReveal, on
                 element={choice}
                 incorrect={incorrectIds.includes(choice.id)}
                 resolved={resolved}
-                showCorrect={correctId === choice.id}
+                isCorrect={correctId === choice.id}
                 onClick={() => handleChoiceClick(choice.id)}
               />
             ))}
           </div>
-         </div> 
+        </div>
         <p className="text-base text-neutral-800 mt-4 mb-1">Which landmark is from this song?</p>
       </div>
     </Modal>
