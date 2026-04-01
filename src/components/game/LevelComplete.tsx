@@ -91,14 +91,14 @@ export default function LevelComplete({
         {hasHigherLevel ? (
           <button
             onClick={onChooseLevel}
-            className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
+            className="px-6 py-3 bg-primary border border-secondary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
           >
             Choose Level
           </button>
         ) : (
           <button
             onClick={onShowHistory}
-            className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
+            className="px-6 py-3 bg-primary border border-secondary text-white rounded-xl font-semibold hover:opacity-90 cursor-pointer"
           >
             View History
           </button>

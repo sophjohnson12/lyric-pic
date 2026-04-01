@@ -6,7 +6,6 @@ import ConfirmPopup from '../common/ConfirmPopup'
 import { getPlayedSongNames } from '../../services/supabase'
 import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY } from '../../utils/constants'
 import type { GameLevel, RevealBehavior } from '../../types/game'
-import { Map } from 'lucide-react';
 
 export type { RevealBehavior }
 
