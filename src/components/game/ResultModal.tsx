@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { CircleCheck, CircleX } from 'lucide-react'
+import { CircleCheck, CircleX, Map } from 'lucide-react'
 import Modal from '../common/Modal'
 import ShareButton from '../common/ShareButton'
 import type { Song, Album, Artist } from '../../types/database'
@@ -14,9 +14,11 @@ interface ResultModalProps {
   artist?: Artist | null
   puzzleWords: PuzzleWord[]
   onNext: () => void
+  hasMapDiscovery?: boolean
+  onGoToMap?: () => void
 }
 
-export default function ResultModal({ correct, message, song, album, artist, puzzleWords, onNext }: ResultModalProps) {
+export default function ResultModal({ correct, message, song, album, artist, puzzleWords, onNext, hasMapDiscovery, onGoToMap }: ResultModalProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -69,6 +71,17 @@ export default function ResultModal({ correct, message, song, album, artist, puz
         {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink my-2 px-4">
           We'll keep this one in the queue so you can try again later.
         </div>}
+        {correct && hasMapDiscovery && onGoToMap && (
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-neutral-600">You discovered a new landmark on the map!</p>
+            <button
+              onClick={onGoToMap}
+              className="group flex-none w-12 h-12 flex items-center justify-center text-primary text-sm px-2 bg-neutral-50 border border-primary rounded-full hover:bg-secondary/50 transition-colors cursor-pointer"
+            >
+              <Map size={24} className="transition-transform group-hover:scale-110" />
+            </button>
+          </div>
+        )}
         <div className="mb-2">
           <ShareButton text={shareText} url={shareUrl} />
         </div>

@@ -19,7 +19,7 @@ import SettingsModal from './SettingsModal'
 import LevelComplete from './LevelComplete'
 import Toast from '../common/Toast'
 import ConfirmPopup from '../common/ConfirmPopup'
-import { flagWord, flagImage } from '../../services/supabase'
+import { flagWord, flagImage, songHasMapElements } from '../../services/supabase'
 
 export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
@@ -57,6 +57,22 @@ export default function GamePage() {
     const timer = setTimeout(() => setShowFailedModal(true), 500)
     return () => clearTimeout(timer)
   }, [game.songFailed])
+
+  const [hasMapDiscovery, setHasMapDiscovery] = useState(false)
+  useEffect(() => {
+    if (!game.songGuessed || !game.currentSong) {
+      setHasMapDiscovery(false)
+      return
+    }
+    songHasMapElements(game.currentSong.id)
+      .then(setHasMapDiscovery)
+      .catch(() => setHasMapDiscovery(false))
+  }, [game.songGuessed, game.currentSong?.id])
+
+  const handleGoToMap = () => {
+    game.markCurrentSongPlayed()
+    navigate(`/${artistSlug}/map?level=${levelSlug}&song_id=${game.currentSong?.id}`)
+  }
  
   // Carousel state
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -570,6 +586,8 @@ export default function GamePage() {
           artist={game.artist}
           puzzleWords={game.puzzleWords}
           onNext={game.nextSong}
+          hasMapDiscovery={hasMapDiscovery}
+          onGoToMap={handleGoToMap}
         />
       )}
       {showFailedModal && (

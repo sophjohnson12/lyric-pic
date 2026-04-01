@@ -274,6 +274,15 @@ export async function getMapElements(artistId: number): Promise<MapElementDetail
   }))
 }
 
+export async function songHasMapElements(songId: number): Promise<boolean> {
+  const { count, error } = await supabase
+    .from('map_element')
+    .select('id', { count: 'exact', head: true })
+    .eq('song_id', songId)
+  if (error) throw error
+  return (count ?? 0) > 0
+}
+
 export async function getAppConfig(): Promise<AppConfig | null> {
   const { data, error } = await supabase
     .from('app_config')

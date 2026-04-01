@@ -532,6 +532,11 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     [state.currentSong, state.incorrectSongGuesses, state.albumGuessed, maxGuessCount, showToast, applyAlbumTheme]
   )
 
+  const markCurrentSongPlayed = useCallback(() => {
+    if (!state.currentSong) return
+    setPlayedSongIds([...playedSongIds, state.currentSong.id])
+  }, [state.currentSong, playedSongIds, setPlayedSongIds])
+
   const nextSong = useCallback(() => {
     if (!state.currentSong || !state.artist) return
     const failed = !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount
@@ -588,6 +593,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     revealAlbumHint,
     guessSong,
     nextSong,
+    markCurrentSongPlayed,
     skipSong,
     clearHistory,
     playedSongIds,
