@@ -12,7 +12,7 @@ export default function MapHeader({ onBack, revealedLandmarks, totalLandmarks }:
       <div className="sm:max-w-7/8 mx-auto flex items-center justify-between h-full">
         <button
           onClick={() => onBack()}
-          className="group self-center h-12 w-14 md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border text-primary bg-neutral-50 border-primary hover:bg-white cursor-pointer"
+          className="group self-center h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border text-primary bg-neutral-50 border-primary hover:bg-secondary/50 cursor-pointer"
         >
           <ArrowLeft size={24} className="transition-transform group-hover:scale-110" />
         </button>

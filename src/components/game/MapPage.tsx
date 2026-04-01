@@ -227,7 +227,7 @@ export default function MapPage() {
       const toLandmarkCenterY = landmarkRect.top + landmarkRect.height / 2
       const tx = toLandmarkCenterX - fromCenterX
       const ty = toLandmarkCenterY - fromCenterY
-      const targetScale = landmarkRect.width / fromRect.width
+      const targetScale = Math.max(landmarkRect.width / fromRect.width, landmarkRect.height / fromRect.height)
       const anim = el.animate(
         [
           { transform: 'scale(1.5)' },
