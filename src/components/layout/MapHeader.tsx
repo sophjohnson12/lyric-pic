@@ -8,7 +8,7 @@ interface MapHeaderProps {
 
 export default function MapHeader({ onBack, revealedLandmarks, totalLandmarks }: MapHeaderProps) {
   return (
-    <header className="bg-neutral-50 top-0 z-50 px-4 py-2 min-w-2xs shadow-sm h-16 max-md:fixed max-md:inset-x-0">
+    <header className="bg-neutral-50 fixed inset-x-0 top-0 z-50 px-4 py-2 shadow-sm h-16">
       <div className="sm:max-w-7/8 mx-auto flex items-center justify-between h-full">
         <button
           onClick={() => onBack()}

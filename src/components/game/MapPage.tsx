@@ -68,10 +68,66 @@ export default function MapPage() {
   const landmarkRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const overlayRef = useRef<HTMLImageElement>(null)
   const pendingRevealId = useRef<number | null>(null)
+  const lastPinchDistRef = useRef<number | null>(null)
 
   useLayoutEffect(() => {
     clearBackground()
   }, [])
+
+  // Prevent native browser pinch-to-zoom on the map page
+  useEffect(() => {
+    const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+    const original = viewport?.getAttribute('content') ?? ''
+    viewport?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
+    return () => { viewport?.setAttribute('content', original) }
+  }, [])
+
+  // Trackpad / mouse wheel zoom (ctrlKey = pinch-to-zoom gesture)
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return
+      e.preventDefault()
+      setMapScale((prev) => Math.max(0.5, Math.min(3, prev * (1 - e.deltaY * 0.002))))
+    }
+    container.addEventListener('wheel', onWheel, { passive: false })
+    return () => container.removeEventListener('wheel', onWheel)
+  }, [dataLoading])
+
+  // Mobile two-finger pinch zoom — single-finger scroll stays native
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2)
+        lastPinchDistRef.current = Math.hypot(
+          e.touches[1].clientX - e.touches[0].clientX,
+          e.touches[1].clientY - e.touches[0].clientY
+        )
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || lastPinchDistRef.current === null) return
+      e.preventDefault()
+      const dist = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      )
+      setMapScale((prev) => Math.max(0.5, Math.min(3, prev * (dist / lastPinchDistRef.current!))))
+      lastPinchDistRef.current = dist
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) lastPinchDistRef.current = null
+    }
+    container.addEventListener('touchstart', onTouchStart, { passive: true })
+    container.addEventListener('touchmove', onTouchMove, { passive: false })
+    container.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart)
+      container.removeEventListener('touchmove', onTouchMove)
+      container.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [dataLoading])
 
   useEffect(() => {
     if (!artistSlug) return
@@ -92,7 +148,7 @@ export default function MapPage() {
   const allImagesLoaded = elements.length === 0 || imagesLoadedCount >= elements.length
   const showSpinner = dataLoading || !allImagesLoaded
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (showSpinner || !scrollContainerRef.current) return
     const el = scrollContainerRef.current
     el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
@@ -163,23 +219,33 @@ export default function MapPage() {
     pendingRevealId.current = id
     const el = elements.find((e) => e.id === id)
     const container = scrollContainerRef.current
-    const mapDiv = mapContentRef.current
-    if (el && container && mapDiv) {
+    const landmarkEl = landmarkRefs.current.get(id)
+    if (el && container && landmarkEl) {
       const containerRect = container.getBoundingClientRect()
-      const mapRect = mapDiv.getBoundingClientRect()
-      const mapOriginLeft = mapRect.left - containerRect.left + container.scrollLeft
-      const mapOriginTop = mapRect.top - containerRect.top + container.scrollTop
-      const landmarkCenterX =
-        mapOriginLeft +
-        (el.x_percent / 100) * mapDiv.offsetWidth +
-        ((el.width_percent / 100) * mapDiv.offsetWidth) / 2
-      const landmarkCenterY = mapOriginTop + (el.y_percent / 100) * mapDiv.offsetHeight
+      const landmarkRect  = landmarkEl.getBoundingClientRect()
+
+      // Convert landmark viewport-centre to scroll coordinates
+      const lx = landmarkRect.left + landmarkRect.width  / 2 - containerRect.left + container.scrollLeft
+      const ly = landmarkRect.top  + landmarkRect.height / 2 - containerRect.top  + container.scrollTop
+
+      // Place landmark ~20% from the edge it's naturally closest to on the map
+      const EDGE = 0.2
+      const nearRight  = (el.x_percent + el.width_percent / 2) > 50
+      const nearBottom = el.y_percent > 50
+
+      const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max))
       container.scrollTo({
-        left: landmarkCenterX - container.clientWidth / 2,
-        top: landmarkCenterY - container.clientHeight / 2,
+        left: clamp(
+          nearRight  ? lx - container.clientWidth  * (1 - EDGE) : lx - container.clientWidth  * EDGE,
+          container.scrollWidth  - container.clientWidth
+        ),
+        top: clamp(
+          nearBottom ? ly - container.clientHeight * (1 - EDGE) : ly - container.clientHeight * EDGE,
+          container.scrollHeight - container.clientHeight
+        ),
         behavior: 'smooth',
       })
-      setMapScale(1.5)
+      // No mapScale change — landmark appears at the user's current zoom level
     }
     await sleep(850)
   }
@@ -242,7 +308,6 @@ export default function MapPage() {
         const id = pendingRevealId.current
         if (id !== null) {
           setRevealedIds((prev) => [...prev, id])
-          setTimeout(() => setMapScale(1), 600)
         }
         setRevealOverlay(null)
       })
@@ -278,10 +343,9 @@ export default function MapPage() {
               className="relative w-[300vw] md:w-full"
               style={{
                 aspectRatio: '2855 / 3570',
-                margin: '50vh 50vw',
                 transform: `scale(${mapScale})`,
                 transformOrigin: 'center',
-                transition: 'transform 0.7s ease-in-out',
+                transition: 'transform 0.1s ease-out',
                 willChange: 'transform',
               }}
             >
