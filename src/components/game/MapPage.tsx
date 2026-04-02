@@ -71,15 +71,24 @@ export default function MapPage() {
 
   useLayoutEffect(() => {
     clearBackground()
-    // Disable native browser pinch-to-zoom on the map page so the fixed header,
-    // map content, and floating button don't get resized by the OS zoom gesture.
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
-    if (!meta) return
-    const original = meta.content
-    meta.content =
-      'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-visual'
+  }, [])
+
+  // Prevent native pinch-to-zoom via event interception — iOS ignores runtime viewport
+  // meta changes so the only reliable approach is preventDefault on multi-touch gestures.
+  useEffect(() => {
+    const preventZoom = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault()
+    }
+    const preventWheelZoom = (e: WheelEvent) => {
+      if (e.ctrlKey) e.preventDefault()
+    }
+    document.addEventListener('touchstart', preventZoom, { passive: false })
+    document.addEventListener('touchmove', preventZoom, { passive: false })
+    document.addEventListener('wheel', preventWheelZoom, { passive: false })
     return () => {
-      meta.content = original
+      document.removeEventListener('touchstart', preventZoom)
+      document.removeEventListener('touchmove', preventZoom)
+      document.removeEventListener('wheel', preventWheelZoom)
     }
   }, [])
 
@@ -185,35 +194,35 @@ export default function MapPage() {
 
   async function handleRevealStart(id: number): Promise<void> {
     pendingRevealId.current = id
+    // Just wait for the card-swap animation (350ms) plus a brief success pause.
+    // The map scroll happens later — between the overlay growing and shrinking phases —
+    // after the modal has closed, so iOS won't block it under the fixed overlay.
+    await sleep(500)
+  }
+
+  function scrollToLandmark(id: number) {
     const el = elements.find((e) => e.id === id)
     const container = scrollContainerRef.current
     const landmarkEl = landmarkRefs.current.get(id)
-    if (el && container && landmarkEl) {
-      // offsetLeft/offsetTop are relative to the map content div (the nearest positioned
-      // ancestor), so they're always in scroll coordinates regardless of current scroll
-      // position or whether the element is outside the viewport.
-      const lx = landmarkEl.offsetLeft + landmarkEl.offsetWidth / 2
-      const ly = landmarkEl.offsetTop + landmarkEl.offsetHeight / 2
-      const lhw = landmarkEl.offsetWidth / 2
-      const lhh = landmarkEl.offsetHeight / 2
-
-      // Place landmark ~20% from the edge it's naturally closest to on the map
-      const EDGE = 0.2
-      const nearRight  = (el.x_percent + el.width_percent / 2) > 50
-      const nearBottom = el.y_percent > 50
-
-      const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max))
-      // Direct assignment (not scrollTo smooth) for cross-browser reliability on mobile
-      container.scrollLeft = clamp(
-        nearRight  ? lx + lhw - container.clientWidth  * (1 - EDGE) : lx - lhw - container.clientWidth  * EDGE,
-        container.scrollWidth  - container.clientWidth
-      )
-      container.scrollTop = clamp(
-        nearBottom ? ly + lhh - container.clientHeight * (1 - EDGE) : ly - lhh - container.clientHeight * EDGE,
-        container.scrollHeight - container.clientHeight
-      )
-    }
-    await sleep(850)
+    if (!el || !container || !landmarkEl) return
+    // offsetLeft/offsetTop are relative to the map content div (position:relative),
+    // so they're always in scroll coordinates regardless of current scroll position.
+    const lx = landmarkEl.offsetLeft + landmarkEl.offsetWidth / 2
+    const ly = landmarkEl.offsetTop + landmarkEl.offsetHeight / 2
+    const lhw = landmarkEl.offsetWidth / 2
+    const lhh = landmarkEl.offsetHeight / 2
+    const EDGE = 0.2
+    const nearRight  = (el.x_percent + el.width_percent / 2) > 50
+    const nearBottom = el.y_percent > 50
+    const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max))
+    container.scrollLeft = clamp(
+      nearRight  ? lx + lhw - container.clientWidth  * (1 - EDGE) : lx - lhw - container.clientWidth  * EDGE,
+      container.scrollWidth  - container.clientWidth
+    )
+    container.scrollTop = clamp(
+      nearBottom ? ly + lhh - container.clientHeight * (1 - EDGE) : ly - lhh - container.clientHeight * EDGE,
+      container.scrollHeight - container.clientHeight
+    )
   }
 
   function handleLiftOff(src: string, fromRect: DOMRect) {
@@ -232,6 +241,9 @@ export default function MapPage() {
       )
       anim.addEventListener('finish', () => {
         if (cancelled) return
+        // Modal is now closed — safe to scroll on iOS (no fixed overlay blocking it).
+        const id = pendingRevealId.current
+        if (id !== null) scrollToLandmark(id)
         setRevealOverlay((prev) => (prev ? { ...prev, phase: 'shrinking' } : null))
       })
       return () => {
@@ -305,7 +317,7 @@ export default function MapPage() {
       {!dataLoading && (
         <div
           ref={scrollContainerRef}
-          className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : (!mapVisible ? ' invisible' : '')}`}
+          className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : (!mapVisible ? ' opacity-0' : '')}`}
           onClick={() => setTappedId(null)}
         >
           <div
