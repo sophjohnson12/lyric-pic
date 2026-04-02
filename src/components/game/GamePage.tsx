@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
 import { parseLevelSlug } from '../../types/game'
-import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
+import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY, REVEALED_LANDMARKS_KEY_PREFIX } from '../../utils/constants'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import type { RevealBehavior } from './SettingsModal'
 import Header from '../layout/Header'
@@ -19,7 +19,7 @@ import SettingsModal from './SettingsModal'
 import LevelComplete from './LevelComplete'
 import Toast from '../common/Toast'
 import ConfirmPopup from '../common/ConfirmPopup'
-import { flagWord, flagImage, songHasMapElements } from '../../services/supabase'
+import { flagWord, flagImage, getSongMapElementIds } from '../../services/supabase'
 
 export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
@@ -68,8 +68,15 @@ export default function GamePage() {
     }
     setHasMapDiscovery(false)
     setMapDiscoveryReady(false)
-    songHasMapElements(game.currentSong.id)
-      .then((result) => { setHasMapDiscovery(result); setMapDiscoveryReady(true) })
+    getSongMapElementIds(game.currentSong.id)
+      .then((elementIds) => {
+        if (elementIds.length > 0) {
+          const stored = localStorage.getItem(`${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`)
+          const revealedIds: number[] = stored ? JSON.parse(stored) : []
+          setHasMapDiscovery(elementIds.some((id) => !revealedIds.includes(id)))
+        }
+        setMapDiscoveryReady(true)
+      })
       .catch(() => { setHasMapDiscovery(false); setMapDiscoveryReady(true) })
   }, [game.currentSong?.id])
 
