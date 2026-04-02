@@ -75,6 +75,8 @@ export default function MapPage() {
 
   // Prevent native pinch-to-zoom via event interception — iOS ignores runtime viewport
   // meta changes so the only reliable approach is preventDefault on multi-touch gestures.
+  // gesturestart/gesturechange are Safari-specific pinch events and are the most reliable
+  // interception point; touchstart/touchmove catch the same gesture on other browsers.
   useEffect(() => {
     const preventZoom = (e: TouchEvent) => {
       if (e.touches.length > 1) e.preventDefault()
@@ -82,13 +84,22 @@ export default function MapPage() {
     const preventWheelZoom = (e: WheelEvent) => {
       if (e.ctrlKey) e.preventDefault()
     }
+    const preventGesture = (e: Event) => e.preventDefault()
     document.addEventListener('touchstart', preventZoom, { passive: false })
     document.addEventListener('touchmove', preventZoom, { passive: false })
     document.addEventListener('wheel', preventWheelZoom, { passive: false })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    document.addEventListener('gesturestart' as any, preventGesture, { passive: false })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    document.addEventListener('gesturechange' as any, preventGesture, { passive: false })
     return () => {
       document.removeEventListener('touchstart', preventZoom)
       document.removeEventListener('touchmove', preventZoom)
       document.removeEventListener('wheel', preventWheelZoom)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      document.removeEventListener('gesturestart' as any, preventGesture)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      document.removeEventListener('gesturechange' as any, preventGesture)
     }
   }, [])
 
@@ -111,26 +122,24 @@ export default function MapPage() {
   const allImagesLoaded = elements.length === 0 || imagesLoadedCount >= elements.length
   const showSpinner = dataLoading || !allImagesLoaded
 
+  // Set scroll synchronously in useLayoutEffect — fires before the browser paints and
+  // reading scrollWidth/scrollHeight forces an immediate synchronous reflow, so we always
+  // get the correct dimensions regardless of when the container left the absolute flow.
+  useLayoutEffect(() => {
+    if (showSpinner || mapVisible) return
+    const el = scrollContainerRef.current
+    if (!el) return
+    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+  }, [showSpinner, mapVisible])
+
+  // Reveal the map in the next frame — by then useLayoutEffect has already set scroll,
+  // and opacity-0 → visible doesn't reset scroll on iOS (visibility changes do).
   useEffect(() => {
-    if (showSpinner) return
-    // Double-RAF: first frame lets the browser recalculate layout after the container
-    // transitions from `absolute` (loading state) to `flex-1` (normal flow). The second
-    // frame reads the now-correct scrollWidth/scrollHeight values.
-    let id2: number
-    const id1 = requestAnimationFrame(() => {
-      id2 = requestAnimationFrame(() => {
-        const el = scrollContainerRef.current
-        if (!el) return
-        el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
-        el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
-        setMapVisible(true)
-      })
-    })
-    return () => {
-      cancelAnimationFrame(id1)
-      cancelAnimationFrame(id2)
-    }
-  }, [showSpinner])
+    if (showSpinner || mapVisible) return
+    const id = requestAnimationFrame(() => setMapVisible(true))
+    return () => cancelAnimationFrame(id)
+  }, [showSpinner, mapVisible])
 
   // Union of all played song IDs — reads both the current level-specific keys and the
   // legacy key (written before levels were introduced: lyricpic_played_songs_<slug>).
