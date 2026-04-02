@@ -61,16 +61,17 @@ export default function GamePage() {
   const [hasMapDiscovery, setHasMapDiscovery] = useState(false)
   const [mapDiscoveryReady, setMapDiscoveryReady] = useState(false)
   useEffect(() => {
-    if (!game.songGuessed || !game.currentSong) {
+    if (!game.currentSong) {
       setHasMapDiscovery(false)
       setMapDiscoveryReady(false)
       return
     }
+    setHasMapDiscovery(false)
     setMapDiscoveryReady(false)
     songHasMapElements(game.currentSong.id)
       .then((result) => { setHasMapDiscovery(result); setMapDiscoveryReady(true) })
       .catch(() => { setHasMapDiscovery(false); setMapDiscoveryReady(true) })
-  }, [game.songGuessed, game.currentSong?.id])
+  }, [game.currentSong?.id])
 
   const handleGoToMap = () => {
     navigate(`/${artistSlug}/map?level=${levelSlug}&song_id=${game.currentSong?.id}`)
