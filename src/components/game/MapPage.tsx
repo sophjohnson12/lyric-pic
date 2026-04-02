@@ -71,6 +71,16 @@ export default function MapPage() {
 
   useLayoutEffect(() => {
     clearBackground()
+    // Disable native browser pinch-to-zoom on the map page so the fixed header,
+    // map content, and floating button don't get resized by the OS zoom gesture.
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
+    if (!meta) return
+    const original = meta.content
+    meta.content =
+      'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-visual'
+    return () => {
+      meta.content = original
+    }
   }, [])
 
   useEffect(() => {
@@ -94,14 +104,23 @@ export default function MapPage() {
 
   useEffect(() => {
     if (showSpinner) return
-    const id = requestAnimationFrame(() => {
-      const el = scrollContainerRef.current
-      if (!el) return
-      el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
-      el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
-      setMapVisible(true)
+    // Double-RAF: first frame lets the browser recalculate layout after the container
+    // transitions from `absolute` (loading state) to `flex-1` (normal flow). The second
+    // frame reads the now-correct scrollWidth/scrollHeight values.
+    let id2: number
+    const id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => {
+        const el = scrollContainerRef.current
+        if (!el) return
+        el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+        el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+        setMapVisible(true)
+      })
     })
-    return () => cancelAnimationFrame(id)
+    return () => {
+      cancelAnimationFrame(id1)
+      cancelAnimationFrame(id2)
+    }
   }, [showSpinner])
 
   // Union of all played song IDs — reads both the current level-specific keys and the
@@ -170,33 +189,29 @@ export default function MapPage() {
     const container = scrollContainerRef.current
     const landmarkEl = landmarkRefs.current.get(id)
     if (el && container && landmarkEl) {
-      const containerRect = container.getBoundingClientRect()
-      const landmarkRect  = landmarkEl.getBoundingClientRect()
-
-      // Convert landmark viewport-centre to scroll coordinates
-      const lx = landmarkRect.left + landmarkRect.width  / 2 - containerRect.left + container.scrollLeft
-      const ly = landmarkRect.top  + landmarkRect.height / 2 - containerRect.top  + container.scrollTop
+      // offsetLeft/offsetTop are relative to the map content div (the nearest positioned
+      // ancestor), so they're always in scroll coordinates regardless of current scroll
+      // position or whether the element is outside the viewport.
+      const lx = landmarkEl.offsetLeft + landmarkEl.offsetWidth / 2
+      const ly = landmarkEl.offsetTop + landmarkEl.offsetHeight / 2
+      const lhw = landmarkEl.offsetWidth / 2
+      const lhh = landmarkEl.offsetHeight / 2
 
       // Place landmark ~20% from the edge it's naturally closest to on the map
       const EDGE = 0.2
       const nearRight  = (el.x_percent + el.width_percent / 2) > 50
       const nearBottom = el.y_percent > 50
 
-      const lhw = landmarkRect.width  / 2
-      const lhh = landmarkRect.height / 2
       const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max))
-      container.scrollTo({
-        left: clamp(
-          nearRight  ? lx + lhw - container.clientWidth  * (1 - EDGE) : lx - lhw - container.clientWidth  * EDGE,
-          container.scrollWidth  - container.clientWidth
-        ),
-        top: clamp(
-          nearBottom ? ly + lhh - container.clientHeight * (1 - EDGE) : ly - lhh - container.clientHeight * EDGE,
-          container.scrollHeight - container.clientHeight
-        ),
-        behavior: 'smooth',
-      })
-      // No mapScale change — landmark appears at the user's current zoom level
+      // Direct assignment (not scrollTo smooth) for cross-browser reliability on mobile
+      container.scrollLeft = clamp(
+        nearRight  ? lx + lhw - container.clientWidth  * (1 - EDGE) : lx - lhw - container.clientWidth  * EDGE,
+        container.scrollWidth  - container.clientWidth
+      )
+      container.scrollTop = clamp(
+        nearBottom ? ly + lhh - container.clientHeight * (1 - EDGE) : ly - lhh - container.clientHeight * EDGE,
+        container.scrollHeight - container.clientHeight
+      )
     }
     await sleep(850)
   }
