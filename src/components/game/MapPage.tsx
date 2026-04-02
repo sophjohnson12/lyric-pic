@@ -52,7 +52,7 @@ export default function MapPage() {
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [mapScale, setMapScale] = useState(1)
+  const [mapVisible, setMapVisible] = useState(false)
   const [revealOverlay, setRevealOverlay] = useState<{
     src: string
     fromRect: DOMRect
@@ -68,66 +68,10 @@ export default function MapPage() {
   const landmarkRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const overlayRef = useRef<HTMLImageElement>(null)
   const pendingRevealId = useRef<number | null>(null)
-  const lastPinchDistRef = useRef<number | null>(null)
 
   useLayoutEffect(() => {
     clearBackground()
   }, [])
-
-  // Prevent native browser pinch-to-zoom on the map page
-  useEffect(() => {
-    const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')
-    const original = viewport?.getAttribute('content') ?? ''
-    viewport?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
-    return () => { viewport?.setAttribute('content', original) }
-  }, [])
-
-  // Trackpad / mouse wheel zoom (ctrlKey = pinch-to-zoom gesture)
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-    const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey) return
-      e.preventDefault()
-      setMapScale((prev) => Math.max(0.5, Math.min(3, prev * (1 - e.deltaY * 0.002))))
-    }
-    container.addEventListener('wheel', onWheel, { passive: false })
-    return () => container.removeEventListener('wheel', onWheel)
-  }, [dataLoading])
-
-  // Mobile two-finger pinch zoom — single-finger scroll stays native
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2)
-        lastPinchDistRef.current = Math.hypot(
-          e.touches[1].clientX - e.touches[0].clientX,
-          e.touches[1].clientY - e.touches[0].clientY
-        )
-    }
-    const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length !== 2 || lastPinchDistRef.current === null) return
-      e.preventDefault()
-      const dist = Math.hypot(
-        e.touches[1].clientX - e.touches[0].clientX,
-        e.touches[1].clientY - e.touches[0].clientY
-      )
-      setMapScale((prev) => Math.max(0.5, Math.min(3, prev * (dist / lastPinchDistRef.current!))))
-      lastPinchDistRef.current = dist
-    }
-    const onTouchEnd = (e: TouchEvent) => {
-      if (e.touches.length < 2) lastPinchDistRef.current = null
-    }
-    container.addEventListener('touchstart', onTouchStart, { passive: true })
-    container.addEventListener('touchmove', onTouchMove, { passive: false })
-    container.addEventListener('touchend', onTouchEnd, { passive: true })
-    return () => {
-      container.removeEventListener('touchstart', onTouchStart)
-      container.removeEventListener('touchmove', onTouchMove)
-      container.removeEventListener('touchend', onTouchEnd)
-    }
-  }, [dataLoading])
 
   useEffect(() => {
     if (!artistSlug) return
@@ -148,11 +92,16 @@ export default function MapPage() {
   const allImagesLoaded = elements.length === 0 || imagesLoadedCount >= elements.length
   const showSpinner = dataLoading || !allImagesLoaded
 
-  useLayoutEffect(() => {
-    if (showSpinner || !scrollContainerRef.current) return
-    const el = scrollContainerRef.current
-    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
-    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+  useEffect(() => {
+    if (showSpinner) return
+    const id = requestAnimationFrame(() => {
+      const el = scrollContainerRef.current
+      if (!el) return
+      el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+      el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+      setMapVisible(true)
+    })
+    return () => cancelAnimationFrame(id)
   }, [showSpinner])
 
   // Union of all played song IDs — reads both the current level-specific keys and the
@@ -233,14 +182,16 @@ export default function MapPage() {
       const nearRight  = (el.x_percent + el.width_percent / 2) > 50
       const nearBottom = el.y_percent > 50
 
+      const lhw = landmarkRect.width  / 2
+      const lhh = landmarkRect.height / 2
       const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max))
       container.scrollTo({
         left: clamp(
-          nearRight  ? lx - container.clientWidth  * (1 - EDGE) : lx - container.clientWidth  * EDGE,
+          nearRight  ? lx + lhw - container.clientWidth  * (1 - EDGE) : lx - lhw - container.clientWidth  * EDGE,
           container.scrollWidth  - container.clientWidth
         ),
         top: clamp(
-          nearBottom ? ly - container.clientHeight * (1 - EDGE) : ly - container.clientHeight * EDGE,
+          nearBottom ? ly + lhh - container.clientHeight * (1 - EDGE) : ly - lhh - container.clientHeight * EDGE,
           container.scrollHeight - container.clientHeight
         ),
         behavior: 'smooth',
@@ -304,12 +255,16 @@ export default function MapPage() {
       )
       anim.addEventListener('finish', () => {
         if (cancelled) return
-        // Reveal the landmark only once the overlay has fully landed on it
+        // Reveal the landmark — this starts the brightness(0%) → brightness(120%) CSS transition.
+        // Keep the overlay in place for the full transition duration so the black silhouette is
+        // never exposed; the overlay (already at brightness(120%)) acts as a seamless cover.
         const id = pendingRevealId.current
         if (id !== null) {
           setRevealedIds((prev) => [...prev, id])
         }
-        setRevealOverlay(null)
+        setTimeout(() => {
+          if (!cancelled) setRevealOverlay(null)
+        }, 650)
       })
       return () => {
         cancelled = true
@@ -335,19 +290,13 @@ export default function MapPage() {
       {!dataLoading && (
         <div
           ref={scrollContainerRef}
-          className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : ''}`}
+          className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : (!mapVisible ? ' invisible' : '')}`}
           onClick={() => setTappedId(null)}
         >
           <div
               ref={mapContentRef}
               className="relative w-[300vw] md:w-full"
-              style={{
-                aspectRatio: '2855 / 3570',
-                transform: `scale(${mapScale})`,
-                transformOrigin: 'center',
-                transition: 'transform 0.1s ease-out',
-                willChange: 'transform',
-              }}
+              style={{ aspectRatio: '2855 / 3570' }}
             >
               {elements.map((element) => {
                 const hasInfo = element.song_id !== null
@@ -472,6 +421,7 @@ export default function MapPage() {
             top: revealOverlay.fromRect.top,
             width: revealOverlay.fromRect.width,
             height: revealOverlay.fromRect.height,
+            filter: 'brightness(120%)',
             willChange: 'transform',
           }}
         />
