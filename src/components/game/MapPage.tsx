@@ -274,7 +274,7 @@ export default function MapPage() {
   }, [revealOverlay?.phase])
 
   return (
-    <div className="flex flex-col h-dvh">
+    <div className="flex flex-col h-dvh pt-16">
       {!showSpinner && (
         <MapHeader
           onBack={() => navigate(gameUrl)}
@@ -352,7 +352,7 @@ export default function MapPage() {
                       </div>
                     )}
                     {tooltipVisible && isLocked && (
-                      <Tooltip borderColor="var(--color-theme-primary)">
+                      <Tooltip borderColor="var(--color-theme-primary)" topMargin={64}>
                         <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark!</p>
                         <p className="text-xs mt-1">
                           <span className="text-neutral-600 font-semibold">Level: </span>
@@ -364,6 +364,7 @@ export default function MapPage() {
                       <Tooltip
                         borderColor={element.album_primary_color ?? 'var(--color-theme-primary)'}
                         overlayColor={hexToRgba(element.album_secondary_color, 0.5) || undefined}
+                        topMargin={64}
                       >
                         <p className="font-semibold text-neutral-800 text-sm leading-tight">{element.song_name}</p>
                         <p className="text-xs italic text-neutral-600 mt-0.5">{element.album_name}</p>

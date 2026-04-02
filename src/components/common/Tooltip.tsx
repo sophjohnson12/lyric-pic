@@ -3,6 +3,7 @@ import { useState, useLayoutEffect, useRef } from 'react'
 interface TooltipProps {
   borderColor?: string
   overlayColor?: string
+  topMargin?: number
   children: React.ReactNode
 }
 
@@ -18,7 +19,7 @@ function caretFill(overlayColor?: string): string {
 
 const MARGIN = 8
 
-export default function Tooltip({ borderColor = 'var(--color-theme-primary)', overlayColor, children }: TooltipProps) {
+export default function Tooltip({ borderColor = 'var(--color-theme-primary)', overlayColor, topMargin = MARGIN, children }: TooltipProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isBelow, setIsBelow] = useState(false)
   const [xShift, setXShift] = useState(0)
@@ -28,7 +29,7 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
     const el = containerRef.current
     if (!el) return
     const rect = el.getBoundingClientRect()
-    if (rect.top < MARGIN) setIsBelow(true)
+    if (rect.top < topMargin) setIsBelow(true)
     let shift = 0
     if (rect.left < MARGIN) shift = MARGIN - rect.left
     else if (rect.right > window.innerWidth - MARGIN) shift = (window.innerWidth - MARGIN) - rect.right
