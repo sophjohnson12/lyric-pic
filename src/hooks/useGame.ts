@@ -506,6 +506,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
       if (songId === state.currentSong.id) {
         const correctAlbum = currentAlbumRef.current
         if (!state.albumGuessed && correctAlbum) applyAlbumTheme(correctAlbum, enableBackgroundsRef.current)
+        setPlayedSongIds([...playedSongIds, state.currentSong.id])
         setState((prev) => ({
           ...prev,
           songGuessed: true,
@@ -529,26 +530,14 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
       }))
       return 'incorrect'
     },
-    [state.currentSong, state.incorrectSongGuesses, state.albumGuessed, maxGuessCount, showToast, applyAlbumTheme]
+    [state.currentSong, state.incorrectSongGuesses, state.albumGuessed, maxGuessCount, showToast, applyAlbumTheme, playedSongIds, setPlayedSongIds]
   )
-
-  const markCurrentSongPlayed = useCallback(() => {
-    if (!state.currentSong) return
-    setPlayedSongIds([...playedSongIds, state.currentSong.id])
-  }, [state.currentSong, playedSongIds, setPlayedSongIds])
 
   const nextSong = useCallback(() => {
     if (!state.currentSong || !state.artist) return
-    const failed = !state.songGuessed && state.incorrectSongGuesses.length >= maxGuessCount
     applyArtistTheme(state.artist)
-    if (failed) {
-      loadNewSong(state.artist, playedSongIds, maxDifficultyRankRef.current)
-    } else {
-      const newPlayed = [...playedSongIds, state.currentSong.id]
-      setPlayedSongIds(newPlayed)
-      loadNewSong(state.artist, newPlayed, maxDifficultyRankRef.current)
-    }
-  }, [state.currentSong, state.artist, state.songGuessed, state.incorrectSongGuesses, maxGuessCount, playedSongIds, setPlayedSongIds, applyArtistTheme, loadNewSong])
+    loadNewSong(state.artist, playedSongIds, maxDifficultyRankRef.current)
+  }, [state.currentSong, state.artist, playedSongIds, applyArtistTheme, loadNewSong])
 
   const skipSong = useCallback(() => {
     if (!state.artist) return
@@ -593,7 +582,6 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     revealAlbumHint,
     guessSong,
     nextSong,
-    markCurrentSongPlayed,
     skipSong,
     clearHistory,
     playedSongIds,

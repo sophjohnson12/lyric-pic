@@ -59,18 +59,20 @@ export default function GamePage() {
   }, [game.songFailed])
 
   const [hasMapDiscovery, setHasMapDiscovery] = useState(false)
+  const [mapDiscoveryReady, setMapDiscoveryReady] = useState(false)
   useEffect(() => {
     if (!game.songGuessed || !game.currentSong) {
       setHasMapDiscovery(false)
+      setMapDiscoveryReady(false)
       return
     }
+    setMapDiscoveryReady(false)
     songHasMapElements(game.currentSong.id)
-      .then(setHasMapDiscovery)
-      .catch(() => setHasMapDiscovery(false))
+      .then((result) => { setHasMapDiscovery(result); setMapDiscoveryReady(true) })
+      .catch(() => { setHasMapDiscovery(false); setMapDiscoveryReady(true) })
   }, [game.songGuessed, game.currentSong?.id])
 
   const handleGoToMap = () => {
-    game.markCurrentSongPlayed()
     navigate(`/${artistSlug}/map?level=${levelSlug}&song_id=${game.currentSong?.id}`)
   }
  
@@ -577,7 +579,7 @@ export default function GamePage() {
       </main>
 
       {/* Modals */}
-      {game.songGuessed && (
+      {game.songGuessed && mapDiscoveryReady && (
         <ResultModal
           correct={true}
           message={game.currentSong.success_message || game.artist.success_message || "You got it!"}
