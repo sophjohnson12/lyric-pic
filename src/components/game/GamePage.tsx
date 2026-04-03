@@ -50,6 +50,7 @@ export default function GamePage() {
   }, [game.allSongsPlayed])
   const [showHistory, setShowHistory] = useState(false)
   const [showSkipConfirm, setShowSkipConfirm] = useState(false)
+  const [showMapConfirm, setShowMapConfirm] = useState(false)
   const [showFailedModal, setShowFailedModal] = useState(false)
 
   useEffect(() => {
@@ -475,6 +476,7 @@ export default function GamePage() {
         onHistory={() => setShowHistory(true)}
         onSkip={() => setShowSkipConfirm(true)}
         levelSlug={levelSlug ?? undefined}
+        onMapNavigate={() => setShowMapConfirm(true)}
       />
 
       <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 md:overflow-y-visible">
@@ -629,6 +631,17 @@ export default function GamePage() {
           cancelLabel="Cancel"
           onConfirm={() => { game.skipSong(); setShowSkipConfirm(false) }}
           onCancel={() => setShowSkipConfirm(false)}
+          showEaseIn={true}
+        />
+      )}
+      {showMapConfirm && (
+        <ConfirmPopup
+          title="Continue to Map?"
+          message="Are you sure you want to leave this song? We'll keep it in the queue so you can try again later."
+          confirmLabel="Continue"
+          cancelLabel="Cancel"
+          onConfirm={() => { setShowMapConfirm(false); navigate(`/${artistSlug}/map?level=${levelSlug}&song_id=${game.currentSong?.id}`) }}
+          onCancel={() => setShowMapConfirm(false)}
           showEaseIn={true}
         />
       )}

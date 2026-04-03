@@ -72,7 +72,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       <div className="text-base text-neutral-600">
         <h2 className="tracking-wide text-xl font-bold text-primary mb-1">Settings & Stats</h2>
         <div className="space-y-2 md:space-y-3">
-          <div className="md:hidden">
+          <div className="hidden">
             <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Landmarks</h3>
             <div>
               <button

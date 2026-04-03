@@ -10,6 +10,7 @@ interface HeaderProps {
   skipDisabled?: boolean
   onChangeDifficulty?: () => void
   levelSlug?: string
+  onMapNavigate?: () => void
 }
 
 export default function Header({
@@ -19,6 +20,7 @@ export default function Header({
   onSkip,
   skipDisabled = false,
   levelSlug,
+  onMapNavigate,
 }: HeaderProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const navigate = useNavigate()
@@ -54,7 +56,7 @@ export default function Header({
           </button>
           {levelSlug && (
             <button
-              onClick={() => navigate(`/${artistSlug}/map?level=${levelSlug}`)}
+              onClick={onMapNavigate ?? (() => navigate(`/${artistSlug}/map?level=${levelSlug}`))}
               className="group flex h-12 w-12 md:h-auto md:w-auto items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
               title="View map"
             >
