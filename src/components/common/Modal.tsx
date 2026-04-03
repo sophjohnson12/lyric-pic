@@ -50,7 +50,7 @@ export default function Modal({ children, onClose, showClose = true, showEaseIn 
         initial={showEaseIn ? { opacity: 0, scale: 0.97 } : { opacity: 1, scale: 1 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: showEaseIn ? 0.25 : 0, ease: 'easeOut' }}
-        className="bg-neutral-50 text-neutral-800 rounded-2xl shadow-xl p-6 mx-4 max-w-lg w-full min-w-2xs max-h-[80vh] overflow-y-auto relative"
+        className="bg-neutral-50 text-neutral-800 rounded-2xl shadow-xl p-6 mx-4 max-w-lg w-full min-w-2xs max-h-[80vh] overflow-y-auto relative [will-change:transform]"
         onClick={(e) => e.stopPropagation()}
       >
         {showClose && onClose && (
