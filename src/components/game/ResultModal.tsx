@@ -14,11 +14,11 @@ interface ResultModalProps {
   artist?: Artist | null
   puzzleWords: PuzzleWord[]
   onNext: () => void
-  hasMapDiscovery?: boolean
+  mapDiscoveryCount?: number
   onGoToMap?: () => void
 }
 
-export default function ResultModal({ correct, message, song, album, artist, puzzleWords, onNext, hasMapDiscovery, onGoToMap }: ResultModalProps) {
+export default function ResultModal({ correct, message, song, album, artist, puzzleWords, onNext, mapDiscoveryCount, onGoToMap }: ResultModalProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
           className="font-bold text-primary mb-4 mx-auto tracking-wide"
           style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
         >{message}</h2>
-        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-2 w-full">
+        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
           <p className="text-lg md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
           <p className={"text-sm mb-2 md:mb-4 italic"}>
 
@@ -71,18 +71,22 @@ export default function ResultModal({ correct, message, song, album, artist, puz
         {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink my-2 px-4">
           We'll keep this one in the queue so you can try again later.
         </div>}
-        {correct && hasMapDiscovery && onGoToMap && (
-          <div className="flex items-center gap-2">
-            <p className="text-xs text-neutral-600">You discovered a new landmark on the map!</p>
+        {correct && !!mapDiscoveryCount && onGoToMap && (
+          <div className="flex items-center gap-1">
+            <p className="text-sm text-neutral-600">
+              {mapDiscoveryCount === 1 ? 'You discovered a new landmark!' : `You discovered ${mapDiscoveryCount} new landmarks!`}
+            </p>
             <button
               onClick={onGoToMap}
-              className="group flex-none w-12 h-12 flex items-center justify-center text-primary text-sm px-2 bg-neutral-50 border border-primary rounded-full hover:bg-secondary/50 transition-colors cursor-pointer"
+              className="w-12 h-12 flex items-center justify-center cursor-pointer group"
             >
-              <Map size={24} className="transition-transform group-hover:scale-110" />
+              <div className="w-10 h-10 flex items-center justify-center text-primary border border-primary bg-neutral-50 rounded-full group-hover:bg-secondary/50 transition-colors">
+                <Map size={24} />
+              </div>
             </button>
           </div>
         )}
-        <div className="mb-2">
+        <div className="mb-4">
           <ShareButton text={shareText} url={shareUrl} />
         </div>
         <button

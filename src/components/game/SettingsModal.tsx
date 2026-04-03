@@ -72,13 +72,13 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         <h2 className="tracking-wide text-xl font-bold text-primary mb-1">Settings & Stats</h2>
         <div className="space-y-2 md:space-y-3">
           <div>
-            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Landmark Map</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Landmarks</h3>
             <div>
               <button
                 onClick={() => { onClose(); navigate(`/${artistSlug}/map?level=${levelSlug}`) }}
-                className="group w-12 h-12 flex items-center justify-center text-primary bg-neutral-50 border border-primary rounded-full hover:bg-secondary/50 transition-colors cursor-pointer"
+                className="flex w-full md:w-auto py-2 px-4 h-12 items-center justify-center gap-1 font-medium text-base text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
               >
-                <Map size={24} className="transition-transform group-hover:scale-110" />
+                <Map size={24} className="transition-transform group-hover:scale-110" />View Map
               </button>
             </div>
           </div>

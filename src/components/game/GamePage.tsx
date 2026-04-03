@@ -58,26 +58,26 @@ export default function GamePage() {
     return () => clearTimeout(timer)
   }, [game.songFailed])
 
-  const [hasMapDiscovery, setHasMapDiscovery] = useState(false)
+  const [mapDiscoveryCount, setMapDiscoveryCount] = useState(0)
   const [mapDiscoveryReady, setMapDiscoveryReady] = useState(false)
   useEffect(() => {
     if (!game.currentSong) {
-      setHasMapDiscovery(false)
+      setMapDiscoveryCount(0)
       setMapDiscoveryReady(false)
       return
     }
-    setHasMapDiscovery(false)
+    setMapDiscoveryCount(0)
     setMapDiscoveryReady(false)
     getSongMapElementIds(game.currentSong.id)
       .then((elementIds) => {
         if (elementIds.length > 0) {
           const stored = localStorage.getItem(`${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`)
           const revealedIds: number[] = stored ? JSON.parse(stored) : []
-          setHasMapDiscovery(elementIds.some((id) => !revealedIds.includes(id)))
+          setMapDiscoveryCount(elementIds.filter((id) => !revealedIds.includes(id)).length)
         }
         setMapDiscoveryReady(true)
       })
-      .catch(() => { setHasMapDiscovery(false); setMapDiscoveryReady(true) })
+      .catch(() => { setMapDiscoveryCount(0); setMapDiscoveryReady(true) })
   }, [game.currentSong?.id])
 
   const handleGoToMap = () => {
@@ -596,7 +596,7 @@ export default function GamePage() {
           artist={game.artist}
           puzzleWords={game.puzzleWords}
           onNext={game.nextSong}
-          hasMapDiscovery={hasMapDiscovery}
+          mapDiscoveryCount={mapDiscoveryCount}
           onGoToMap={handleGoToMap}
         />
       )}
