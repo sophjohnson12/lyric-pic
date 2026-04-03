@@ -449,7 +449,7 @@ export default function MapPage() {
           src={revealOverlay.src}
           className="fixed object-contain pointer-events-none"
           style={{
-            zIndex: 9999,
+            zIndex: 25,
             left: revealOverlay.fromRect.left,
             top: revealOverlay.fromRect.top,
             width: revealOverlay.fromRect.width,
