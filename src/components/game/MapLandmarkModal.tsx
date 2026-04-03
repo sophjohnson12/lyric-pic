@@ -114,7 +114,7 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
   }
 
   return (
-    <div ref={divRef} className={`w-28 h-28 [will-change:transform] ${cursorClass}`}>
+    <div ref={divRef} className={`w-28 h-28 [will-change:transform] ${cursorClass}`} style={{ zIndex: isCorrect ? 1 : 0 }}>
       <div
         ref={scaleRef}
         role="button"
