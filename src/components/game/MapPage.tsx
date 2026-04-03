@@ -15,6 +15,33 @@ import { REVEALED_LANDMARKS_KEY_PREFIX, LOCAL_STORAGE_KEY_PREFIX } from '../../u
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
+function smoothScroll(
+  container: HTMLElement,
+  targetLeft: number,
+  targetTop: number,
+  duration: number,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const startLeft = container.scrollLeft
+    const startTop = container.scrollTop
+    if (targetLeft === startLeft && targetTop === startTop) {
+      resolve()
+      return
+    }
+    const startTime = performance.now()
+    function step(now: number) {
+      const elapsed = now - startTime
+      const t = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3) // ease-out cubic
+      container.scrollLeft = startLeft + (targetLeft - startLeft) * eased
+      container.scrollTop = startTop + (targetTop - startTop) * eased
+      if (t < 1) requestAnimationFrame(step)
+      else resolve()
+    }
+    requestAnimationFrame(step)
+  })
+}
+
 function hexToRgba(hex: string | null, opacity: number): string | null {
   if (!hex) return null
   const clean = hex.startsWith('#') ? hex.slice(1) : hex
@@ -225,7 +252,7 @@ export default function MapPage() {
     await sleep(500)
   }
 
-  function scrollToLandmark(id: number) {
+  async function scrollToLandmark(id: number): Promise<void> {
     const el = elements.find((e) => e.id === id)
     const container = scrollContainerRef.current
     const landmarkEl = landmarkRefs.current.get(id)
@@ -237,17 +264,20 @@ export default function MapPage() {
     const lhw = landmarkEl.offsetWidth / 2
     const lhh = landmarkEl.offsetHeight / 2
     const EDGE = 0.2
-    const nearRight  = (el.x_percent + el.width_percent / 2) > 50
-    const nearBottom = el.y_percent > 50
+    // Use viewport-relative position so the landmark lands near whichever edge
+    // it came from — not based on its absolute position in the map.
+    const nearRight  = lx > container.scrollLeft + container.clientWidth  / 2
+    const nearBottom = ly > container.scrollTop  + container.clientHeight / 2
     const clamp = (v: number, max: number) => Math.max(0, Math.min(v, max))
-    container.scrollLeft = clamp(
+    const targetLeft = clamp(
       nearRight  ? lx + lhw - container.clientWidth  * (1 - EDGE) : lx - lhw - container.clientWidth  * EDGE,
       container.scrollWidth  - container.clientWidth
     )
-    container.scrollTop = clamp(
+    const targetTop = clamp(
       nearBottom ? ly + lhh - container.clientHeight * (1 - EDGE) : ly - lhh - container.clientHeight * EDGE,
       container.scrollHeight - container.clientHeight
     )
+    await smoothScroll(container, targetLeft, targetTop, 700)
   }
 
   function handleLiftOff(src: string, fromRect: DOMRect) {
@@ -264,12 +294,12 @@ export default function MapPage() {
         [{ transform: 'scale(1)' }, { transform: 'scale(1.5)' }],
         { duration: 300, easing: 'ease-out', fill: 'forwards' }
       )
-      anim.addEventListener('finish', () => {
+      anim.addEventListener('finish', async () => {
         if (cancelled) return
         // Modal is now closed — safe to scroll on iOS (no fixed overlay blocking it).
         const id = pendingRevealId.current
-        if (id !== null) scrollToLandmark(id)
-        setRevealOverlay((prev) => (prev ? { ...prev, phase: 'shrinking' } : null))
+        if (id !== null) await scrollToLandmark(id)
+        if (!cancelled) setRevealOverlay((prev) => (prev ? { ...prev, phase: 'shrinking' } : null))
       })
       return () => {
         cancelled = true
