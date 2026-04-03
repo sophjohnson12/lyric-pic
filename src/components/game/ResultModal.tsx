@@ -33,10 +33,11 @@ export default function ResultModal({ correct, message, song, album, artist, puz
   const lyricsWithLines = puzzleWords.filter(pw => pw.lineText)
 
   const wordLine = puzzleWords.map(pw => pw.word).join(' + ') + ' = ' + (correct ? '✅' : '❌')
-  const result = correct ? 'I got it. 😎' : 'I couldn\'t. 😢'
-  const artistName = artist?.name ?? 'the artist'
+  const artistName = artist?.name ?? 'artist\'s'
+  const result = correct ? 'I guessed' : 'I couldn\'t guess'
+  const emoji = correct ? '😎' : '😢'
+  const shareText = `${wordLine}\n\n${result} the ${artistName} song. ${emoji} Play Lyric Pic for more songs!`
   const shareUrl = `https://playlyricpic.com/${artist?.slug ?? ''}`
-  const shareText = `${wordLine}\n\nCan you guess this ${artistName} song? ${result} Play Lyric Pic for more songs!`
 
   return (
     <Modal showClose={false} showEaseIn={true}>
@@ -48,12 +49,12 @@ export default function ResultModal({ correct, message, song, album, artist, puz
           }
         </div>
         <h2
-          className="font-bold text-primary mb-4 mx-auto tracking-wide"
+          className="font-bold text-primary mb-3 mx-auto tracking-wide"
           style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
         >{message}</h2>
-        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-4 w-full">
+        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-3 w-full">
           <p className="text-lg md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
-          <p className={"text-sm mb-2 md:mb-4 italic"}>
+          <p className={"text-sm mb-2 md:mb-3 italic"}>
 
             <span className="font-medium text-neutral-700">{album ? album.name : 'Single'}</span>
             <span className="ml-1 font-thin text-neutral-600">{album && album.release_year ? `(${album.release_year})` : ''}</span>
@@ -86,7 +87,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
             </button>
           </div>
         )}
-        <div className="mb-4">
+        <div className="mb-3">
           <ShareButton text={shareText} url={shareUrl} />
         </div>
         <button
