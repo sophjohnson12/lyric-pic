@@ -188,7 +188,11 @@ export default function MapPage() {
   const distractors = useMemo(() => {
     if (!activeElement) return []
     const pool = elements.filter(
-      (el) => el.song_id !== null && !revealedIds.includes(el.id) && el.id !== activeElement.id
+      (el) =>
+        el.song_id !== null &&
+        !revealedIds.includes(el.id) &&
+        el.id !== activeElement.id &&
+        el.song_id !== activeElement.song_id
     )
     return [...pool].sort(() => Math.random() - 0.5).slice(0, 2)
   }, [activeElement, elements, revealedIds])
