@@ -1,5 +1,5 @@
 import Modal from '../common/Modal'
-import { KeyRound, Sliders, SkipForward, Flag } from 'lucide-react';
+import { KeyRound, Sliders, SkipForward, Map, Flag } from 'lucide-react';
 import type { Album } from '../../types/database'
 import AlbumButtons from './AlbumButtons'
 
@@ -68,6 +68,7 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
           </p>
           <ul>
             <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/>Manage levels and game history</li>
+            <li className="flex items-center"><Map size={15} strokeWidth={3} className="mr-2 text-primary"/>View landmark map</li>
             <li className="flex items-center"><SkipForward size={15} strokeWidth={3} className="mr-2 text-primary"/>Skip song</li>
           </ul>
         </div>
