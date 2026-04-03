@@ -37,10 +37,7 @@ export default function Modal({ children, onClose, showClose = true, showEaseIn 
   }, [onClose])
 
   return (
-    <motion.div
-      initial={showEaseIn ? { opacity: 0 } : { opacity: 1 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: showEaseIn ? 0.2 : 0 }}
+    <div
       className={`fixed inset-0 z-60 flex ${lockedTop !== null ? 'items-start' : 'items-center'} justify-center bg-black/50`}
       style={lockedTop !== null ? { paddingTop: lockedTop } : undefined}
       onClick={onClose}
@@ -64,6 +61,6 @@ export default function Modal({ children, onClose, showClose = true, showEaseIn 
         )}
         {children}
       </motion.div>
-    </motion.div>
+    </div>
   )
 }

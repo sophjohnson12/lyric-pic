@@ -33,6 +33,9 @@ export default function GamePage() {
 
   const showInfoOnLoad = localStorage.getItem(SHOW_INFO_KEY) === 'true'
   const [showInfo, setShowInfo] = useState(showInfoOnLoad)
+  // Tracks whether the modal was auto-launched on this page load (not user-triggered).
+  // Used to hide game content while the modal is open, preventing a flash of the underlying UI.
+  const autoLaunchRef = useRef(showInfoOnLoad)
 
   useEffect(() => {
     if (showInfoOnLoad) {
@@ -464,7 +467,8 @@ export default function GamePage() {
   const correctAlbumForModal = game.correctAlbum
 
   return (
-    <div className="md:h-auto flex flex-col max-md:min-h-[calc(100lvh+64px)]">
+    <>
+    <div className={`md:h-auto flex flex-col max-md:min-h-[calc(100lvh+64px)]${autoLaunchRef.current && showInfo ? ' opacity-0' : ''}`}>
       <Header
         artistName={game.artist.name}
         onInfo={() => setShowInfo(true)}
@@ -628,20 +632,6 @@ export default function GamePage() {
           showEaseIn={true}
         />
       )}
-      {showInfo && (
-        <InfoModal
-          minSongLyricCount={game.minSongLyricCount}
-          minImageCount={game.minImageCount}
-          maxImageCount={game.maxImageCount}
-          guessCount={game.maxGuessCount}
-          songCount={game.totalPlayableSongs}
-          albums={game.albums}
-          showAlbumFilters={game.showAlbumFilters}
-          showFlagIcon={game.enableLyricFlag}
-          levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
-          onClose={() => setShowInfo(false)}
-        />
-      )}
       {showHistory && (
         <SettingsModal
           playedSongIds={game.playedSongIds}
@@ -661,5 +651,20 @@ export default function GamePage() {
 
       <Toast message={game.toastMessage} />
     </div>
+    {showInfo && (
+      <InfoModal
+        minSongLyricCount={game.minSongLyricCount}
+        minImageCount={game.minImageCount}
+        maxImageCount={game.maxImageCount}
+        guessCount={game.maxGuessCount}
+        songCount={game.totalPlayableSongs}
+        albums={game.albums}
+        showAlbumFilters={game.showAlbumFilters}
+        showFlagIcon={game.enableLyricFlag}
+        levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
+        onClose={() => { autoLaunchRef.current = false; setShowInfo(false) }}
+      />
+    )}
+    </>
   )
 }
