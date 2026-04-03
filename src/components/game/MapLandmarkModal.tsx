@@ -7,6 +7,7 @@ import type { MapElementDetails } from '../../types/database'
 export interface ChoiceCardHandle {
   shakeError: () => Promise<void>
   slideTo: (dx: number) => Promise<void>
+  shrinkOut: () => Promise<void>
   getDivRect: () => DOMRect
   getImageRect: () => DOMRect
 }
@@ -23,7 +24,10 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
   { element, incorrect, resolved, isCorrect, onClick },
   ref
 ) {
+  // Outer div: handles translateX (shake + slide) — decoupled from the inner scale
+  // so WAAPI 'transform' animations on the two elements never conflict.
   const divRef = useRef<HTMLDivElement>(null)
+  const scaleRef = useRef<HTMLDivElement>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const [showError, setShowError] = useState(false)
 
@@ -67,6 +71,19 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
         }
       })
     },
+    shrinkOut() {
+      return new Promise<void>((resolve) => {
+        const anim = scaleRef.current?.animate(
+          [{ transform: 'scale(1)' }, { transform: 'scale(0.8)' }],
+          { duration: 200, easing: 'ease-out', fill: 'forwards' }
+        )
+        if (anim) {
+          anim.addEventListener('finish', () => resolve())
+        } else {
+          resolve()
+        }
+      })
+    },
     getDivRect() {
       return divRef.current?.getBoundingClientRect() ?? new DOMRect()
     },
@@ -97,23 +114,25 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
   }
 
   return (
-    <div
-      ref={divRef}
-      role="button"
-      aria-label={element.display_name}
-      tabIndex={incorrect || resolved ? -1 : 0}
-      onClick={handleClick}
-      onKeyDown={(e) => e.key === 'Enter' && handleClick()}
-      className={`relative w-28 h-28 rounded-lg border-2 overflow-hidden bg-neutral-50 [will-change:transform] ${borderClass} ${cursorClass}`}
-    >
-      <div className={overlayClass} />
-      <img
-        ref={imgRef}
-        src={element.url}
-        alt={element.display_name}
-        className={`w-full h-full object-contain p-1 [will-change:transform] ${imgOpacityClass}`}
-        style={{ filter: 'brightness(120%)' }}
-      />
+    <div ref={divRef} className={`w-28 h-28 [will-change:transform] ${cursorClass}`}>
+      <div
+        ref={scaleRef}
+        role="button"
+        aria-label={element.display_name}
+        tabIndex={incorrect || resolved ? -1 : 0}
+        onClick={handleClick}
+        onKeyDown={(e) => e.key === 'Enter' && handleClick()}
+        className={`relative w-full h-full rounded-lg border-2 overflow-hidden bg-neutral-50 [will-change:transform] ${borderClass}`}
+      >
+        <div className={overlayClass} />
+        <img
+          ref={imgRef}
+          src={element.url}
+          alt={element.display_name}
+          className={`w-full h-full object-contain p-1 ${imgOpacityClass}`}
+          style={{ filter: 'brightness(120%)' }}
+        />
+      </div>
     </div>
   )
 })
@@ -144,9 +163,16 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
     const handle = cardRefs.current[element.id]
     if (!handle) return
 
-    // Mark correct card and gray out the others
+    // Apply disabled styling to all cards
     setCorrectId(element.id)
     setResolved(true)
+
+    // Shrink all distractors simultaneously, then swap
+    await Promise.all(
+      choices
+        .filter((c) => c.id !== element.id)
+        .map((c) => cardRefs.current[c.id]?.shrinkOut() ?? Promise.resolve())
+    )
 
     // Swap correct card to the center position if needed (only for 3 choices)
     const correctIndex = choices.findIndex((c) => c.id === element.id)
