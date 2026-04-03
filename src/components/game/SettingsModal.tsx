@@ -63,7 +63,8 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       localStorage.removeItem(LOAD_MESSAGE_KEY)
     }
     localStorage.setItem(SHOW_INFO_KEY, 'true')
-    window.location.href = `/${artistSlug}/${slug}`
+    onClose()
+    navigate(`/${artistSlug}/${slug}`)
   }
 
   return (

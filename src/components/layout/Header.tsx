@@ -55,7 +55,7 @@ export default function Header({
           {levelSlug && (
             <button
               onClick={() => navigate(`/${artistSlug}/map?level=${levelSlug}`)}
-              className="group hidden md:flex h-12 w-12 md:h-auto md:w-auto items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
+              className="group flex h-12 w-12 md:h-auto md:w-auto items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
               title="View map"
             >
               <Map size={20} className="transition-transform group-hover:scale-110" />

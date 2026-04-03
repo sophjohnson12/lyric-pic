@@ -252,6 +252,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
   useEffect(() => {
     let cancelled = false
     async function init() {
+      setState((prev) => ({ ...prev, loading: true }))
       try {
         // Load app config and artist in parallel
         const [config, artist] = await Promise.all([
