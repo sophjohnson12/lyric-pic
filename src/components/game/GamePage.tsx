@@ -384,6 +384,7 @@ export default function GamePage() {
           onSkip={() => {}}
           skipDisabled={true}
           onChangeDifficulty={() => navigate(`/${artistSlug}`)}
+          levelSlug={levelSlug ?? undefined}
         />
         {noSongs ? (
           <div className="flex-1 flex items-center justify-center p-8">
@@ -465,6 +466,7 @@ export default function GamePage() {
         onInfo={() => setShowInfo(true)}
         onHistory={() => setShowHistory(true)}
         onSkip={() => setShowSkipConfirm(true)}
+        levelSlug={levelSlug ?? undefined}
       />
 
       <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 md:overflow-y-visible">
