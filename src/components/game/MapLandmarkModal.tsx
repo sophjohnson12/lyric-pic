@@ -131,10 +131,16 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
   const [resolved, setResolved] = useState(false)
   const [correctId, setCorrectId] = useState<number | null>(null)
   const cardRefs = useRef<Record<number, ChoiceCardHandle | null>>({})
+  // Refs so concurrent async handlers share the same mutable state without
+  // stale closures — incorrectIdsRef drives the "all distractors gone?" logic,
+  // triggeringCorrect prevents triggerCorrect() from being entered twice.
+  const incorrectIdsRef = useRef<Set<number>>(new Set())
+  const triggeringCorrect = useRef(false)
 
   const [choices] = useState(() => [...[element, ...distractors]].sort(() => Math.random() - 0.5))
 
   async function triggerCorrect() {
+    triggeringCorrect.current = true
     const handle = cardRefs.current[element.id]
     if (!handle) return
 
@@ -164,7 +170,8 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
   }
 
   async function handleChoiceClick(choiceId: number) {
-    if (resolved) return
+    if (triggeringCorrect.current) return
+    if (incorrectIdsRef.current.has(choiceId)) return
     const handle = cardRefs.current[choiceId]
     if (!handle) return
 
@@ -172,9 +179,9 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
       await triggerCorrect()
     } else {
       await handle.shakeError()
-      const newIncorrectIds = [...incorrectIds, choiceId]
-      setIncorrectIds(newIncorrectIds)
-      if (choices.length - newIncorrectIds.length === 1) {
+      incorrectIdsRef.current.add(choiceId)
+      setIncorrectIds([...incorrectIdsRef.current])
+      if (choices.length - incorrectIdsRef.current.size === 1 && !triggeringCorrect.current) {
         await triggerCorrect()
       }
     }
