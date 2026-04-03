@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
 import { useGame } from '../../hooks/useGame'
@@ -340,6 +340,10 @@ export default function GamePage() {
   }, [game.currentSong?.id])
 
 
+
+  useLayoutEffect(() => {
+    if (game.loading) window.scrollTo(0, 0)
+  }, [game.loading])
 
   if (!levelSlug) {
     return <Navigate to={`/${artistSlug}`} replace />
