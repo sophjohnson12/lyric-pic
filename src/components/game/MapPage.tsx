@@ -447,7 +447,7 @@ export default function MapPage() {
                     {tooltipVisible && !isLocked && (
                       <Tooltip
                         borderColor={element.album_primary_color ?? 'var(--color-theme-primary)'}
-                        overlayColor={hexToRgba(element.album_secondary_color, 0.5) || undefined}
+                        overlayColor={hexToRgba(element.album_secondary_color, 0.25) || undefined}
                         topMargin={64}
                         exiting={tooltipExiting}
                       >

@@ -224,7 +224,7 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
         <div
           className="rounded-lg border p-4 md:p-6 mb-3 w-full"
           style={{
-            backgroundColor: element.album_secondary_color ? `${element.album_secondary_color}80` : undefined,
+            backgroundColor: element.album_secondary_color ? `${element.album_secondary_color}40` : undefined,
             borderColor: element.album_primary_color ?? undefined,
           }}
         >
