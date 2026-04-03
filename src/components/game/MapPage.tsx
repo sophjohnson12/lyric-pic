@@ -340,6 +340,8 @@ export default function MapPage() {
         const id = pendingRevealId.current
         if (id !== null) {
           setRevealedIds((prev) => [...prev, id])
+          // Auto-show the info tooltip for the newly revealed landmark
+          setTappedId(id)
         }
         if (!cancelled) setRevealOverlay(null)
       })
@@ -395,8 +397,15 @@ export default function MapPage() {
                       width: `${element.width_percent}%`,
                       zIndex: tooltipVisible ? 20 : element.song_id === null ? 0 : 1,
                     }}
-                    onMouseEnter={() => hasInfo && setHoveredId(element.id)}
-                    onMouseLeave={() => setHoveredId(null)}
+                    onMouseEnter={() => {
+                      if (!hasInfo) return
+                      setHoveredId(element.id)
+                      setTappedId((prev) => (prev !== null && prev !== element.id ? null : prev))
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredId(null)
+                      setTappedId((prev) => (prev === element.id ? null : prev))
+                    }}
                     onClick={(e) => { if (hasInfo) e.stopPropagation() }}
                     onPointerUp={(e) => {
                       if (!hasInfo || e.pointerType !== 'touch') return
