@@ -51,6 +51,8 @@ export default function MapPage() {
   const [imagesLoadedCount, setImagesLoadedCount] = useState(0)
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
+  const [dismissingId, setDismissingId] = useState<number | null>(null)
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [mapVisible, setMapVisible] = useState(false)
   const [revealOverlay, setRevealOverlay] = useState<{
@@ -140,6 +142,16 @@ export default function MapPage() {
     const id = requestAnimationFrame(() => setMapVisible(true))
     return () => cancelAnimationFrame(id)
   }, [showSpinner, mapVisible])
+
+  // Fade out a tooltip before removing it to prevent Safari GPU compositing artifacts
+  const scheduleDismiss = (id: number) => {
+    setDismissingId(id)
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current)
+    dismissTimerRef.current = setTimeout(() => setDismissingId(null), 160)
+  }
+  useEffect(() => () => {
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current)
+  }, [])
 
   // Union of all played song IDs — reads both the current level-specific keys and the
   // legacy key (written before levels were introduced: lyricpic_played_songs_<slug>).
@@ -326,7 +338,7 @@ export default function MapPage() {
         <div
           ref={scrollContainerRef}
           className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : (!mapVisible ? ' opacity-0' : '')}`}
-          onClick={() => setTappedId(null)}
+          onClick={() => { if (tappedId !== null) scheduleDismiss(tappedId); setTappedId(null) }}
         >
           <div
               ref={mapContentRef}
@@ -336,7 +348,8 @@ export default function MapPage() {
               {elements.map((element) => {
                 const hasInfo = element.song_id !== null
                 const isLocked = hasInfo && !revealedIds.includes(element.id)
-                const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id)
+                const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id || dismissingId === element.id)
+                const tooltipExiting = dismissingId === element.id && tappedId !== element.id
 
                 return (
                   <div
@@ -354,10 +367,17 @@ export default function MapPage() {
                     }}
                     onMouseEnter={() => hasInfo && setHoveredId(element.id)}
                     onMouseLeave={() => setHoveredId(null)}
+                    onClick={(e) => { if (hasInfo) e.stopPropagation() }}
                     onPointerUp={(e) => {
                       if (!hasInfo || e.pointerType !== 'touch') return
                       e.stopPropagation()
-                      setTappedId(tappedId === element.id ? null : element.id)
+                      if (tappedId === element.id) {
+                        scheduleDismiss(element.id)
+                        setTappedId(null)
+                      } else {
+                        if (tappedId !== null) scheduleDismiss(tappedId)
+                        setTappedId(element.id)
+                      }
                     }}
                   >
                     <img
@@ -386,7 +406,7 @@ export default function MapPage() {
                       </div>
                     )}
                     {tooltipVisible && isLocked && (
-                      <Tooltip borderColor="var(--color-theme-primary)" topMargin={64}>
+                      <Tooltip borderColor="var(--color-theme-primary)" topMargin={64} exiting={tooltipExiting}>
                         <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark.</p>
                         <p className="text-xs mt-1">
                           <span className="text-neutral-600 font-semibold">Level: </span>
@@ -399,6 +419,7 @@ export default function MapPage() {
                         borderColor={element.album_primary_color ?? 'var(--color-theme-primary)'}
                         overlayColor={hexToRgba(element.album_secondary_color, 0.5) || undefined}
                         topMargin={64}
+                        exiting={tooltipExiting}
                       >
                         <p className="font-semibold text-neutral-800 text-sm leading-tight">{element.song_name}</p>
                         <p className="text-xs italic text-neutral-600 mt-0.5">{element.album_name}</p>
