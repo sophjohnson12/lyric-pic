@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import GamePage from './components/game/GamePage'
 import DifficultyPage from './components/game/DifficultyPage'
 import LoginPage from './components/admin/LoginPage'
@@ -30,6 +30,11 @@ import MapElementFormPage from './components/admin/MapElementFormPage'
 import CopywriterCorner from './components/admin/CopywriterCorner'
 import UploadImagePage from './components/admin/UploadImagePage'
 import MapPage from './components/game/MapPage'
+
+function KeyedGamePage() {
+  const { artistSlug, difficulty } = useParams<{ artistSlug: string; difficulty: string }>()
+  return <GamePage key={`${artistSlug}-${difficulty}`} />
+}
 
 export default function App() {
   return (
@@ -72,7 +77,7 @@ export default function App() {
         </Route>
         <Route path="/:artistSlug" element={<DifficultyPage />} />
         <Route path="/:artistSlug/map" element={<MapPage />} />
-        <Route path="/:artistSlug/:difficulty" element={<GamePage />} />
+        <Route path="/:artistSlug/:difficulty" element={<KeyedGamePage />} />
       </Routes>
     </BrowserRouter>
     </>
