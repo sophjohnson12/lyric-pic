@@ -429,7 +429,7 @@ export default function MapPage() {
                       >
                         <div className="h-12 w-12 flex items-center justify-center">
                           <div className="absolute inset-0 rounded-full bg-neutral-50" />
-                          <div className="absolute inset-0 rounded-full bg-secondary/50 shadow-sm border-1 border-primary flex items-center justify-center">
+                          <div className="absolute inset-0 rounded-full bg-secondary/50 shadow-sm border-2 border-primary flex items-center justify-center">
                               <Lock size={20} className="text-primary" />
                           </div>
                         </div>
