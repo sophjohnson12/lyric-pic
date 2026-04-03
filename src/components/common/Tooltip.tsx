@@ -80,7 +80,7 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
         [isBelow ? 'top' : 'bottom']: 'calc(50% + 11px)',
         left: '50%',
         transform: `translateX(calc(-50% + ${xShift}px))`,
-        width: 'clamp(150px, 20vw, 280px)',
+        width: 'clamp(180px, 20vw, 200px)',
       }}
     >
       {isBelow ? <>{caret}{box}</> : <>{box}{caret}</>}

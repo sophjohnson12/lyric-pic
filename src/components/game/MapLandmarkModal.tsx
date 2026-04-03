@@ -81,17 +81,16 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
   }
 
   let borderClass = 'border-neutral-200'
-  let bgClass = 'bg-neutral-50'
   let cursorClass = 'cursor-pointer'
   let imgOpacityClass = ''
+  let overlayClass = 'hidden'
 
   if (showError) {
     borderClass = 'border-error'
-    bgClass = 'bg-error/50'
+    overlayClass = 'absolute inset-0 bg-error/50'
   } else if (incorrect || (resolved && !isCorrect)) {
-    borderClass = 'border-neutral-200'
-    bgClass = 'bg-neutral-300'
     cursorClass = 'cursor-default'
+    overlayClass = 'absolute inset-0 bg-neutral-300'
     imgOpacityClass = 'opacity-50'
   } else if (resolved && isCorrect) {
     cursorClass = 'cursor-default'
@@ -105,8 +104,9 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
       tabIndex={incorrect || resolved ? -1 : 0}
       onClick={handleClick}
       onKeyDown={(e) => e.key === 'Enter' && handleClick()}
-      className={`w-28 h-28 rounded-lg border-2 overflow-hidden [will-change:transform] ${bgClass} ${borderClass} ${cursorClass}`}
+      className={`relative w-28 h-28 rounded-lg border-2 overflow-hidden bg-neutral-50 [will-change:transform] ${borderClass} ${cursorClass}`}
     >
+      <div className={overlayClass} />
       <img
         ref={imgRef}
         src={element.url}

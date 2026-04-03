@@ -291,16 +291,11 @@ export default function MapPage() {
       )
       anim.addEventListener('finish', () => {
         if (cancelled) return
-        // Reveal the landmark — this starts the brightness(0%) → brightness(120%) CSS transition.
-        // Keep the overlay in place for the full transition duration so the black silhouette is
-        // never exposed; the overlay (already at brightness(120%)) acts as a seamless cover.
         const id = pendingRevealId.current
         if (id !== null) {
           setRevealedIds((prev) => [...prev, id])
         }
-        setTimeout(() => {
-          if (!cancelled) setRevealOverlay(null)
-        }, 650)
+        if (!cancelled) setRevealOverlay(null)
       })
       return () => {
         cancelled = true
@@ -369,7 +364,6 @@ export default function MapPage() {
                       style={{
                         WebkitTouchCallout: 'none',
                         filter: isLocked ? 'brightness(0%)' : 'brightness(120%)',
-                        transition: 'filter 0.6s ease',
                       }}
                       onLoad={() => setImagesLoadedCount((c) => c + 1)}
                       onError={() => setImagesLoadedCount((c) => c + 1)}
@@ -389,7 +383,7 @@ export default function MapPage() {
                     )}
                     {tooltipVisible && isLocked && (
                       <Tooltip borderColor="var(--color-theme-primary)" topMargin={64}>
-                        <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark!</p>
+                        <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark.</p>
                         <p className="text-xs mt-1">
                           <span className="text-neutral-600 font-semibold">Level: </span>
                           <span className="text-neutral-700 font-normal">{getLevelNames(element, levels)}</span>
@@ -427,12 +421,14 @@ export default function MapPage() {
             buttonText="Place a Landmark"
             messageText={`${eligibleElements.length} ready to place!`}
             onClick={() => setModalOpen(true)}
+            disabled={modalOpen || !!revealOverlay}
           />
         ) : undiscoveredCount > 0 ? (
           <MapFloatingAction
             buttonText="Return to Game"
             messageText={`${undiscoveredCount} more landmark${undiscoveredCount === 1 ? '' : 's'} to discover!`}
             onClick={() => navigate(gameUrl)}
+            disabled={modalOpen || !!revealOverlay}
           />
         ) : null
       )}

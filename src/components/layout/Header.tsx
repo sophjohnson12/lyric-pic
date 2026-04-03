@@ -50,11 +50,11 @@ export default function Header({
             <Sliders size={20} className="transition-transform group-hover:scale-110" />
           </button>
           <button
-            onClick={skipDisabled ? undefined : onSkip}
+            onClick={onSkip}
             disabled={skipDisabled}
-            className={`group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border ${skipDisabled ? 'text-neutral-400 bg-neutral-300 border-neutral-200 cursor-default' : 'text-primary bg-neutral-50 border-primary hover:bg-secondary/50 cursor-pointer'}`}
+            className="group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border text-primary bg-neutral-50 border-primary hover:bg-secondary/50 cursor-pointer disabled:opacity-60 disabled:cursor-default disabled:pointer-events-none"
           >
-            <SkipForward size={24} className={skipDisabled ? '' : 'transition-transform group-hover:scale-110'} />
+            <SkipForward size={24} className="transition-transform group-hover:scale-110" />
           </button>
         </div>
       </div>
