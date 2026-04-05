@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { CircleHelp } from 'lucide-react'
+
 import type { PuzzleWord } from '../../types/game'
 
 type TabState = 'question' | 'hiding' | 'word'
@@ -55,8 +55,8 @@ function WordTab({
           {word.word.toLowerCase()}
         </span>
       ) : (
-        <div ref={questionRef}>
-          <CircleHelp size={24} />
+        <div ref={questionRef} className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center">
+          <span className="text-sm font-bold leading-none [font-variant-numeric:lining-nums_tabular-nums]">{index + 1}</span>
         </div>
       )}
     </button>
