@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react'
+
 interface MapFloatingActionProps {
-  buttonText: string
-  messageText: string
+  buttonText: ReactNode
+  messageText?: string
   onClick: () => void
   disabled?: boolean
 }
@@ -8,11 +10,13 @@ interface MapFloatingActionProps {
 export default function MapFloatingAction({ buttonText, messageText, onClick, disabled }: MapFloatingActionProps) {
   return (
     <>
-      <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-30 w-fit bg-neutral-50/65 backdrop-blur-3xl rounded-3xl p-1">
-        <div className="text-xs text-neutral-800 whitespace-nowrap">
-          {messageText}
+      {messageText && (
+        <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-30 w-fit bg-neutral-50/65 backdrop-blur-3xl rounded-3xl p-1">
+          <div className="text-xs text-neutral-800 whitespace-nowrap">
+            {messageText}
+          </div>
         </div>
-      </div>
+      )}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 bg-neutral-50 rounded-3xl [will-change:transform] shadow-sm">
         <button
           onClick={onClick}

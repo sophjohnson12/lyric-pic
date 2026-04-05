@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Share } from 'lucide-react'
 
 interface ShareButtonProps {
-  text: string
-  url: string
+  text?: string
+  url?: string
+  imageUrl?: string
 }
 
-export default function ShareButton({ text, url }: ShareButtonProps) {
+export default function ShareButton({ text, url, imageUrl }: ShareButtonProps) {
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -14,10 +15,41 @@ export default function ShareButton({ text, url }: ShareButtonProps) {
     if (sharing) return
     setSharing(true)
 
+    if (imageUrl) {
+      try {
+        const response = await fetch(imageUrl)
+        const blob = await response.blob()
+        const file = new File([blob], 'map.png', { type: 'image/png' })
+        if (navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file] })
+            setSharing(false)
+            return
+          } catch (err) {
+            if ((err as DOMException).name === 'AbortError') {
+              setSharing(false)
+              return
+            }
+          }
+        }
+        // Fallback: trigger download
+        const objectUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = objectUrl
+        a.download = 'map.png'
+        a.click()
+        URL.revokeObjectURL(objectUrl)
+      } catch {
+        // silently ignore
+      }
+      setSharing(false)
+      return
+    }
+
     const isMac = /Mac/.test(navigator.platform) && !('ontouchstart' in window)
     if (navigator.share) {
       try {
-        await navigator.share(isMac ? { text: `${text}\n\n${url}` } : { text, url })
+        await navigator.share(isMac ? { text: `${text ?? ''}\n\n${url ?? ''}` } : { text, url })
         setSharing(false)
         return
       } catch (err) {
@@ -29,7 +61,7 @@ export default function ShareButton({ text, url }: ShareButtonProps) {
       }
     }
     try {
-      await navigator.clipboard.writeText(`${text}\n\n${url}`)
+      await navigator.clipboard.writeText(`${text ?? ''}\n\n${url ?? ''}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {

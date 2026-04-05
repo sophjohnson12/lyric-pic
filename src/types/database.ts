@@ -14,6 +14,7 @@ export interface Artist {
   theme_text_color: string
   theme_font_heading: string
   genius_artist_id: number | null
+  map_image_url: string | null
   updated_at: string | null
   refreshed_at: string | null
   created_at: string

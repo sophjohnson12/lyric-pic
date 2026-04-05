@@ -203,6 +203,16 @@ export interface ArtistFormData {
   theme_background_color?: string
   theme_text_color: string
   theme_font_heading: string
+  map_image_url: string | null
+}
+
+export async function uploadMapCompleteImage(file: File, artistSlug: string): Promise<string> {
+  const { error } = await supabase.storage
+    .from('map_elements')
+    .upload(`map_complete_${artistSlug}.png`, file, { contentType: 'image/png', upsert: true })
+  if (error) throw error
+  const { data } = supabase.storage.from('map_elements').getPublicUrl(`map_complete_${artistSlug}.png`)
+  return data.publicUrl
 }
 
 export async function createArtist(data: ArtistFormData) {

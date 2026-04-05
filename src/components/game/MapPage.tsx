@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { flushSync } from 'react-dom'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Lock } from 'lucide-react'
+import { Lock, Award } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
@@ -10,6 +10,7 @@ import MapHeader from '../layout/MapHeader'
 import MapFloatingAction from './MapFloatingAction'
 import Tooltip from '../common/Tooltip'
 import MapLandmarkModal from './MapLandmarkModal'
+import MapCompleteModal from './MapCompleteModal'
 import type { MapElementDetails } from '../../types/database'
 import type { GameLevel } from '../../types/game'
 import { REVEALED_LANDMARKS_KEY_PREFIX, LOCAL_STORAGE_KEY_PREFIX } from '../../utils/constants'
@@ -94,6 +95,11 @@ export default function MapPage() {
     `${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`,
     []
   )
+  const [mapCompleteImageUrl, setMapCompleteImageUrl] = useState<string | null>(null)
+  const [mapCompleteImageSize, setMapCompleteImageSize] = useState<{ width: number; height: number } | null>(null)
+  const [showCompleteModal, setShowCompleteModal] = useState(false)
+  const elementsRef = useRef<MapElementDetails[]>([])
+  const revealedIdsRef = useRef<number[]>([])
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const mapContentRef = useRef<HTMLDivElement>(null)
   const landmarkRefs = useRef<Map<number, HTMLDivElement>>(new Map())
@@ -134,11 +140,27 @@ export default function MapPage() {
     }
   }, [])
 
+  useEffect(() => { elementsRef.current = elements }, [elements])
+  useEffect(() => { revealedIdsRef.current = revealedIds }, [revealedIds])
+
+  // Pre-fetch the complete map image into browser cache as soon as we know
+  // the map is complete — on page load (if already done) or after the final reveal.
+  // This way the modal opens with the image already cached rather than waiting for it.
+  useEffect(() => {
+    if (!mapCompleteImageUrl || dataLoading) return
+    const songElementCount = elements.filter((e) => e.song_id !== null).length
+    if (songElementCount === 0 || revealedIds.length < songElementCount) return
+    const img = new Image()
+    img.onload = () => setMapCompleteImageSize({ width: img.naturalWidth, height: img.naturalHeight })
+    img.src = mapCompleteImageUrl
+  }, [mapCompleteImageUrl, elements, revealedIds, dataLoading])
+
   useEffect(() => {
     if (!artistSlug) return
     async function load() {
       const artist = await getArtistBySlug(artistSlug!)
       applyArtistTheme(artist)
+      setMapCompleteImageUrl(artist.map_image_url ?? null)
       const [els, fetchedLevels] = await Promise.all([
         getMapElements(artist.id),
         getArtistLevels(artist.id),
@@ -371,7 +393,15 @@ export default function MapPage() {
         if (cancelled) return
         const id = pendingRevealId.current
         if (id !== null) {
-          setRevealedIds((prev) => [...prev, id])
+          setRevealedIds((prev) => {
+            const next = [...prev, id]
+            // Check if this was the final landmark
+            const songElementCount = elementsRef.current.filter((e) => e.song_id !== null).length
+            if (songElementCount > 0 && next.length >= songElementCount) {
+              setTimeout(() => setShowCompleteModal(true), 700)
+            }
+            return next
+          })
           // Auto-show the info tooltip for the newly revealed landmark
           setTappedId(id)
         }
@@ -458,7 +488,7 @@ export default function MapPage() {
                       draggable={false}
                       style={{
                         WebkitTouchCallout: 'none',
-                        filter: isLocked ? 'brightness(0%)' : 'brightness(120%)',
+                        filter: isLocked ? 'brightness(0%)' : 'brightness(115%)',
                       }}
                       onLoad={() => setImagesLoadedCount((c) => c + 1)}
                       onError={() => setImagesLoadedCount((c) => c + 1)}
@@ -526,7 +556,21 @@ export default function MapPage() {
             onClick={() => navigate(gameUrl)}
             disabled={modalOpen || !!revealOverlay}
           />
+        ) : elements.filter((el) => el.song_id !== null).length > 0 ? (
+          <MapFloatingAction
+            buttonText={<><Award size={20} /> Claim Map</>}
+            onClick={() => setShowCompleteModal(true)}
+            disabled={showCompleteModal}
+          />
         ) : null
+      )}
+
+      {showCompleteModal && (
+        <MapCompleteModal
+          onClose={() => setShowCompleteModal(false)}
+          mapCompleteImageUrl={mapCompleteImageUrl}
+          mapCompleteImageSize={mapCompleteImageSize}
+        />
       )}
 
       {modalOpen && activeElement && (

@@ -5,7 +5,7 @@ import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
 import ColorField from './ColorField'
 import Toast from '../common/Toast'
-import { getAdminArtistById, createArtist, updateArtist, searchGeniusArtistId } from '../../services/adminService'
+import { getAdminArtistById, createArtist, updateArtist, searchGeniusArtistId, uploadMapCompleteImage } from '../../services/adminService'
 
 export default function ArtistFormPage() {
   const { id } = useParams()
@@ -27,6 +27,9 @@ export default function ArtistFormPage() {
   const [secondaryColor, setSecondaryColor] = useState('#5C2028')
   const [textColor, setTextColor] = useState('#2D1F2D')
   const [font, setFont] = useState('')
+  const [mapCompleteImageUrl, setMapCompleteImageUrl] = useState<string | null>(null)
+  const [mapCompleteImageFile, setMapCompleteImageFile] = useState<File | null>(null)
+  const [uploadingMapImage, setUploadingMapImage] = useState(false)
   const [saving, setSaving] = useState(false)
   const [findingGenius, setFindingGenius] = useState(false)
   const [geniusError, setGeniusError] = useState('')
@@ -54,6 +57,7 @@ export default function ArtistFormPage() {
         setSecondaryColor(a.theme_secondary_color)
         setTextColor(a.theme_text_color)
         setFont(a.theme_font_heading)
+        setMapCompleteImageUrl(a.map_image_url ?? null)
       })
     }
   }, [id, isEdit])
@@ -78,6 +82,17 @@ export default function ArtistFormPage() {
     e.preventDefault()
     setSaving(true)
     try {
+      let finalMapCompleteImageUrl = mapCompleteImageUrl
+      if (mapCompleteImageFile && slug.trim()) {
+        setUploadingMapImage(true)
+        try {
+          finalMapCompleteImageUrl = await uploadMapCompleteImage(mapCompleteImageFile, slug.trim())
+          setMapCompleteImageUrl(finalMapCompleteImageUrl)
+          setMapCompleteImageFile(null)
+        } finally {
+          setUploadingMapImage(false)
+        }
+      }
       const data = {
         name,
         slug,
@@ -91,6 +106,7 @@ export default function ArtistFormPage() {
         theme_secondary_color: secondaryColor,
         theme_text_color: textColor,
         theme_font_heading: font,
+        map_image_url: finalMapCompleteImageUrl,
       }
       if (isEdit) {
         await updateArtist(Number(id), data)
@@ -175,6 +191,30 @@ export default function ArtistFormPage() {
           </div>
           <FormField label="Font">
             <input type="text" value={font} onChange={(e) => setFont(e.target.value)} className={inputClass} />
+          </FormField>
+        </div>
+      </div>
+      <div>
+        <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Map</h2>
+        <div className="space-y-5">
+          <FormField label="Complete Map Image">
+            {mapCompleteImageUrl && !mapCompleteImageFile && (
+              <img src={mapCompleteImageUrl} alt="Complete map" className="w-full max-h-48 object-contain rounded-lg mb-2 border border-neutral-200" />
+            )}
+            {mapCompleteImageFile && (
+              <img src={URL.createObjectURL(mapCompleteImageFile)} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mb-2 border border-neutral-200" />
+            )}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null
+                setMapCompleteImageFile(file)
+              }}
+              className={inputClass}
+              disabled={uploadingMapImage}
+            />
+            {uploadingMapImage && <p className="text-sm text-neutral-500 mt-1">Uploading…</p>}
           </FormField>
         </div>
       </div>
