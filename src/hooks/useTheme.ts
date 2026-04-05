@@ -19,20 +19,19 @@ function clearBgPattern(bgPattern: HTMLElement) {
   }, TRANSITION_MS)
 }
 
-// Clears the bg-pattern instantly (no fade) — use when navigating away from the game.
-// Uses setProperty with 'important' to override the CSS `transition !important` rule so
-// the opacity jump is instantaneous.
+// Clears the bg-pattern when navigating away from the game. The CSS transition has
+// `!important` which cannot be overridden by an inline `!important` per the CSS cascade,
+// so the opacity will still fade out over 750ms. Setting backgroundColor to 'transparent'
+// (rather than removing the inline style) ensures nothing is visible during that fade,
+// even after the mask is cleared synchronously.
 function clearBgPatternImmediate(bgPattern: HTMLElement) {
   if (clearPatternTimer) { clearTimeout(clearPatternTimer); clearPatternTimer = null }
-  bgPattern.style.setProperty('transition', 'none', 'important')
-  bgPattern.style.opacity = '0'
   bgPattern.style.webkitMaskImage = ''
   bgPattern.style.maskImage = ''
   bgPattern.style.webkitMaskSize = ''
   bgPattern.style.setProperty('mask-size', '')
-  bgPattern.style.backgroundColor = ''
-  // Re-enable the CSS transition after the current paint so future fades still work.
-  requestAnimationFrame(() => { bgPattern.style.removeProperty('transition') })
+  bgPattern.style.backgroundColor = 'transparent'
+  bgPattern.style.opacity = '0'
 }
 
 export function useTheme() {
