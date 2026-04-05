@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
+import { flushSync } from 'react-dom'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Lock } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
@@ -84,7 +85,8 @@ export default function MapPage() {
   const [mapVisible, setMapVisible] = useState(false)
   const [revealOverlay, setRevealOverlay] = useState<{
     src: string
-    fromRect: DOMRect
+    overlayRect: { left: number; top: number; width: number; height: number }
+    initialScale: number
     phase: 'growing' | 'shrinking'
     id: number
   } | null>(null)
@@ -281,17 +283,46 @@ export default function MapPage() {
   }
 
   function handleLiftOff(src: string, fromRect: DOMRect) {
-    setRevealOverlay({ src, fromRect, phase: 'growing', id: pendingRevealId.current! })
+    const id = pendingRevealId.current!
+    const landmarkEl = landmarkRefs.current.get(id)
+    const landmarkRect = landmarkEl?.getBoundingClientRect()
+
+    let overlayRect = { left: fromRect.left, top: fromRect.top, width: fromRect.width, height: fromRect.height }
+    let initialScale = 1
+
+    if (landmarkRect && landmarkRect.width > 0 && landmarkRect.height > 0) {
+      const scale = Math.max(landmarkRect.width / fromRect.width, landmarkRect.height / fromRect.height)
+      if (scale > 1) {
+        const newWidth = fromRect.width * scale
+        const newHeight = fromRect.height * scale
+        overlayRect = {
+          left: fromRect.left - (newWidth - fromRect.width) / 2,
+          top: fromRect.top - (newHeight - fromRect.height) / 2,
+          width: newWidth,
+          height: newHeight,
+        }
+        initialScale = 1 / scale
+      }
+    }
+
+    // flushSync forces a synchronous React render + useLayoutEffect execution,
+    // guaranteeing the overlay is in the DOM with WAAPI running before we return.
+    // The caller can then close the modal immediately with no race condition.
+    flushSync(() => {
+      setRevealOverlay({ src, overlayRect, initialScale, phase: 'growing', id })
+    })
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!revealOverlay || !overlayRef.current) return
     let cancelled = false
     const el = overlayRef.current
 
     if (revealOverlay.phase === 'growing') {
+      const { initialScale } = revealOverlay
+      const peakScale = 1.5 * initialScale
       const anim = el.animate(
-        [{ transform: 'scale(1)' }, { transform: 'scale(1.5)' }],
+        [{ transform: `scale(${initialScale})` }, { transform: `scale(${peakScale})` }],
         { duration: 300, easing: 'ease-out', fill: 'forwards' }
       )
       anim.addEventListener('finish', async () => {
@@ -314,23 +345,24 @@ export default function MapPage() {
         setRevealOverlay(null)
         return
       }
-      const { fromRect } = revealOverlay
+      const { overlayRect, initialScale } = revealOverlay
+      const peakScale = 1.5 * initialScale
       const landmarkEl = landmarkRefs.current.get(id)
       const landmarkRect = landmarkEl?.getBoundingClientRect()
       if (!landmarkRect) {
         setRevealOverlay(null)
         return
       }
-      const fromCenterX = fromRect.left + fromRect.width / 2
-      const fromCenterY = fromRect.top + fromRect.height / 2
+      const fromCenterX = overlayRect.left + overlayRect.width / 2
+      const fromCenterY = overlayRect.top + overlayRect.height / 2
       const toLandmarkCenterX = landmarkRect.left + landmarkRect.width / 2
       const toLandmarkCenterY = landmarkRect.top + landmarkRect.height / 2
       const tx = toLandmarkCenterX - fromCenterX
       const ty = toLandmarkCenterY - fromCenterY
-      const targetScale = Math.max(landmarkRect.width / fromRect.width, landmarkRect.height / fromRect.height)
+      const targetScale = Math.max(landmarkRect.width / overlayRect.width, landmarkRect.height / overlayRect.height)
       const anim = el.animate(
         [
-          { transform: 'scale(1.5)' },
+          { transform: `scale(${peakScale})` },
           { transform: `translate(${tx}px, ${ty}px) scale(${targetScale})` },
         ],
         { duration: 600, easing: 'ease-in-out', fill: 'forwards' }
@@ -350,7 +382,7 @@ export default function MapPage() {
         anim.cancel()
       }
     }
-  }, [revealOverlay?.phase])
+  }, [revealOverlay?.phase]) // useLayoutEffect: fires before paint so WAAPI starts before the overlay is ever shown
 
   return (
     <div className="flex flex-col h-dvh pt-16">
@@ -514,10 +546,11 @@ export default function MapPage() {
           className="fixed object-contain pointer-events-none"
           style={{
             zIndex: 25,
-            left: revealOverlay.fromRect.left,
-            top: revealOverlay.fromRect.top,
-            width: revealOverlay.fromRect.width,
-            height: revealOverlay.fromRect.height,
+            left: revealOverlay.overlayRect.left,
+            top: revealOverlay.overlayRect.top,
+            width: revealOverlay.overlayRect.width,
+            height: revealOverlay.overlayRect.height,
+            transform: `scale(${revealOverlay.initialScale})`,
             filter: 'brightness(120%)',
             willChange: 'transform',
           }}

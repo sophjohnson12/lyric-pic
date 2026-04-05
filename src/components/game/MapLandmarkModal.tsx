@@ -189,7 +189,8 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
     // Scroll + zoom to the landmark on the map (modal stays visible throughout)
     await onReveal(element.id)
 
-    // Liftoff: hand the image position to MapPage and close the modal
+    // Liftoff: onLiftOff calls flushSync internally — when it returns, the overlay
+    // is already in the DOM with WAAPI running. Close the modal immediately after.
     const fromRect = handle.getImageRect()
     onLiftOff(element.url, fromRect)
     onClose()
