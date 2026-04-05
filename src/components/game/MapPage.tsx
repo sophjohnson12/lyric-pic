@@ -427,7 +427,7 @@ export default function MapPage() {
                       left: `${element.x_percent}%`,
                       top: `${element.y_percent}%`,
                       width: `${element.width_percent}%`,
-                      zIndex: tooltipVisible ? 20 : element.song_id === null ? 0 : 1,
+                      zIndex: (tappedId === element.id || hoveredId === element.id) ? 21 : tooltipVisible ? 20 : element.song_id === null ? 0 : 1,
                     }}
                     onMouseEnter={() => {
                       if (!hasInfo) return
