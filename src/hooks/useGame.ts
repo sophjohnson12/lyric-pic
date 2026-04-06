@@ -18,6 +18,7 @@ import {
   getLyricGroupMemberIds,
   getAppConfig,
   getCachedImages,
+  getArtistHasMapElements,
 } from '../services/supabase'
 import { setImagesEnabled } from '../services/pexels'
 import { useLocalStorage } from './useLocalStorage'
@@ -134,6 +135,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
   const [minImageCount, setMinImageCount] = useState(3)
   const [maxImageCount, setMaxImageCount] = useState(5)
 
+  const [hasMapElements, setHasMapElements] = useState(false)
   const [levels, setLevels] = useState<GameLevel[]>([])
   const [levelSongCounts, setLevelSongCounts] = useState<Record<number, number>>({})
   const { applyArtistTheme, applyAlbumTheme } = useTheme()
@@ -284,15 +286,17 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
         setLevels(fetchedLevels)
         const currentLevel = fetchedLevels.find((l) => l.slug === levelSlug)
         maxDifficultyRankRef.current = currentLevel?.max_difficulty_rank
-        const [playableSongIds, albumData, allLevelSongs, levelSongCountsArr] = await Promise.all([
+        const [playableSongIds, albumData, allLevelSongs, levelSongCountsArr, artistHasMapElements] = await Promise.all([
           getPlayableSongIds(artist.id, maxDifficultyRankRef.current),
           getArtistAlbums(artist.id),
           getArtistSongs(artist.id, [], maxDifficultyRankRef.current),
           Promise.all(fetchedLevels.map((l) => getPlayableSongCount(artist.id, l.max_difficulty_rank))),
+          getArtistHasMapElements(artist.id),
         ])
         if (!cancelled) {
           const counts = Object.fromEntries(fetchedLevels.map((l, i) => [l.id, levelSongCountsArr[i]]))
           setLevelSongCounts(counts)
+          setHasMapElements(artistHasMapElements)
         }
         if (cancelled) return
 
@@ -565,6 +569,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     levelSlug,
     showAlbumFilters,
     albums,
+    hasMapElements,
     depletedAlbumIds,
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,
     toastMessage,

@@ -12,11 +12,12 @@ interface InfoModalProps {
   albums: Album[]
   showAlbumFilters: boolean
   showFlagIcon: boolean
+  showMapButton: boolean
   levelName: string
   onClose: () => void
 }
 
-export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, levelName, onClose }: InfoModalProps) {
+export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, showMapButton, levelName, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary mb-1 tracking-wide">How to Play</h2>
@@ -68,7 +69,7 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
           </p>
           <ul>
             <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/>Manage levels and game history</li>
-            <li className="flex items-center"><Map size={15} strokeWidth={3} className="mr-2 text-primary"/>View landmark map</li>
+            {showMapButton && <li className="flex items-center"><Map size={15} strokeWidth={3} className="mr-2 text-primary"/>View landmark map</li>}
             <li className="flex items-center"><SkipForward size={15} strokeWidth={3} className="mr-2 text-primary"/>Skip song</li>
           </ul>
         </div>

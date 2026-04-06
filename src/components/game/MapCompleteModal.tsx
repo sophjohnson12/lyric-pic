@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Modal from '../common/Modal'
 import ShareButton from '../common/ShareButton'
 
@@ -8,6 +9,7 @@ interface MapCompleteModalProps {
 }
 
 export default function MapCompleteModal({ onClose, mapCompleteImageUrl, mapCompleteImageSize }: MapCompleteModalProps) {
+  const [imageLoaded, setImageLoaded] = useState(false)
   async function handleDownload() {
     if (!mapCompleteImageUrl) return
     const response = await fetch(mapCompleteImageUrl)
@@ -15,7 +17,7 @@ export default function MapCompleteModal({ onClose, mapCompleteImageUrl, mapComp
     const objectUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = objectUrl
-    a.download = 'Map.png'
+    a.download = 'LyricPic_TaylorSwift_Map.png'
     a.click()
     URL.revokeObjectURL(objectUrl)
   }
@@ -31,12 +33,22 @@ export default function MapCompleteModal({ onClose, mapCompleteImageUrl, mapComp
         </h2>
         {mapCompleteImageUrl ? (
           <>
-            <img
-              src={mapCompleteImageUrl}
-              alt="Complete map"
-              className="w-full max-h-[50vh] object-contain rounded-lg mb-3"
+            <div
+              className="relative w-full max-h-[50vh] mb-3"
               style={mapCompleteImageSize ? { aspectRatio: `${mapCompleteImageSize.width} / ${mapCompleteImageSize.height}` } : undefined}
-            />
+            >
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-10 h-10 border-4 border-neutral-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+              <img
+                src={mapCompleteImageUrl}
+                alt="Complete map"
+                className={`w-full h-full object-contain rounded-lg${imageLoaded ? '' : ' invisible'}`}
+                onLoad={() => setImageLoaded(true)}
+              />
+            </div>
             <div className="mb-3">
               <ShareButton imageUrl={mapCompleteImageUrl} />
             </div>
@@ -44,7 +56,7 @@ export default function MapCompleteModal({ onClose, mapCompleteImageUrl, mapComp
               onClick={handleDownload}
               className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer"
             >
-              Download Map
+              Download
             </button>
           </>
         ) : (

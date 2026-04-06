@@ -11,6 +11,7 @@ interface HeaderProps {
   onChangeDifficulty?: () => void
   levelSlug?: string
   onMapNavigate?: () => void
+  showMapButton?: boolean
 }
 
 export default function Header({
@@ -21,6 +22,7 @@ export default function Header({
   skipDisabled = false,
   levelSlug,
   onMapNavigate,
+  showMapButton = false,
 }: HeaderProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const navigate = useNavigate()
@@ -54,7 +56,7 @@ export default function Header({
           >
             <Sliders size={20} className="transition-transform group-hover:scale-110" />
           </button>
-          {levelSlug && (
+          {levelSlug && showMapButton && (
             <button
               onClick={onMapNavigate ?? (() => navigate(`/${artistSlug}/map?level=${levelSlug}`))}
               className="group flex h-12 w-12 md:h-auto md:w-auto items-center justify-center mr-2 md:mr-0 md:p-2 rounded-full transition-colors cursor-pointer hover:text-neutral-800"
