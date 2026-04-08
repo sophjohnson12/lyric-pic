@@ -95,7 +95,9 @@ export default function MapPage() {
     `${REVEALED_LANDMARKS_KEY_PREFIX}${artistSlug ?? ''}`,
     []
   )
+  const [artistName, setArtistName] = useState('')
   const [mapCompleteImageUrl, setMapCompleteImageUrl] = useState<string | null>(null)
+  const [mapPreviewImageUrl, setMapPreviewImageUrl] = useState<string | null>(null)
   const [mapCompleteImageSize, setMapCompleteImageSize] = useState<{ width: number; height: number } | null>(null)
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const elementsRef = useRef<MapElementDetails[]>([])
@@ -143,24 +145,27 @@ export default function MapPage() {
   useEffect(() => { elementsRef.current = elements }, [elements])
   useEffect(() => { revealedIdsRef.current = revealedIds }, [revealedIds])
 
-  // Pre-fetch the complete map image into browser cache as soon as we know
+  // Pre-fetch the preview image into browser cache as soon as we know
   // the map is complete — on page load (if already done) or after the final reveal.
   // This way the modal opens with the image already cached rather than waiting for it.
   useEffect(() => {
-    if (!mapCompleteImageUrl || dataLoading) return
+    const displayUrl = mapPreviewImageUrl ?? mapCompleteImageUrl
+    if (!displayUrl || dataLoading) return
     const songElementCount = elements.filter((e) => e.song_id !== null).length
     if (songElementCount === 0 || revealedIds.length < songElementCount) return
     const img = new Image()
     img.onload = () => setMapCompleteImageSize({ width: img.naturalWidth, height: img.naturalHeight })
-    img.src = mapCompleteImageUrl
-  }, [mapCompleteImageUrl, elements, revealedIds, dataLoading])
+    img.src = displayUrl
+  }, [mapPreviewImageUrl, mapCompleteImageUrl, elements, revealedIds, dataLoading])
 
   useEffect(() => {
     if (!artistSlug) return
     async function load() {
       const artist = await getArtistBySlug(artistSlug!)
       applyArtistTheme(artist)
+      setArtistName(artist.name)
       setMapCompleteImageUrl(artist.map_image_url ?? null)
+      setMapPreviewImageUrl(artist.map_image_preview_url ?? null)
       const [els, fetchedLevels] = await Promise.all([
         getMapElements(artist.id),
         getArtistLevels(artist.id),
@@ -568,8 +573,10 @@ export default function MapPage() {
       {showCompleteModal && (
         <MapCompleteModal
           onClose={() => setShowCompleteModal(false)}
-          mapCompleteImageUrl={mapCompleteImageUrl}
+          previewImageUrl={mapPreviewImageUrl ?? mapCompleteImageUrl}
+          downloadImageUrl={mapCompleteImageUrl}
           mapCompleteImageSize={mapCompleteImageSize}
+          artistName={artistName}
         />
       )}
 

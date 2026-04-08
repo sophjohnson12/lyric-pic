@@ -204,14 +204,28 @@ export interface ArtistFormData {
   theme_text_color: string
   theme_font_heading: string
   map_image_url: string | null
+  map_image_preview_url: string | null
+}
+
+export async function uploadMapPreviewImage(file: File, artistSlug: string): Promise<string> {
+  const ext = file.type === 'image/webp' ? 'webp' : file.type === 'image/jpeg' ? 'jpg' : 'png'
+  const storageKey = `map_preview_${artistSlug}.${ext}`
+  const { error } = await supabase.storage
+    .from('map_elements')
+    .upload(storageKey, file, { contentType: file.type, upsert: true })
+  if (error) throw error
+  const { data } = supabase.storage.from('map_elements').getPublicUrl(storageKey)
+  return data.publicUrl
 }
 
 export async function uploadMapCompleteImage(file: File, artistSlug: string): Promise<string> {
+  const ext = file.type === 'image/webp' ? 'webp' : file.type === 'image/jpeg' ? 'jpg' : 'png'
+  const storageKey = `map_complete_${artistSlug}.${ext}`
   const { error } = await supabase.storage
     .from('map_elements')
-    .upload(`map_complete_${artistSlug}.png`, file, { contentType: 'image/png', upsert: true })
+    .upload(storageKey, file, { contentType: file.type, upsert: true })
   if (error) throw error
-  const { data } = supabase.storage.from('map_elements').getPublicUrl(`map_complete_${artistSlug}.png`)
+  const { data } = supabase.storage.from('map_elements').getPublicUrl(storageKey)
   return data.publicUrl
 }
 
@@ -2794,11 +2808,13 @@ export async function updateMapElement(id: number, data: MapElementFormData): Pr
 }
 
 export async function uploadMapElementImage(file: File, name: string): Promise<string> {
+  const ext = file.type === 'image/webp' ? 'webp' : 'png'
+  const contentType = file.type === 'image/webp' ? 'image/webp' : 'image/png'
   const { error } = await supabase.storage
     .from('map_elements')
-    .upload(`${name}.png`, file, { contentType: 'image/png', upsert: true })
+    .upload(`${name}.${ext}`, file, { contentType, upsert: true })
   if (error) throw error
-  const { data } = supabase.storage.from('map_elements').getPublicUrl(`${name}.png`)
+  const { data } = supabase.storage.from('map_elements').getPublicUrl(`${name}.${ext}`)
   return data.publicUrl
 }
 

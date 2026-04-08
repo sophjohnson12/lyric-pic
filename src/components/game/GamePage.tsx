@@ -393,6 +393,8 @@ export default function GamePage() {
           skipDisabled={true}
           onChangeDifficulty={() => navigate(`/${artistSlug}`)}
           levelSlug={levelSlug ?? undefined}
+          showMapButton={!!game.artist?.map_image_url && game.hasMapElements}
+          onMapNavigate={() => navigate(`/${artistSlug}/map?level=${levelSlug}`)}
         />
         {noSongs ? (
           <div className="flex-1 flex items-center justify-center p-8">

@@ -78,7 +78,15 @@ export default function ArtistMapElementsPage() {
         keyFn={(el) => el.id}
         loading={loading}
         columns={[
-          { header: 'Name', accessor: (el) => el.name },
+          { header: 'Name', accessor: (el) => (
+            <Link
+              to={`/admin/artists/${aid}/map-elements/${el.id}`}
+              state={{ backUrl: location.pathname, backState: capturedLocationState }}
+              className="text-primary hover:underline"
+            >
+              {el.name}
+            </Link>
+          ) },
           { header: 'Display Name', accessor: (el) => el.display_name },
           { header: 'Song', accessor: (el) => el.song_name ?? '—' },
           {

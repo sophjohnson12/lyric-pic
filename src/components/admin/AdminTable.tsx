@@ -26,6 +26,7 @@ interface AdminTableProps<T> {
     onToggleAll: (keys: (string | number)[]) => void
   }
   rowClassName?: (row: T) => string | undefined
+  defaultPageSize?: number
 }
 
 export default function AdminTable<T>({
@@ -36,9 +37,10 @@ export default function AdminTable<T>({
   serverPagination,
   selection,
   rowClassName,
+  defaultPageSize = 10,
 }: AdminTableProps<T>) {
   const [clientPage, setClientPage] = useState(1)
-  const [clientPageSize, setClientPageSize] = useState(10)
+  const [clientPageSize, setClientPageSize] = useState(defaultPageSize)
 
   const isServerPaginated = !!serverPagination
   const page = isServerPaginated ? serverPagination.page : clientPage

@@ -5,7 +5,7 @@ import AdminFormPage from './AdminFormPage'
 import FormField from './FormField'
 import ColorField from './ColorField'
 import Toast from '../common/Toast'
-import { getAdminArtistById, createArtist, updateArtist, searchGeniusArtistId, uploadMapCompleteImage } from '../../services/adminService'
+import { getAdminArtistById, createArtist, updateArtist, searchGeniusArtistId, uploadMapCompleteImage, uploadMapPreviewImage } from '../../services/adminService'
 
 export default function ArtistFormPage() {
   const { id } = useParams()
@@ -30,6 +30,9 @@ export default function ArtistFormPage() {
   const [mapCompleteImageUrl, setMapCompleteImageUrl] = useState<string | null>(null)
   const [mapCompleteImageFile, setMapCompleteImageFile] = useState<File | null>(null)
   const [uploadingMapImage, setUploadingMapImage] = useState(false)
+  const [mapPreviewImageUrl, setMapPreviewImageUrl] = useState<string | null>(null)
+  const [mapPreviewImageFile, setMapPreviewImageFile] = useState<File | null>(null)
+  const [uploadingMapPreview, setUploadingMapPreview] = useState(false)
   const [saving, setSaving] = useState(false)
   const [findingGenius, setFindingGenius] = useState(false)
   const [geniusError, setGeniusError] = useState('')
@@ -58,6 +61,7 @@ export default function ArtistFormPage() {
         setTextColor(a.theme_text_color)
         setFont(a.theme_font_heading)
         setMapCompleteImageUrl(a.map_image_url ?? null)
+        setMapPreviewImageUrl(a.map_image_preview_url ?? null)
       })
     }
   }, [id, isEdit])
@@ -93,6 +97,17 @@ export default function ArtistFormPage() {
           setUploadingMapImage(false)
         }
       }
+      let finalMapPreviewImageUrl = mapPreviewImageUrl
+      if (mapPreviewImageFile && slug.trim()) {
+        setUploadingMapPreview(true)
+        try {
+          finalMapPreviewImageUrl = await uploadMapPreviewImage(mapPreviewImageFile, slug.trim())
+          setMapPreviewImageUrl(finalMapPreviewImageUrl)
+          setMapPreviewImageFile(null)
+        } finally {
+          setUploadingMapPreview(false)
+        }
+      }
       const data = {
         name,
         slug,
@@ -107,6 +122,7 @@ export default function ArtistFormPage() {
         theme_text_color: textColor,
         theme_font_heading: font,
         map_image_url: finalMapCompleteImageUrl,
+        map_image_preview_url: finalMapPreviewImageUrl,
       }
       if (isEdit) {
         await updateArtist(Number(id), data)
@@ -197,7 +213,7 @@ export default function ArtistFormPage() {
       <div>
         <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Map</h2>
         <div className="space-y-5">
-          <FormField label="Complete Map Image">
+          <FormField label="Complete Map Image (download/share JPG)">
             {mapCompleteImageUrl && !mapCompleteImageFile && (
               <img src={mapCompleteImageUrl} alt="Complete map" className="w-full max-h-48 object-contain rounded-lg mb-2 border border-neutral-200" />
             )}
@@ -215,6 +231,25 @@ export default function ArtistFormPage() {
               disabled={uploadingMapImage}
             />
             {uploadingMapImage && <p className="text-sm text-neutral-500 mt-1">Uploading…</p>}
+          </FormField>
+          <FormField label="Map Preview Image (in-modal display WebP)">
+            {mapPreviewImageUrl && !mapPreviewImageFile && (
+              <img src={mapPreviewImageUrl} alt="Map preview" className="w-full max-h-48 object-contain rounded-lg mb-2 border border-neutral-200" />
+            )}
+            {mapPreviewImageFile && (
+              <img src={URL.createObjectURL(mapPreviewImageFile)} alt="Preview" className="w-full max-h-48 object-contain rounded-lg mb-2 border border-neutral-200" />
+            )}
+            <input
+              type="file"
+              accept="image/webp,image/png,image/jpeg"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null
+                setMapPreviewImageFile(file)
+              }}
+              className={inputClass}
+              disabled={uploadingMapPreview}
+            />
+            {uploadingMapPreview && <p className="text-sm text-neutral-500 mt-1">Uploading…</p>}
           </FormField>
         </div>
       </div>

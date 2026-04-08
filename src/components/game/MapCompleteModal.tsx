@@ -1,25 +1,36 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import Modal from '../common/Modal'
 import ShareButton from '../common/ShareButton'
 
 interface MapCompleteModalProps {
   onClose: () => void
-  mapCompleteImageUrl: string | null
+  previewImageUrl: string | null
+  downloadImageUrl: string | null
   mapCompleteImageSize: { width: number; height: number } | null
+  artistName: string
 }
 
-export default function MapCompleteModal({ onClose, mapCompleteImageUrl, mapCompleteImageSize }: MapCompleteModalProps) {
+export default function MapCompleteModal({ onClose, previewImageUrl, downloadImageUrl, mapCompleteImageSize, artistName }: MapCompleteModalProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
   async function handleDownload() {
-    if (!mapCompleteImageUrl) return
-    const response = await fetch(mapCompleteImageUrl)
-    const blob = await response.blob()
-    const objectUrl = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = objectUrl
-    a.download = 'LyricPic_TaylorSwift_Map.png'
-    a.click()
-    URL.revokeObjectURL(objectUrl)
+    if (!downloadImageUrl) return
+    setDownloading(true)
+    try {
+      const response = await fetch(downloadImageUrl)
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = objectUrl
+      const ext = downloadImageUrl.split('.').pop()?.split('?')[0] ?? 'jpg'
+      a.download = `LyricPic_TaylorSwift_Map.${ext}`
+      a.click()
+      URL.revokeObjectURL(objectUrl)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   return (
@@ -31,7 +42,7 @@ export default function MapCompleteModal({ onClose, mapCompleteImageUrl, mapComp
         >
           You completed the map!
         </h2>
-        {mapCompleteImageUrl ? (
+        {previewImageUrl ? (
           <>
             <div
               className="relative w-full max-h-[50vh] mb-3"
@@ -43,21 +54,26 @@ export default function MapCompleteModal({ onClose, mapCompleteImageUrl, mapComp
                 </div>
               )}
               <img
-                src={mapCompleteImageUrl}
+                src={previewImageUrl}
                 alt="Complete map"
                 className={`w-full h-full object-contain rounded-lg${imageLoaded ? '' : ' invisible'}`}
                 onLoad={() => setImageLoaded(true)}
               />
             </div>
             <div className="mb-3">
-              <ShareButton imageUrl={mapCompleteImageUrl} />
+              <ShareButton imageUrl={downloadImageUrl ?? previewImageUrl} filename={`LyricPic - ${artistName} Map`} />
             </div>
-            <button
-              onClick={handleDownload}
-              className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer"
-            >
-              Download
-            </button>
+            {downloadImageUrl && (
+              <motion.button
+                onClick={handleDownload}
+                disabled={downloading}
+                animate={downloading ? { opacity: [1, 0.45, 1] } : { opacity: 1 }}
+                transition={downloading ? { repeat: Infinity, duration: 0.75, ease: 'easeInOut' } : { duration: 0.15 }}
+                className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer disabled:cursor-default"
+              >
+                Download
+              </motion.button>
+            )}
           </>
         ) : (
           <p className="text-neutral-500 text-sm">All landmarks have been revealed!</p>

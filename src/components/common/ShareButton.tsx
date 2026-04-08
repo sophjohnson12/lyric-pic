@@ -5,9 +5,10 @@ interface ShareButtonProps {
   text?: string
   url?: string
   imageUrl?: string
+  filename?: string
 }
 
-export default function ShareButton({ text, url, imageUrl }: ShareButtonProps) {
+export default function ShareButton({ text, url, imageUrl, filename }: ShareButtonProps) {
   const [sharing, setSharing] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -19,7 +20,9 @@ export default function ShareButton({ text, url, imageUrl }: ShareButtonProps) {
       try {
         const response = await fetch(imageUrl)
         const blob = await response.blob()
-        const file = new File([blob], 'map.png', { type: 'image/png' })
+        const ext = imageUrl.split('.').pop()?.split('?')[0] ?? 'jpg'
+        const resolvedFilename = `${filename ?? 'map'}.${ext}`
+        const file = new File([blob], resolvedFilename, { type: blob.type })
         if (navigator.canShare?.({ files: [file] })) {
           try {
             await navigator.share({ files: [file] })
@@ -36,7 +39,7 @@ export default function ShareButton({ text, url, imageUrl }: ShareButtonProps) {
         const objectUrl = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = objectUrl
-        a.download = 'map.png'
+        a.download = resolvedFilename
         a.click()
         URL.revokeObjectURL(objectUrl)
       } catch {
