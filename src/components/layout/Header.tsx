@@ -68,7 +68,7 @@ export default function Header({
           <button
             onClick={onSkip}
             disabled={skipDisabled}
-            className="group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full transition-colors border text-primary bg-neutral-50 border-primary hover:bg-secondary/50 cursor-pointer disabled:opacity-60 disabled:cursor-default disabled:pointer-events-none"
+            className="group h-12 w-14 md:w-auto md:h-auto py-2 px-3 flex items-center justify-center rounded-full border text-primary bg-neutral-50 border-primary hover:bg-secondary/50 cursor-pointer disabled:opacity-60 disabled:cursor-default disabled:pointer-events-none"
           >
             <SkipForward size={24} className="transition-transform group-hover:scale-110" />
           </button>
