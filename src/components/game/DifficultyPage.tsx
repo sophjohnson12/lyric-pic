@@ -15,6 +15,7 @@ export default function DifficultyPage() {
   // no fade-out and no flash of the game's album background on back navigation.
   useLayoutEffect(() => {
     clearBackground()
+    window.scrollTo(0, 0)
   }, [])
   const [artist, setArtist] = useState<Artist | null>(null)
   const [levels, setLevels] = useState<GameLevel[]>([])
