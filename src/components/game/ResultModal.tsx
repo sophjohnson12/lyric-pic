@@ -33,10 +33,11 @@ export default function ResultModal({ correct, message, song, album, artist, puz
   const lyricsWithLines = puzzleWords.filter(pw => pw.lineText)
 
   const wordLine = puzzleWords.map(pw => pw.word).join(' + ') + ' = ' + (correct ? '✅' : '❌')
-  const artistName = artist?.name ?? 'artist\'s'
+  const artistName = artist?.name ?? 'artist\'s'  
+  const fanbaseName = artist?.fanbase_name ?? 'fan'
   const result = correct ? 'I guessed' : 'I couldn\'t guess'
   const emoji = correct ? '😎' : '😢'
-  const shareText = `${wordLine}\n\n${result} the ${artistName} song. ${emoji} Play Lyric Pic for more songs!`
+  const shareText = `${wordLine}\n\n${result} the ${artistName} song. ${emoji} Your turn to prove your ${fanbaseName} status!`
   const shareUrl = `https://playlyricpic.com/${artist?.slug ?? ''}`
 
   return (

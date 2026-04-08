@@ -29,7 +29,7 @@ export async function getAllArtists(): Promise<Artist[]> {
 export async function getArtistLevels(artistId: number): Promise<GameLevel[]> {
   const { data, error } = await supabase
     .from('level')
-    .select('id, name, slug, description, load_message, max_difficulty_rank, show_album_filters')
+    .select('id, name, slug, description, load_message, max_difficulty_rank, show_album_filters, reveal_word_only')
     .eq('artist_id', artistId)
     .order('max_difficulty_rank', { ascending: true })
   if (error) throw error

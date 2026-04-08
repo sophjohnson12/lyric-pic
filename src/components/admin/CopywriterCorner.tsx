@@ -188,6 +188,7 @@ export default function CopywriterCorner() {
         load_message: editingLevelLoadMsg,
         max_difficulty_rank: editingLevel.max_difficulty_rank,
         show_album_filters: editingLevel.show_album_filters,
+        reveal_word_only: editingLevel.reveal_word_only,
       })
       setEditingLevel(null)
       await loadLevels(artistId)

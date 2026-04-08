@@ -2700,12 +2700,13 @@ export interface AdminLevelRow {
   load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
+  reveal_word_only: boolean
 }
 
 export async function getAdminLevels(artistId: number): Promise<AdminLevelRow[]> {
   const { data, error } = await supabase
     .from('level')
-    .select('id, name, slug, description, load_message, max_difficulty_rank, show_album_filters')
+    .select('id, name, slug, description, load_message, max_difficulty_rank, show_album_filters, reveal_word_only')
     .eq('artist_id', artistId)
     .order('max_difficulty_rank', { ascending: true })
   if (error) throw error
@@ -2715,7 +2716,7 @@ export async function getAdminLevels(artistId: number): Promise<AdminLevelRow[]>
 export async function getLevelById(id: number): Promise<AdminLevelRow & { artist_id: number }> {
   const { data, error } = await supabase
     .from('level')
-    .select('id, artist_id, name, slug, description, load_message, max_difficulty_rank, show_album_filters')
+    .select('id, artist_id, name, slug, description, load_message, max_difficulty_rank, show_album_filters, reveal_word_only')
     .eq('id', id)
     .single()
   if (error) throw error
@@ -2730,6 +2731,7 @@ export interface LevelFormData {
   load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
+  reveal_word_only: boolean
 }
 
 export async function createLevel(data: LevelFormData): Promise<void> {

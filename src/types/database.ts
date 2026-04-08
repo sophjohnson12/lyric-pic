@@ -143,6 +143,7 @@ export interface Level {
   load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
+  reveal_word_only: boolean
   created_at: string
   updated_at: string | null
 }

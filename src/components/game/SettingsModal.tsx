@@ -4,7 +4,7 @@ import Modal from '../common/Modal'
 import ProgressBar from '../common/ProgressBar'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { getPlayedSongNames } from '../../services/supabase'
-import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY } from '../../utils/constants'
+import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
 import type { GameLevel, RevealBehavior } from '../../types/game'
 import { Map } from 'lucide-react'
 
@@ -63,6 +63,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
       localStorage.removeItem(LOAD_MESSAGE_KEY)
     }
     localStorage.setItem(SHOW_INFO_KEY, 'true')
+    localStorage.setItem(REVEAL_BEHAVIOR_KEY, JSON.stringify(level?.reveal_word_only ? 'word_only' : 'full_lyric'))
     onClose()
     navigate(`/${artistSlug}/${slug}`)
   }
@@ -81,26 +82,6 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
               >
                 <Map size={24} className="transition-transform group-hover:scale-110" />View Map
               </button>
-            </div>
-          </div>
-          <div>
-            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Reveal Behavior</h3>
-            <div className="flex gap-6">
-              {(['full_lyric', 'word_only'] as const).map((value) => (
-                <label key={value} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="revealBehavior"
-                    value={value}
-                    checked={revealBehavior === value}
-                    onChange={() => onRevealBehaviorChange(value)}
-                    className="accent-primary cursor-pointer"
-                  />
-                  <span>
-                    {value === 'word_only' ? 'Word Only' : 'Full Lyric'}
-                  </span>
-                </label>
-              ))}
             </div>
           </div>
           <div>
@@ -130,6 +111,26 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
                     </span>
                   )}
                 </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Reveal Behavior</h3>
+            <div className="flex gap-6">
+              {(['full_lyric', 'word_only'] as const).map((value) => (
+                <label key={value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="revealBehavior"
+                    value={value}
+                    checked={revealBehavior === value}
+                    onChange={() => onRevealBehaviorChange(value)}
+                    className="accent-primary cursor-pointer"
+                  />
+                  <span>
+                    {value === 'word_only' ? 'Word Only' : 'Full Lyric'}
+                  </span>
+                </label>
               ))}
             </div>
           </div>

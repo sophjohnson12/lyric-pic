@@ -10,6 +10,7 @@ export interface GameLevel {
   load_message: string | null
   max_difficulty_rank: number
   show_album_filters: boolean
+  reveal_word_only: boolean
 }
 
 export function parseLevelSlug(raw: string | undefined): string | null {

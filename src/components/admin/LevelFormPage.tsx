@@ -28,6 +28,7 @@ export default function LevelFormPage() {
   const [loadMessage, setLoadMessage] = useState<string | null>(null)
   const [maxDifficultyRank, setMaxDifficultyRank] = useState('')
   const [showAlbumFilters, setShowAlbumFilters] = useState(false)
+  const [revealWordOnly, setRevealWordOnly] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -51,6 +52,7 @@ export default function LevelFormPage() {
         setLoadMessage(l.load_message)
         setMaxDifficultyRank(l.max_difficulty_rank.toString())
         setShowAlbumFilters(l.show_album_filters)
+        setRevealWordOnly(l.reveal_word_only)
       })
     }
   }, [id, isEdit])
@@ -67,6 +69,7 @@ export default function LevelFormPage() {
           load_message: loadMessage,
           max_difficulty_rank: Number(maxDifficultyRank),
           show_album_filters: showAlbumFilters,
+          reveal_word_only: revealWordOnly,
         })
       } else {
         await createLevel({
@@ -77,6 +80,7 @@ export default function LevelFormPage() {
           load_message: loadMessage,
           max_difficulty_rank: Number(maxDifficultyRank),
           show_album_filters: showAlbumFilters,
+          reveal_word_only: revealWordOnly,
         })
       }
       setToast('Level saved')
@@ -153,6 +157,9 @@ export default function LevelFormPage() {
           </FormField>
           <FormField label="Album Filters?">
             <ToggleSwitch checked={showAlbumFilters} onChange={setShowAlbumFilters} />
+          </FormField>
+          <FormField label="Reveal Word Only?">
+            <ToggleSwitch checked={revealWordOnly} onChange={setRevealWordOnly} />
           </FormField>
         </div>
       </AdminFormPage>

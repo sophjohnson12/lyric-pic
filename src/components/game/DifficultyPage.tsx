@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getArtistBySlug, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
-import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY } from '../../utils/constants'
+import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
 import type { Artist } from '../../types/database'
 import type { GameLevel } from '../../types/game'
 
@@ -50,6 +50,7 @@ export default function DifficultyPage() {
       localStorage.removeItem(LOAD_MESSAGE_KEY)
     }
     localStorage.setItem(SHOW_INFO_KEY, 'true')
+    localStorage.setItem(REVEAL_BEHAVIOR_KEY, JSON.stringify(level.reveal_word_only ? 'word_only' : 'full_lyric'))
     navigate(`/${artistSlug}/${level.slug}`)
   }
 
