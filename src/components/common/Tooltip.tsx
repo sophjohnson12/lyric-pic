@@ -44,7 +44,7 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
   }, [])
 
   const box = (
-    <div className={`relative rounded-lg overflow-hidden w-full${exiting ? '' : ' shadow-xl'}`} style={{ border: `1px solid ${exiting ? 'transparent' : borderColor}` }}>
+    <div className="relative rounded-lg shadow-xl overflow-hidden w-full" style={{ border: `1px solid ${borderColor}` }}>
       <div className="absolute inset-0 bg-neutral-50" />
       {overlayColor && <div className="absolute inset-0" style={{ backgroundColor: overlayColor }} />}
       <div className="relative z-10 p-3 text-center">{children}</div>
@@ -62,7 +62,7 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
         position: 'absolute', top: isBelow ? -11 : 0, left: -11, width: 0, height: 0,
         borderLeft: '11px solid transparent',
         borderRight: '11px solid transparent',
-        ...(isBelow ? { borderBottom: `11px solid ${exiting ? 'transparent' : borderColor}` } : { borderTop: `11px solid ${exiting ? 'transparent' : borderColor}` }),
+        ...(isBelow ? { borderBottom: `11px solid ${borderColor}` } : { borderTop: `11px solid ${borderColor}` }),
       }} />
       <div style={{
         position: 'absolute', top: isBelow ? -9 : 0, left: -9, width: 0, height: 0,
