@@ -80,8 +80,8 @@ export default function MapPage() {
   const [imagesLoadedCount, setImagesLoadedCount] = useState(0)
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
-  const [dismissingId, setDismissingId] = useState<number | null>(null)
-  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [dismissingIds, setDismissingIds] = useState<Set<number>>(new Set())
+  const dismissTimerRefs = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
   const [modalOpen, setModalOpen] = useState(false)
   const [mapVisible, setMapVisible] = useState(false)
   const [revealOverlay, setRevealOverlay] = useState<{
@@ -199,14 +199,19 @@ export default function MapPage() {
     return () => cancelAnimationFrame(id)
   }, [showSpinner, mapVisible])
 
-  // Fade out a tooltip before removing it to prevent Safari GPU compositing artifacts
+  // Fade out a tooltip before removing it to prevent Safari GPU compositing artifacts.
+  // Per-element timers so concurrent dismissals don't cancel each other mid-fade.
   const scheduleDismiss = (id: number) => {
-    setDismissingId(id)
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current)
-    dismissTimerRef.current = setTimeout(() => setDismissingId(null), 160)
+    setDismissingIds(prev => new Set([...prev, id]))
+    const existing = dismissTimerRefs.current.get(id)
+    if (existing) clearTimeout(existing)
+    dismissTimerRefs.current.set(id, setTimeout(() => {
+      setDismissingIds(prev => { const next = new Set(prev); next.delete(id); return next })
+      dismissTimerRefs.current.delete(id)
+    }, 200))
   }
   useEffect(() => () => {
-    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current)
+    dismissTimerRefs.current.forEach(t => clearTimeout(t))
   }, [])
 
   // Union of all played song IDs — reads both the current level-specific keys and the
@@ -447,8 +452,8 @@ export default function MapPage() {
               {elements.map((element) => {
                 const hasInfo = element.song_id !== null
                 const isLocked = hasInfo && !revealedIds.includes(element.id)
-                const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id || dismissingId === element.id)
-                const tooltipExiting = dismissingId === element.id && tappedId !== element.id
+                const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id || dismissingIds.has(element.id))
+                const tooltipExiting = dismissingIds.has(element.id) && tappedId !== element.id
 
                 return (
                   <div
@@ -462,7 +467,7 @@ export default function MapPage() {
                       left: `${element.x_percent}%`,
                       top: `${element.y_percent}%`,
                       width: `${element.width_percent}%`,
-                      zIndex: (tappedId === element.id || hoveredId === element.id) ? 21 : tooltipVisible ? 20 : element.song_id === null ? 0 : 1,
+                      zIndex: (tappedId === element.id || hoveredId === element.id) ? 21 : tooltipVisible ? 20 : (element.song_id === null ? 0 : 1),
                     }}
                     onMouseEnter={() => {
                       if (!hasInfo) return
@@ -475,7 +480,7 @@ export default function MapPage() {
                     }}
                     onClick={(e) => { if (hasInfo) e.stopPropagation() }}
                     onPointerUp={(e) => {
-                      if (!hasInfo || e.pointerType !== 'touch') return
+                      if (!hasInfo || e.pointerType !== 'touch' || !e.isPrimary) return
                       e.stopPropagation()
                       if (tappedId === element.id) {
                         scheduleDismiss(element.id)
