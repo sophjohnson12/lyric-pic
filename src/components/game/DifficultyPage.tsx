@@ -15,7 +15,11 @@ export default function DifficultyPage() {
   // no fade-out and no flash of the game's album background on back navigation.
   useLayoutEffect(() => {
     clearBackground()
+    // Disable browser scroll restoration so Safari doesn't override this after mount
+    const prev = window.history.scrollRestoration
+    window.history.scrollRestoration = 'manual'
     window.scrollTo(0, 0)
+    return () => { window.history.scrollRestoration = prev }
   }, [])
   const [artist, setArtist] = useState<Artist | null>(null)
   const [levels, setLevels] = useState<GameLevel[]>([])
