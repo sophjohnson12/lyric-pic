@@ -12,12 +12,36 @@
   --text-tiny: 0.625rem;
 }
 
+/* Register theme color properties so Safari can natively interpolate them
+   without relying on computed background-color changes propagating through
+   a var() chain, which Safari does not reliably detect. */
+@property --color-theme-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #454b82;
+}
+
+@property --color-theme-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #c9e3ee;
+}
+
 :root {
   --color-theme-primary: #454b82;
   --color-theme-secondary: #c9e3ee;
 }
 
-.theme-transitioning,
+/* Transition the custom properties themselves (works via @property) plus
+   the concrete properties as a fallback for older browsers. */
+.theme-transitioning {
+  transition: --color-theme-primary 0.75s ease-in-out,
+              --color-theme-secondary 0.75s ease-in-out,
+              background-color 0.75s ease-in-out,
+              border-color 0.75s ease-in-out,
+              color 0.75s ease-in-out !important;
+}
+
 .theme-transitioning * {
   transition: background-color 0.75s ease-in-out,
               border-color 0.75s ease-in-out,

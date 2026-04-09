@@ -82,6 +82,10 @@ export default function MapPage() {
   const [tappedId, setTappedId] = useState<number | null>(null)
   const [dismissingIds, setDismissingIds] = useState<Set<number>>(new Set())
   const dismissTimerRefs = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
+  // Track active touch pointers globally so we can ignore onPointerUp events that are
+  // part of a multi-finger gesture (e.g. pinch). isPrimary is unreliable on iOS Safari.
+  const activeTouchPointers = useRef<Set<number>>(new Set())
+  const hadMultiTouch = useRef(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [mapVisible, setMapVisible] = useState(false)
   const [revealOverlay, setRevealOverlay] = useState<{
@@ -212,6 +216,29 @@ export default function MapPage() {
   }
   useEffect(() => () => {
     dismissTimerRefs.current.forEach(t => clearTimeout(t))
+  }, [])
+
+  // Track multi-touch gestures so onPointerUp never opens two tooltips at once.
+  // isPrimary is unreliable on iOS Safari; this approach is browser-agnostic.
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      if (activeTouchPointers.current.size > 0) hadMultiTouch.current = true
+      activeTouchPointers.current.add(e.pointerId)
+    }
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      activeTouchPointers.current.delete(e.pointerId)
+      if (activeTouchPointers.current.size === 0) hadMultiTouch.current = false
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('pointerup', onUp)
+    document.addEventListener('pointercancel', onUp)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('pointerup', onUp)
+      document.removeEventListener('pointercancel', onUp)
+    }
   }, [])
 
   // Union of all played song IDs — reads both the current level-specific keys and the
@@ -480,7 +507,7 @@ export default function MapPage() {
                     }}
                     onClick={(e) => { if (hasInfo) e.stopPropagation() }}
                     onPointerUp={(e) => {
-                      if (!hasInfo || e.pointerType !== 'touch' || !e.isPrimary) return
+                      if (!hasInfo || e.pointerType !== 'touch' || hadMultiTouch.current) return
                       e.stopPropagation()
                       if (tappedId === element.id) {
                         scheduleDismiss(element.id)
