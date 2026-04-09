@@ -46,6 +46,10 @@ export function useTheme() {
   const applyAlbumTheme = useCallback((album: Album, enableBackgrounds: boolean) => {
     if (album.theme_primary_color) {
       document.documentElement.classList.add('theme-transitioning')
+      // Force a reflow so the browser captures the "before" state with the transition
+      // rule active. Without this, Safari batches the class addition and the property
+      // update into one style recalculation and skips the transition entirely.
+      void document.documentElement.offsetWidth
 
       document.documentElement.style.setProperty('--color-theme-primary', album.theme_primary_color)
       if (album.theme_secondary_color) {
