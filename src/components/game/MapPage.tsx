@@ -224,6 +224,22 @@ export default function MapPage() {
     }
   }, [])
 
+  // Dismiss tapped tooltip when the user touches anywhere outside the active element.
+  // Uses capture phase so it fires before element handlers, and pointerdown so it also
+  // catches scroll-start gestures (iOS fires pointercancel for scrolls, not pointerup,
+  // so onClick on the scroll container never fires after a scroll gesture).
+  useEffect(() => {
+    if (tappedId === null) return
+    const dismiss = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return
+      const el = landmarkRefs.current.get(tappedId)
+      if (el && el.contains(e.target as Node)) return
+      setTappedId(null)
+    }
+    document.addEventListener('pointerdown', dismiss, { capture: true })
+    return () => document.removeEventListener('pointerdown', dismiss, { capture: true })
+  }, [tappedId])
+
   // Union of all played song IDs — reads both the current level-specific keys and the
   // legacy key (written before levels were introduced: lyricpic_played_songs_<slug>).
   const allPlayedSongIds = useMemo(() => {
