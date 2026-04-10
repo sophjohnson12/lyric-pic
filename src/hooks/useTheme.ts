@@ -45,7 +45,7 @@ export function useTheme() {
     if (bgPattern) clearBgPattern(bgPattern)
   }, [])
 
-  const applyAlbumTheme = useCallback((album: Album, enableBackgrounds: boolean) => {
+  const applyAlbumTheme = useCallback((album: Album, enableBackgrounds: boolean, colorsOnly = false) => {
     if (album.theme_primary_color) {
       document.documentElement.classList.add('theme-transitioning')
       // Force a reflow so the browser captures the "before" state with the transition
@@ -64,6 +64,8 @@ export function useTheme() {
         document.documentElement.classList.remove('theme-transitioning')
       }, 1000)
     }
+
+    if (colorsOnly) return
 
     const bgPattern = document.getElementById('bg-pattern')
     if (bgPattern) {
