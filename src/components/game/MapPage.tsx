@@ -80,8 +80,6 @@ export default function MapPage() {
   const [imagesLoadedCount, setImagesLoadedCount] = useState(0)
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
-  const [dismissingIds, setDismissingIds] = useState<Set<number>>(new Set())
-  const dismissTimerRefs = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
   // Track active touch pointers globally so we can ignore onPointerUp events that are
   // part of a multi-finger gesture (e.g. pinch). isPrimary is unreliable on iOS Safari.
   const activeTouchPointers = useRef<Set<number>>(new Set())
@@ -202,21 +200,6 @@ export default function MapPage() {
     const id = requestAnimationFrame(() => setMapVisible(true))
     return () => cancelAnimationFrame(id)
   }, [showSpinner, mapVisible])
-
-  // Fade out a tooltip before removing it to prevent Safari GPU compositing artifacts.
-  // Per-element timers so concurrent dismissals don't cancel each other mid-fade.
-  const scheduleDismiss = (id: number) => {
-    setDismissingIds(prev => new Set([...prev, id]))
-    const existing = dismissTimerRefs.current.get(id)
-    if (existing) clearTimeout(existing)
-    dismissTimerRefs.current.set(id, setTimeout(() => {
-      setDismissingIds(prev => { const next = new Set(prev); next.delete(id); return next })
-      dismissTimerRefs.current.delete(id)
-    }, 200))
-  }
-  useEffect(() => () => {
-    dismissTimerRefs.current.forEach(t => clearTimeout(t))
-  }, [])
 
   // Track multi-touch gestures so onPointerUp never opens two tooltips at once.
   // isPrimary is unreliable on iOS Safari; this approach is browser-agnostic.
@@ -469,7 +452,7 @@ export default function MapPage() {
         <div
           ref={scrollContainerRef}
           className={`flex-1 overflow-auto${showSpinner ? ' invisible absolute' : (!mapVisible ? ' opacity-0' : '')}`}
-          onClick={() => { if (tappedId !== null) scheduleDismiss(tappedId); setTappedId(null) }}
+          onClick={() => setTappedId(null)}
         >
           <div
               ref={mapContentRef}
@@ -479,8 +462,7 @@ export default function MapPage() {
               {elements.map((element) => {
                 const hasInfo = element.song_id !== null
                 const isLocked = hasInfo && !revealedIds.includes(element.id)
-                const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id || dismissingIds.has(element.id))
-                const tooltipExiting = dismissingIds.has(element.id) && tappedId !== element.id
+                const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id)
 
                 return (
                   <div
@@ -494,7 +476,7 @@ export default function MapPage() {
                       left: `${element.x_percent}%`,
                       top: `${element.y_percent}%`,
                       width: `${element.width_percent}%`,
-                      zIndex: (tappedId === element.id || hoveredId === element.id) ? 21 : tooltipVisible ? 20 : (element.song_id === null ? 0 : 1),
+                      zIndex: tooltipVisible ? 20 : (element.song_id === null ? 0 : 1),
                     }}
                     onMouseEnter={() => {
                       if (!hasInfo) return
@@ -509,13 +491,7 @@ export default function MapPage() {
                     onPointerUp={(e) => {
                       if (!hasInfo || e.pointerType !== 'touch' || hadMultiTouch.current) return
                       e.stopPropagation()
-                      if (tappedId === element.id) {
-                        scheduleDismiss(element.id)
-                        setTappedId(null)
-                      } else {
-                        if (tappedId !== null) scheduleDismiss(tappedId)
-                        setTappedId(element.id)
-                      }
+                      setTappedId((prev) => (prev === element.id ? null : element.id))
                     }}
                   >
                     <img
@@ -544,7 +520,7 @@ export default function MapPage() {
                       </div>
                     )}
                     {tooltipVisible && isLocked && (
-                      <Tooltip borderColor="var(--color-theme-primary)" topMargin={64} exiting={tooltipExiting}>
+                      <Tooltip borderColor="var(--color-theme-primary)" topMargin={64}>
                         <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark.</p>
                         <p className="text-xs mt-1">
                           <span className="text-neutral-600 font-semibold">Level: </span>
@@ -557,7 +533,6 @@ export default function MapPage() {
                         borderColor={element.album_primary_color ?? 'var(--color-theme-primary)'}
                         overlayColor={hexToRgba(element.album_secondary_color, 0.25) || undefined}
                         topMargin={64}
-                        exiting={tooltipExiting}
                       >
                         <p className="font-semibold text-neutral-800 text-sm leading-tight">{element.song_name}</p>
                         <p className="text-xs italic text-neutral-600 mt-0.5">{element.album_name}</p>

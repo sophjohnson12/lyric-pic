@@ -4,7 +4,6 @@ interface TooltipProps {
   borderColor?: string
   overlayColor?: string
   topMargin?: number
-  exiting?: boolean
   children: React.ReactNode
 }
 
@@ -20,7 +19,7 @@ function caretFill(overlayColor?: string): string {
 
 const MARGIN = 8
 
-export default function Tooltip({ borderColor = 'var(--color-theme-primary)', overlayColor, topMargin = MARGIN, exiting, children }: TooltipProps) {
+export default function Tooltip({ borderColor = 'var(--color-theme-primary)', overlayColor, topMargin = MARGIN, children }: TooltipProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isBelow, setIsBelow] = useState(false)
   const [xShift, setXShift] = useState(0)
@@ -82,7 +81,6 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
         left: '50%',
         transform: `translateX(calc(-50% + ${xShift}px))`,
         width: 'clamp(180px, 20vw, 200px)',
-        ...(exiting ? { opacity: 0, transition: 'opacity 0.18s ease-out' } : {}),
       }}
     >
       {isBelow ? <>{caret}{box}</> : <>{box}{caret}</>}
