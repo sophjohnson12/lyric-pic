@@ -43,10 +43,12 @@ export default function Tooltip({ borderColor = 'var(--color-theme-primary)', ov
   }, [])
 
   const box = (
-    <div className="relative rounded-lg overflow-hidden w-full" style={{ border: `1px solid ${borderColor}` }}>
-      <div className="absolute inset-0 bg-neutral-50" />
-      {overlayColor && <div className="absolute inset-0" style={{ backgroundColor: overlayColor }} />}
-      <div className="relative z-10 p-3 text-center">{children}</div>
+    <div className="rounded-lg w-full" style={{ padding: '1px', backgroundColor: borderColor }}>
+      <div className="relative rounded-lg overflow-hidden w-full">
+        <div className="absolute inset-0 bg-neutral-50" />
+        {overlayColor && <div className="absolute inset-0" style={{ backgroundColor: overlayColor }} />}
+        <div className="relative z-10 p-3 text-center">{children}</div>
+      </div>
     </div>
   )
 
