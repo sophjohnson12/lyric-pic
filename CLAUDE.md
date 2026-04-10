@@ -26,7 +26,9 @@ Lyric Pic is a music lyric guessing game. Players are shown images representing 
 
 **Admin Service** (`src/services/adminService.ts`): Large service file (~800+ lines) containing all admin CRUD operations against Supabase. Uses PostgREST client methods.
 
-**Theme System**: Artist/album-specific colors applied via CSS custom properties (`--color-theme-primary`, `--color-theme-secondary`) in `src/hooks/useTheme.ts` and consumed by Tailwind (`bg-primary`, `text-primary`, `bg-secondary`, etc.).
+**Theme System**: Artist/album-specific colors applied via CSS custom properties in `src/hooks/useTheme.ts` and consumed by Tailwind (`bg-primary`, `text-primary`, `bg-secondary`, etc.). Four properties are kept in sync: `--color-theme-primary`/`--color-theme-secondary` (used by `#bg-pattern` background-color) and `--color-primary`/`--color-secondary` (used by all Tailwind utilities). All four are set directly to actual color values — never left as `var()` references at runtime.
+
+**Theme color animation**: Driven by a `requestAnimationFrame` loop (`animateColors` in `useTheme.ts`). **Do not use CSS transitions for theme colors** — iOS Safari never detects computed color changes through a `var()` chain and never starts the transition, regardless of `@property` registration. The rAF loop interpolates all four properties each frame; elements pick up changes via normal style recalculation. Timing: color animation starts immediately when an album is guessed (`colorsOnly=true` first call), background fades in 600ms later (second call). `applyArtistTheme` cancels any in-progress animation and snaps to artist colors instantly (no transition needed between songs).
 
 **Color palette** — only these classes are allowed:
 - `primary` / `secondary` — dynamic, artist/album-specific (opacity variants ok)
