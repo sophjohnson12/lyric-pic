@@ -45,24 +45,6 @@
   --color-theme-secondary: #c9e3ee;
 }
 
-/* Transition the custom properties directly (works via @property registration,
-   drives all var()-dependent colors each paint frame) plus concrete properties
-   as a fallback for older browsers. */
-.theme-transitioning {
-  transition: --color-theme-primary 0.75s ease-in-out,
-              --color-theme-secondary 0.75s ease-in-out,
-              --color-primary 0.75s ease-in-out,
-              --color-secondary 0.75s ease-in-out,
-              background-color 0.75s ease-in-out,
-              border-color 0.75s ease-in-out,
-              color 0.75s ease-in-out !important;
-}
-
-.theme-transitioning * {
-  transition: background-color 0.75s ease-in-out,
-              border-color 0.75s ease-in-out,
-              color 0.75s ease-in-out !important;
-}
 
 #bg-pattern {
   position: fixed;

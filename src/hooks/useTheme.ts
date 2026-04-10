@@ -34,35 +34,106 @@ function clearBgPatternImmediate(bgPattern: HTMLElement) {
   bgPattern.style.opacity = '0'
 }
 
+// JS-driven color animation — CSS transitions on `color: var(--color-primary)` are
+// unreliable on iOS Safari because Safari doesn't detect computed color changes through
+// a var() chain and never starts the transition. Instead we interpolate the custom
+// property values directly each rAF frame so all elements pick up the change through
+// normal style recalculation with no transition detection needed.
+
+type Rgb = { r: number; g: number; b: number }
+
+function parseColor(color: string): Rgb | null {
+  const s = color.trim()
+  const rgb = /^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/.exec(s)
+  if (rgb) return { r: +rgb[1], g: +rgb[2], b: +rgb[3] }
+  const hex6 = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(s)
+  if (hex6) return { r: parseInt(hex6[1], 16), g: parseInt(hex6[2], 16), b: parseInt(hex6[3], 16) }
+  const hex3 = /^#([a-f\d])([a-f\d])([a-f\d])$/i.exec(s)
+  if (hex3) return { r: parseInt(hex3[1] + hex3[1], 16), g: parseInt(hex3[2] + hex3[2], 16), b: parseInt(hex3[3] + hex3[3], 16) }
+  return null
+}
+
+function easeInOut(t: number) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+}
+
+let colorAnimRaf: number | null = null
+
+function animateColors(
+  fromPrimary: string,
+  toPrimary: string,
+  fromSecondary: string | null,
+  toSecondary: string | null,
+) {
+  if (colorAnimRaf !== null) cancelAnimationFrame(colorAnimRaf)
+
+  const fromParsed = parseColor(fromPrimary)
+  const toParsed = parseColor(toPrimary)
+  if (!fromParsed || !toParsed) {
+    // Fallback: instant change if colors can't be parsed
+    setColorProperties(toPrimary, toSecondary)
+    return
+  }
+
+  const fromP = fromParsed
+  const toP = toParsed
+  const fromS = fromSecondary ? parseColor(fromSecondary) : null
+  const toS = toSecondary ? parseColor(toSecondary) : null
+  const start = performance.now()
+
+  function step(now: number) {
+    const t = easeInOut(Math.min((now - start) / TRANSITION_MS, 1))
+    const primary = `rgb(${Math.round(fromP.r + (toP.r - fromP.r) * t)},${Math.round(fromP.g + (toP.g - fromP.g) * t)},${Math.round(fromP.b + (toP.b - fromP.b) * t)})`
+    document.documentElement.style.setProperty('--color-theme-primary', primary)
+    document.documentElement.style.setProperty('--color-primary', primary)
+    if (fromS && toS) {
+      const secondary = `rgb(${Math.round(fromS.r + (toS.r - fromS.r) * t)},${Math.round(fromS.g + (toS.g - fromS.g) * t)},${Math.round(fromS.b + (toS.b - fromS.b) * t)})`
+      document.documentElement.style.setProperty('--color-theme-secondary', secondary)
+      document.documentElement.style.setProperty('--color-secondary', secondary)
+    }
+    if (t < 1) {
+      colorAnimRaf = requestAnimationFrame(step)
+    } else {
+      colorAnimRaf = null
+    }
+  }
+
+  colorAnimRaf = requestAnimationFrame(step)
+}
+
+function setColorProperties(primary: string, secondary: string | null) {
+  document.documentElement.style.setProperty('--color-theme-primary', primary)
+  document.documentElement.style.setProperty('--color-primary', primary)
+  if (secondary) {
+    document.documentElement.style.setProperty('--color-theme-secondary', secondary)
+    document.documentElement.style.setProperty('--color-secondary', secondary)
+  }
+}
+
+function getCurrentColor(prop: string): string {
+  return (
+    document.documentElement.style.getPropertyValue(prop).trim() ||
+    getComputedStyle(document.documentElement).getPropertyValue(prop).trim()
+  )
+}
+
 export function useTheme() {
   const applyArtistTheme = useCallback((artist: Artist) => {
-    document.documentElement.style.setProperty('--color-theme-primary', artist.theme_primary_color)
-    document.documentElement.style.setProperty('--color-primary', artist.theme_primary_color)
-    document.documentElement.style.setProperty('--color-theme-secondary', artist.theme_secondary_color)
-    document.documentElement.style.setProperty('--color-secondary', artist.theme_secondary_color)
+    // Cancel any in-progress album transition and snap to artist colors immediately
+    if (colorAnimRaf !== null) { cancelAnimationFrame(colorAnimRaf); colorAnimRaf = null }
+    setColorProperties(artist.theme_primary_color, artist.theme_secondary_color)
 
     const bgPattern = document.getElementById('bg-pattern')
     if (bgPattern) clearBgPattern(bgPattern)
   }, [])
 
   const applyAlbumTheme = useCallback((album: Album, enableBackgrounds: boolean, colorsOnly = false) => {
-    if (album.theme_primary_color) {
-      document.documentElement.classList.add('theme-transitioning')
-      // Force a reflow so the browser captures the "before" state with the transition
-      // rule active. Without this, Safari batches the class addition and the property
-      // update into one style recalculation and skips the transition entirely.
-      void document.documentElement.offsetWidth
-
-      document.documentElement.style.setProperty('--color-theme-primary', album.theme_primary_color)
-      document.documentElement.style.setProperty('--color-primary', album.theme_primary_color)
-      if (album.theme_secondary_color) {
-        document.documentElement.style.setProperty('--color-theme-secondary', album.theme_secondary_color)
-        document.documentElement.style.setProperty('--color-secondary', album.theme_secondary_color)
-      }
-
-      setTimeout(() => {
-        document.documentElement.classList.remove('theme-transitioning')
-      }, 1000)
+    // Only start a new animation if one isn't already running (colorsOnly is called first,
+    // then the full call at +600ms should not restart mid-animation).
+    if (album.theme_primary_color && colorAnimRaf === null) {
+      const fromPrimary = getCurrentColor('--color-primary')
+      const fromSecondary = album.theme_secondary_color ? getCurrentColor('--color-secondary') : null
+      animateColors(fromPrimary, album.theme_primary_color, fromSecondary, album.theme_secondary_color ?? null)
     }
 
     if (colorsOnly) return
