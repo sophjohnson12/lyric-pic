@@ -12,9 +12,10 @@
   --text-tiny: 0.625rem;
 }
 
-/* Register theme color properties so Safari can natively interpolate them
-   without relying on computed color changes propagating through a var() chain,
-   which Safari does not reliably detect for CSS transitions. */
+/* Register theme color properties so Safari can natively interpolate them.
+   --color-primary/secondary are set directly (bypassing the var() chain) and
+   transitioned on :root so all descendants get smooth per-frame color updates.
+   --color-theme-primary/secondary back the bg-pattern and are kept in sync. */
 @property --color-theme-primary {
   syntax: '<color>';
   inherits: true;
@@ -22,6 +23,18 @@
 }
 
 @property --color-theme-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #c9e3ee;
+}
+
+@property --color-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #454b82;
+}
+
+@property --color-secondary {
   syntax: '<color>';
   inherits: true;
   initial-value: #c9e3ee;
@@ -38,6 +51,8 @@
 .theme-transitioning {
   transition: --color-theme-primary 0.75s ease-in-out,
               --color-theme-secondary 0.75s ease-in-out,
+              --color-primary 0.75s ease-in-out,
+              --color-secondary 0.75s ease-in-out,
               background-color 0.75s ease-in-out,
               border-color 0.75s ease-in-out,
               color 0.75s ease-in-out !important;
