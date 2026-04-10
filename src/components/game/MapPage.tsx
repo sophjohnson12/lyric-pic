@@ -648,6 +648,11 @@ export default function MapPage() {
               width: 0,
               height: tappedAnchorRect.height,
               zIndex: 100,
+              // Force an isolated GPU compositing layer. iOS Safari shares the main frame's
+              // compositing layer with position:fixed elements when not scrolling, so removing
+              // them still requires a repaint (causing the border artifact). With an isolated
+              // layer, destruction is instant — no underlying layer needs to repaint.
+              transform: 'translateZ(0)',
             }}
           >
             {isLocked ? (
