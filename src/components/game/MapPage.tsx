@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
-import { flushSync } from 'react-dom'
+import { flushSync, createPortal } from 'react-dom'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Lock, Award } from 'lucide-react'
 import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
@@ -80,6 +80,7 @@ export default function MapPage() {
   const [imagesLoadedCount, setImagesLoadedCount] = useState(0)
   const [hoveredId, setHoveredId] = useState<number | null>(null)
   const [tappedId, setTappedId] = useState<number | null>(null)
+  const [tappedAnchorRect, setTappedAnchorRect] = useState<DOMRect | null>(null)
   // Track active touch pointers globally so we can ignore onPointerUp events that are
   // part of a multi-finger gesture (e.g. pinch). isPrimary is unreliable on iOS Safari.
   const activeTouchPointers = useRef<Set<number>>(new Set())
@@ -200,6 +201,14 @@ export default function MapPage() {
     const id = requestAnimationFrame(() => setMapVisible(true))
     return () => cancelAnimationFrame(id)
   }, [showSpinner, mapVisible])
+
+  // Snapshot the tapped element's viewport position for the fixed-position portal tooltip.
+  // useLayoutEffect fires before paint so the portal renders at the correct position immediately.
+  useLayoutEffect(() => {
+    if (tappedId === null) { setTappedAnchorRect(null); return }
+    const el = landmarkRefs.current.get(tappedId)
+    if (el) setTappedAnchorRect(el.getBoundingClientRect())
+  }, [tappedId])
 
   // Track multi-touch gestures so onPointerUp never opens two tooltips at once.
   // isPrimary is unreliable on iOS Safari; this approach is browser-agnostic.
@@ -468,7 +477,9 @@ export default function MapPage() {
               {elements.map((element) => {
                 const hasInfo = element.song_id !== null
                 const isLocked = hasInfo && !revealedIds.includes(element.id)
-                const tooltipVisible = hasInfo && (hoveredId === element.id || tappedId === element.id)
+                // Hover tooltip only — tap tooltip renders in a fixed-position portal outside
+                // the scroll container so its painted pixels never touch the scroll layer's GPU tiles.
+                const hoverTooltipVisible = hasInfo && hoveredId === element.id
 
                 return (
                   <div
@@ -482,7 +493,7 @@ export default function MapPage() {
                       left: `${element.x_percent}%`,
                       top: `${element.y_percent}%`,
                       width: `${element.width_percent}%`,
-                      zIndex: tooltipVisible ? 20 : (element.song_id === null ? 0 : 1),
+                      zIndex: hoveredId === element.id ? 20 : (element.song_id === null ? 0 : 1),
                     }}
                     onMouseEnter={() => {
                       if (!hasInfo) return
@@ -525,7 +536,7 @@ export default function MapPage() {
                         </div>
                       </div>
                     )}
-                    {tooltipVisible && isLocked && (
+                    {hoverTooltipVisible && isLocked && (
                       <Tooltip borderColor="var(--color-theme-primary)" topMargin={64}>
                         <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark.</p>
                         <p className="text-xs mt-1">
@@ -534,7 +545,7 @@ export default function MapPage() {
                         </p>
                       </Tooltip>
                     )}
-                    {tooltipVisible && !isLocked && (
+                    {hoverTooltipVisible && !isLocked && (
                       <Tooltip
                         borderColor={element.album_primary_color ?? 'var(--color-theme-primary)'}
                         overlayColor={hexToRgba(element.album_secondary_color, 0.25) || undefined}
@@ -620,6 +631,55 @@ export default function MapPage() {
           }}
         />
       )}
+
+      {/* Tap tooltip rendered as a fixed portal — completely outside the scroll container's
+          compositing layer, so removing it never triggers a GPU texture repaint on the map. */}
+      {tappedId !== null && tappedAnchorRect && (() => {
+        const tappedElement = elements.find((e) => e.id === tappedId)
+        if (!tappedElement) return null
+        const isLocked = !revealedIds.includes(tappedId)
+        return createPortal(
+          <div
+            className="pointer-events-none"
+            style={{
+              position: 'fixed',
+              left: tappedAnchorRect.left + tappedAnchorRect.width / 2,
+              top: tappedAnchorRect.top,
+              width: 0,
+              height: tappedAnchorRect.height,
+              zIndex: 100,
+            }}
+          >
+            {isLocked ? (
+              <Tooltip borderColor="var(--color-theme-primary)" topMargin={64}>
+                <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark.</p>
+                <p className="text-xs mt-1">
+                  <span className="text-neutral-600 font-semibold">Level: </span>
+                  <span className="text-neutral-700 font-normal">{getLevelNames(tappedElement, levels)}</span>
+                </p>
+              </Tooltip>
+            ) : (
+              <Tooltip
+                borderColor={tappedElement.album_primary_color ?? 'var(--color-theme-primary)'}
+                overlayColor={hexToRgba(tappedElement.album_secondary_color, 0.25) || undefined}
+                topMargin={64}
+              >
+                <p className="font-semibold text-neutral-800 text-sm leading-tight">{tappedElement.song_name}</p>
+                <p className="text-xs italic text-neutral-600 mt-0.5">{tappedElement.album_name}</p>
+                {tappedElement.line_text && (
+                  <p
+                    className="text-xs text-neutral-700 mt-2 pt-2"
+                    style={{ borderTop: `1px solid ${hexToRgba(tappedElement.album_primary_color, 0.2) ?? 'var(--color-theme-primary)'}` }}
+                  >
+                    {fixOrphanedQuote(tappedElement.line_text)}
+                  </p>
+                )}
+              </Tooltip>
+            )}
+          </div>,
+          document.body
+        )
+      })()}
     </div>
   )
 }
