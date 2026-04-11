@@ -19,7 +19,7 @@ interface InfoModalProps {
 
 export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, showMapButton, levelName, onClose }: InfoModalProps) {
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary mb-1 tracking-wide">How to Play</h2>
       <div className="text-sm mb-1">
         <span className="text-neutral-600 font-semibold">Level: </span>

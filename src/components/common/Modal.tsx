@@ -42,24 +42,36 @@ export default function Modal({ children, onClose, showClose = true, showEaseIn 
       style={lockedTop !== null ? { paddingTop: lockedTop } : undefined}
       onClick={onClose}
     >
+      {/* Outer wrapper: handles scale only — never transparent, so nothing bleeds through */}
       <motion.div
         ref={innerRef}
-        initial={showEaseIn ? { opacity: 0, scale: 0.97 } : { opacity: 1, scale: 1 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={showEaseIn ? { scale: 0.97 } : { scale: 1 }}
+        animate={{ scale: 1 }}
         transition={{ duration: showEaseIn ? 0.25 : 0, ease: 'easeOut' }}
-        className="bg-neutral-50 text-neutral-800 rounded-2xl shadow-xl p-6 mx-4 max-w-lg w-full min-w-2xs max-h-[80vh] overflow-y-auto relative [will-change:transform]"
+        className="relative mx-4 max-w-lg w-full min-w-2xs [will-change:transform]"
         onClick={(e) => e.stopPropagation()}
       >
-        {showClose && onClose && (
-          <button
-            onClick={onClose}
-            autoFocus
-            className="absolute top-2 right-2 h-12 w-12 md:h-auto md:w-auto md:p-2 flex items-center justify-center text-neutral-500 hover:text-neutral-800 rounded-full transition-colors hover:text-neutral-800 text-xl leading-none cursor-pointer max-sm:focus:outline-none"
-          >
-            <X size={20} className="drop-shadow-md" ></X>
-          </button>
-        )}
-        {children}
+        {/* Solid background that appears instantly, preventing content behind the modal from
+            showing through while the content fades in */}
+        <div className="absolute inset-0 bg-neutral-50 rounded-2xl shadow-xl" />
+        {/* Content fades in on top of the solid background */}
+        <motion.div
+          initial={showEaseIn ? { opacity: 0 } : { opacity: 1 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: showEaseIn ? 0.25 : 0, ease: 'easeOut' }}
+          className="bg-neutral-50 text-neutral-800 rounded-2xl p-6 max-h-[80vh] overflow-y-auto relative"
+        >
+          {showClose && onClose && (
+            <button
+              onClick={onClose}
+              autoFocus
+              className="absolute top-2 right-2 h-12 w-12 md:h-auto md:w-auto md:p-2 flex items-center justify-center text-neutral-500 hover:text-neutral-800 rounded-full transition-colors hover:text-neutral-800 text-xl leading-none cursor-pointer max-sm:focus:outline-none"
+            >
+              <X size={20} className="drop-shadow-md" ></X>
+            </button>
+          )}
+          {children}
+        </motion.div>
       </motion.div>
     </div>
   )
