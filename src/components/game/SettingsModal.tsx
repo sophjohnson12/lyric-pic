@@ -64,7 +64,6 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
     }
     localStorage.setItem(SHOW_INFO_KEY, 'true')
     localStorage.setItem(REVEAL_BEHAVIOR_KEY, JSON.stringify(level?.reveal_word_only ? 'word_only' : 'full_lyric'))
-    onClose()
     navigate(`/${artistSlug}/${slug}`)
   }
 
