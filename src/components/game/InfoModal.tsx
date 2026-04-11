@@ -25,7 +25,7 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
         <span className="text-neutral-600 font-semibold">Level: </span>
         <span className="text-neutral-700 font-normal">{levelName}</span>
       </div>
-      <div className="space-y-1 md:space-y-2 text-base text-neutral-600">
+      <div className="space-y-1.5 md:space-y-2 text-base text-neutral-600">
         <div>
           <h3 className="font-semibold text-neutral-800 tracking-wide mb-0.5 md:mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
           <p className="mb-0.5">
