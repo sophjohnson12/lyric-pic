@@ -34,10 +34,10 @@ const sidebarLinks: SidebarLink[] = [
 
 function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const linkClass = (isActive: boolean) =>
-    `block pl-8 pr-4 py-1.5 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-neutral-800 hover:bg-primary/10'}`
+    `block pl-8 pr-4 py-1.5 rounded-lg text-base font-medium ${isActive ? 'bg-primary text-white' : 'text-neutral-800 hover:bg-primary/10'}`
 
   const topLinkClass = (isActive: boolean) =>
-    `block px-4 py-2 rounded-lg text-sm font-medium ${isActive ? 'bg-primary text-white' : 'text-neutral-800 hover:bg-primary/10'}`
+    `block px-4 py-2 rounded-lg text-base font-medium ${isActive ? 'bg-primary text-white' : 'text-neutral-800 hover:bg-primary/10'}`
 
   return (
     <>
@@ -50,17 +50,17 @@ function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       )}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-48 bg-neutral-50 border-r border-primary/20 transition-transform duration-200
+          fixed inset-y-0 left-0 z-40 w-52 bg-neutral-50 border-r border-primary/20 transition-transform duration-200
           md:static md:translate-x-0 md:z-auto md:shrink-0
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        <nav className="flex flex-col gap-1 p-4 pt-16 md:pt-4">
+        <nav className="flex flex-col p-4 pt-16 md:pt-4">
           {sidebarLinks.map((link) => {
             if ('children' in link) {
               return (
                 <div key={link.label}>
-                  <span className="block px-4 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  <span className="block px-4 pt-3 text-base font-semibold text-sm uppercase tracking-wide text-neutral-500">
                     {link.label}
                   </span>
                   {link.children.map((child) => (
@@ -133,7 +133,7 @@ function Breadcrumbs() {
   if (breadcrumbs.length === 0) return null
 
   return (
-    <nav className="bg-neutral-50 border-b border-primary/20 px-6 py-2 text-sm flex items-center gap-1.5 text-neutral-800">
+    <nav className="bg-neutral-50 border-b border-primary/20 px-6 py-2 text-base flex items-center gap-1.5 text-neutral-800">
       {breadcrumbs.map((crumb, i) => (
         <span key={i} className="flex items-center gap-1.5">
           {i > 0 && <span className="text-neutral-400">/</span>}

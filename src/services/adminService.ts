@@ -2896,6 +2896,7 @@ export async function updateSongMessages(
 export interface CopywriterSongRow {
   id: number
   name: string
+  album_name: string | null
   success_message: string | null
   failure_message: string | null
 }
@@ -2913,7 +2914,7 @@ export async function getCopywriterSongs(
 ): Promise<PaginatedResult<CopywriterSongRow>> {
   let query = supabase
     .from('playable_song')
-    .select('id, name, success_message, failure_message, album!inner(is_selectable)', { count: 'exact' })
+    .select('id, name, success_message, failure_message, album!inner(is_selectable, name)', { count: 'exact' })
     .eq('artist_id', artistId)
     .eq('album.is_selectable', true)
     .order('name')
@@ -2936,6 +2937,7 @@ export async function getCopywriterSongs(
     name: row.name,
     success_message: row.success_message,
     failure_message: row.failure_message,
+    album_name: (row.album as any)?.name ?? null,
   }))
 
   return { rows, total: count ?? 0 }

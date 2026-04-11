@@ -87,7 +87,7 @@ export default function AdminTable<T>({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-base">
         <thead>
           <tr className="bg-secondary">
             {selection && (

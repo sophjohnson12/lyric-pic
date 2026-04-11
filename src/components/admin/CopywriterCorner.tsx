@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { Eye, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
 import Modal from '../common/Modal'
 import Toast from '../common/Toast'
+import ResultModal from '../game/ResultModal'
 import {
   getAdminArtists,
   getAdminArtistById,
@@ -18,18 +19,17 @@ import type {
   AdminLevelRow,
   CopywriterSongRow,
 } from '../../services/adminService'
-import type { Artist } from '../../types/database'
+import type { Album, Artist, Song } from '../../types/database'
 
 const messageRows = [
-  { field: 'load_message' as const,          label: 'Loading',        description: 'Displayed on the loading screen',                 required: false },
-  { field: 'success_message' as const,       label: 'Success',        description: 'Displayed when a song is guessed correctly',      required: true  },
-  { field: 'failure_message' as const,       label: 'Failure',        description: 'Displayed when a song is NOT guessed correctly',  required: true  },
-  { field: 'guess_counter_message' as const, label: 'Guess Counter',  description: 'Displayed next to the guess counter',             required: true  },
+  { field: 'load_message' as const,          label: 'Loading',        description: 'Displayed when the main game page is loading',              required: false },
+  { field: 'success_message' as const,       label: 'Success',        description: 'Displayed when the user guesses the song correctly',        required: true  },
+  { field: 'failure_message' as const,       label: 'Failure',        description: 'Displayed when the user makes too many incorrect guesses',  required: true  },
+  { field: 'guess_counter_message' as const, label: 'Guess Counter',  description: 'Displayed next to the number of incorrect guesses',         required: true  },
 ]
 
 export default function CopywriterCorner() {
   const { setBreadcrumbs } = useAdminBreadcrumbs()
-
   // ── Artist selection ──────────────────────────────────
   const [artists, setArtists] = useState<AdminArtistRow[]>([])
   const [artistId, setArtistId] = useState<number | null>(null)
@@ -71,6 +71,9 @@ export default function CopywriterCorner() {
   const [editingSong, setEditingSong] = useState<CopywriterSongRow | null>(null)
   const [editingSongSuccess, setEditingSongSuccess] = useState('')
   const [editingSongFailure, setEditingSongFailure] = useState('')
+
+  // ── Preview ───────────────────────────────────────────
+  const [previewResult, setPreviewResult] = useState<{ correct: boolean; message: string } | null>(null)
 
   const [saving, setSaving] = useState(false)
 
@@ -218,13 +221,54 @@ export default function CopywriterCorner() {
     }
   }
 
+  // ── Preview handlers ──────────────────────────────────
+  function handlePreviewClose() {
+    setPreviewResult(null)
+  }
+
+  const previewMockSong: Song | null = editingSong ? {
+    id: editingSong.id,
+    artist_id: artistId ?? 0,
+    album_id: null,
+    name: editingSong.name,
+    track_number: null,
+    difficulty_rank: 0,
+    is_selectable: true,
+    featured_artists: null,
+    lyrics_full_text: null,
+    genius_song_id: null,
+    load_status_id: 1,
+    is_hidden: false,
+    success_message: null,
+    failure_message: null,
+    updated_at: null,
+    refreshed_at: null,
+    created_at: '',
+  } : null
+
+  const previewMockAlbum: Album | null = editingSong?.album_name ? {
+    id: 0,
+    artist_id: artistId ?? 0,
+    name: editingSong.album_name,
+    release_year: null,
+    is_selectable: true,
+    theme_primary_color: null,
+    theme_secondary_color: null,
+    theme_background_color: null,
+    image_url: null,
+    background_url: null,
+    background_tile_size: null,
+    updated_at: null,
+    created_at: '',
+  } : null
+
   // ── Render ────────────────────────────────────────────
   return (
     <div className="space-y-8">
       {/* Artist dropdown */}
-      <div className="flex items-center gap-3">
-        <label className="text-sm font-semibold text-neutral-700" htmlFor="artist-select">
-          Artist
+      <div className="flex items-center gap-2">
+        <label className="text-base font-semibold text-neutral-600" htmlFor="artist-select">
+          Artist:
         </label>
         <select
           id="artist-select"
@@ -246,14 +290,19 @@ export default function CopywriterCorner() {
 
       {/* ── Table 1: Default Messages ── */}
       <section>
-        <h2 className="text-lg font-bold mb-3">Defaults</h2>
+        <h2 className="text-xl font-bold mb-1">Default Messages</h2>
+        <p className=" text-base mb-3">These are the default messages shown for the selected artist. 
+          They may be overridden for specific
+          <span className="font-semibold"> Levels </span>and
+          <span className="font-semibold"> Songs </span>below.
+        </p>
         {loadingMessages ? (
           <div className="flex justify-center py-8">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-base">
               <thead>
                 <tr className="bg-secondary">
                   <th className="w-1/2 text-left px-4 py-2.5 font-semibold border-b border-primary/20 text-neutral-800">Message</th>
@@ -266,10 +315,10 @@ export default function CopywriterCorner() {
                   <tr key={row.field} className="border-b border-primary/10 hover:bg-primary/5">
                     <td className="px-4 py-2.5">
                       <div className="font-medium text-neutral-800">{row.label}</div>
-                      <div className="text-neutral-500 text-xs">{row.description}</div>
+                      <div className="text-neutral-600 text-sm">{row.description}</div>
                     </td>
-                    <td className="px-4 py-2.5 text-neutral-700 max-w-sm truncate">
-                      {artistData?.[row.field] ?? <span className="text-neutral-400">—</span>}
+                    <td className="px-4 py-2.5 text-neutral-600 max-w-sm truncate">
+                      {artistData?.[row.field] ?? <span className="text-neutral-600">—</span>}
                     </td>
                     <td className="px-4 py-2.5">
                       <button
@@ -295,15 +344,19 @@ export default function CopywriterCorner() {
 
       {/* ── Table 2: Levels ── */}
       <section>
-        <h2 className="text-lg font-bold mb-3">Levels</h2>
+        <h2 className="text-xl font-bold mb-1">Level Messages</h2>        
+        <p className=" text-base mb-3">If configured, these level-specific loading messages will be shown instead of the
+          <span className="font-semibold"> Default Messages </span>
+          configuration above.
+        </p>
         <AdminTable
           data={levels}
           keyFn={(l) => l.id}
           loading={loadingLevels}
           columns={[
-            { header: 'Name', className: 'w-1/5', accessor: (l) => l.name },
-            { header: 'Description', className: 'w-1/4', accessor: (l) => l.description ?? <span className="text-neutral-400">—</span> },
-            { header: 'Load Message', className: 'w-2/5', accessor: (l) => l.load_message ?? <span className="text-neutral-400">—</span> },
+            { header: 'Name', className: 'w-1/5 text-base', accessor: (l) => l.name },
+            { header: 'Description', className: 'w-1/4 text-base', accessor: (l) => l.description ?? <span className="text-neutral-400">—</span> },
+            { header: 'Loading Message', className: 'w-2/5 text-base', accessor: (l) => l.load_message ?? <span className="text-neutral-400">—</span> },
             {
               header: 'Edit',
               className: 'w-16',
@@ -327,14 +380,18 @@ export default function CopywriterCorner() {
 
       {/* ── Table 3: Songs ── */}
       <section>
-        <h2 className="text-lg font-bold mb-3">Songs</h2>
+        <h2 className="text-xl font-bold mb-1">Song Messages</h2>
+        <p className=" text-base mb-3">If configured, these song-specific success and failure messages will be shown instead of the
+          <span className="font-semibold"> Default Messages </span>
+          configuration above.
+        </p>
         <div className="mb-3">
           <input
             type="text"
             placeholder="Search songs…"
             value={songsSearch}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="border border-primary/30 rounded-lg px-3 py-1.5 text-sm bg-neutral-50 text-neutral-800 w-full max-w-sm"
+            className="border border-primary/30 rounded-lg px-3 py-1.5 text-base bg-neutral-50 text-neutral-800 w-full max-w-sm"
           />
         </div>
         <AdminTable
@@ -349,17 +406,17 @@ export default function CopywriterCorner() {
             onPageSizeChange: (size) => { setSongsPageSize(size); setSongsPage(1) },
           }}
           columns={[
-            { header: 'Song Name', className: 'w-1/3', accessor: (s) => s.name },
+            { header: 'Song Name', className: 'w-1/3 text-base', accessor: (s) => s.name },
             {
               header: 'Success Message',
-              className: 'w-1/3',
+              className: 'w-1/3 text-base',
               accessor: (s) => s.success_message
                 ? <span className="truncate max-w-xs block">{s.success_message}</span>
                 : <span className="text-neutral-400">—</span>,
             },
             {
               header: 'Failure Message',
-              className: 'w-1/3',
+              className: 'w-1/3 text-base',
               accessor: (s) => s.failure_message
                 ? <span className="truncate max-w-xs block">{s.failure_message}</span>
                 : <span className="text-neutral-400">—</span>,
@@ -388,7 +445,7 @@ export default function CopywriterCorner() {
       {/* ── Modal: Edit artist message ── */}
       {editingMessage && (
         <Modal onClose={() => setEditingMessage(null)} showEaseIn>
-          <h2 className="text-lg font-bold mb-4">Edit {editingMessage.label}</h2>
+          <h2 className="text-lg font-bold mb-4">Edit {editingMessage.label} Message</h2>
           <textarea
             rows={4}
             value={editingMessage.value}
@@ -420,42 +477,48 @@ export default function CopywriterCorner() {
       {/* ── Modal: Edit level ── */}
       {editingLevel && (
         <Modal onClose={() => setEditingLevel(null)} showEaseIn>
-          <h2 className="text-lg font-bold mb-1">Edit Level</h2>
-          <p className="text-sm text-neutral-500 mb-4">{editingLevel.name}</p>
-          <div className="space-y-3">
+          <h2 className="text-xl font-bold mb-2">Edit Level Messages</h2>
+          <p className="text-base text-neutral-800 mb-4">
+            <span className="font-semibold">Level: </span>
+            {editingLevel.name}
+          </p>
+          <div className="space-y-3 text-base">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">Description <span className="text-error">*</span></label>
+              <label className="block font-medium text-neutral-700 mb-1">Description <span className="text-error">*</span></label>
               <textarea
                 rows={3}
                 value={editingLevelDesc}
                 onChange={(e) => setEditingLevelDesc(e.target.value)}
-                className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
               {!editingLevelDesc.trim() && (
-                <p className="text-error text-xs mt-1">Required</p>
+                <p className="text-error mt-1">Required</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">Load Message</label>
+              <label className="block font-medium text-neutral-700 mb-1">Loading Message</label>
+              <p className="text-neutral-600 mb-3 text-sm">
+                If configured, this will override the artist's default loading message.
+              </p> 
               <input
                 type="text"
                 value={editingLevelLoadMsg ?? ''}
                 onChange={(e) => setEditingLevelLoadMsg(e.target.value || null)}
-                className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={() => setEditingLevel(null)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-primary/10"
+              className="px-4 py-2 rounded-lg font-medium text-neutral-600 hover:bg-primary/10"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveLevel}
               disabled={saving || !editingLevelDesc.trim()}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
@@ -466,46 +529,93 @@ export default function CopywriterCorner() {
       {/* ── Modal: Edit song messages ── */}
       {editingSong && (
         <Modal onClose={() => setEditingSong(null)} showEaseIn>
-          <h2 className="text-lg font-bold mb-1">Edit Song Messages</h2>
-          <p className="text-sm text-neutral-500 mb-4">{editingSong.name}</p>
-          <div className="space-y-3">
+          <h2 className="text-xl font-bold mb-2">Edit Song Messages</h2>
+          <p className="text-base text-neutral-800 mb-4">
+            <span className="font-semibold">Song: </span>
+            {editingSong.name}
+          </p>
+          <div className="space-y-3 text-base">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">Success Message</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-medium text-neutral-700">Success Message</label>
+                <button
+                  type="button"
+                  disabled={!editingSongSuccess.trim()}
+                  onClick={() => {
+                    setPreviewResult({ correct: true, message: editingSongSuccess })
+                  }}
+                  className="flex items-center gap-1 text-sm text-primary hover:cursor-pointer disabled:text-neutral-400 disabled:cursor-default"
+                >
+                  <Eye size={14} />
+                  Preview
+                </button>
+              </div>
+              <p className="text-neutral-600 mb-3 text-sm">
+                If configured, this will override the artist's default success message.
+              </p>
               <textarea
                 rows={3}
                 value={editingSongSuccess}
+                placeholder="Optional"
                 onChange={(e) => setEditingSongSuccess(e.target.value)}
-                placeholder="Optional — overrides the artist default"
-                className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">Failure Message</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-medium text-neutral-700">Failure Message</label>
+                <button
+                  type="button"
+                  disabled={!editingSongFailure.trim()}
+                  onClick={() => {
+                    setPreviewResult({ correct: false, message: editingSongFailure })
+                  }}
+                  className="flex items-center gap-1 text-sm text-primary hover:cursor-pointer disabled:text-neutral-400 disabled:cursor-default"
+                >
+                  <Eye size={14} />
+                  Preview
+                </button>
+              </div>
+              <p className="text-neutral-500 mb-3 text-sm">
+                If configured, this will override the artist's default failure message.
+              </p>
               <textarea
                 rows={3}
                 value={editingSongFailure}
+                placeholder="Optional"
                 onChange={(e) => setEditingSongFailure(e.target.value)}
-                placeholder="Optional — overrides the artist default"
-                className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={() => setEditingSong(null)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-primary/10"
+              className="px-4 py-2 rounded-lg font-medium text-neutral-600 hover:bg-primary/10"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveSong}
               disabled={saving}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </Modal>
+      )}
+
+      {editingSong && previewResult && previewMockSong && (
+        <ResultModal
+          correct={previewResult.correct}
+          message={previewResult.message}
+          song={previewMockSong}
+          album={previewMockAlbum}
+          artist={artistData}
+          puzzleWords={[]}
+          onNext={handlePreviewClose}
+        />
       )}
 
       <Toast message={toast} />
