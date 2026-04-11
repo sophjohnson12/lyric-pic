@@ -180,6 +180,7 @@ export interface AppConfig {
   enable_lyric_flag: boolean
   enable_image_flag: boolean
   enable_backgrounds: boolean
+  enable_map: boolean
   max_guess_count: number
   min_image_count: number
   min_song_lyric_count: number

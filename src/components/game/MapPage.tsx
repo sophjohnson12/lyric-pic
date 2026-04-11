@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { flushSync, createPortal } from 'react-dom'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Lock, Award } from 'lucide-react'
-import { getArtistBySlug, getMapElements, getArtistLevels } from '../../services/supabase'
+import { getArtistBySlug, getMapElements, getArtistLevels, getAppConfig } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { fixOrphanedQuote } from './HighlightedLine'
@@ -165,14 +165,19 @@ export default function MapPage() {
     if (!artistSlug) return
     async function load() {
       const artist = await getArtistBySlug(artistSlug!)
+      const [config, els, fetchedLevels] = await Promise.all([
+        getAppConfig(),
+        getMapElements(artist.id),
+        getArtistLevels(artist.id),
+      ])
+      if (!config?.enable_map || !artist.map_image_url || els.length === 0) {
+        navigate(`/${artistSlug}`, { replace: true })
+        return
+      }
       applyArtistTheme(artist)
       setArtistName(artist.name)
       setMapCompleteImageUrl(artist.map_image_url ?? null)
       setMapPreviewImageUrl(artist.map_image_preview_url ?? null)
-      const [els, fetchedLevels] = await Promise.all([
-        getMapElements(artist.id),
-        getArtistLevels(artist.id),
-      ])
       setElements(els)
       setLevels(fetchedLevels)
       setDataLoading(false)

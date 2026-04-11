@@ -128,6 +128,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([])
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [enableImages, setEnableImages] = useState(true)
+  const [enableMap, setEnableMap] = useState(true)
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState(3)
@@ -268,6 +269,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
           setEnableImages(config.enable_images)
           enableImagesRef.current = config.enable_images
           enableBackgroundsRef.current = config.enable_backgrounds
+          setEnableMap(config.enable_map ?? true)
           setEnableLyricFlag(config.enable_lyric_flag)
           setEnableImageFlag(config.enable_image_flag)
           maxImageCountRef.current = config.max_image_count
@@ -571,6 +573,7 @@ export function useGame(artistSlug: string, levelSlug: string | null, revealBeha
     showAlbumFilters,
     albums,
     hasMapElements,
+    enableMap,
     depletedAlbumIds,
     allSongs: filteredSongs.length > 0 ? filteredSongs : allSongs,
     toastMessage,

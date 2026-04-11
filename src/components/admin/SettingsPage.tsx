@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [secondaryColor, setSecondaryColor] = useState('')
   const [enableImages, setEnableImages] = useState(true)
   const [enableBackgrounds, setEnableBackgrounds] = useState(false)
+  const [enableMap, setEnableMap] = useState(true)
   const [enableLyricFlag, setEnableLyricFlag] = useState(true)
   const [enableImageFlag, setEnableImageFlag] = useState(true)
   const [maxGuessCount, setMaxGuessCount] = useState('')
@@ -43,6 +44,7 @@ export default function SettingsPage() {
         setSecondaryColor(config.theme_secondary_color)
         setEnableImages(config.enable_images)
         setEnableBackgrounds(config.enable_backgrounds)
+        setEnableMap(config.enable_map ?? true)
         setEnableLyricFlag(config.enable_lyric_flag)
         setEnableImageFlag(config.enable_image_flag)
         setMaxGuessCount(String(config.max_guess_count))
@@ -81,6 +83,18 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Failed to save:', err)
       setEnableBackgrounds(!value)
+      showToast('Failed to save')
+    }
+  }
+
+  async function handleToggleMap(value: boolean) {
+    setEnableMap(value)
+    try {
+      await updateAppConfig({ enable_map: value })
+      showToast('Saved')
+    } catch (err) {
+      console.error('Failed to save:', err)
+      setEnableMap(!value)
       showToast('Failed to save')
     }
   }
@@ -248,6 +262,13 @@ export default function SettingsPage() {
                   <div className="text-xs text-neutral-500">Display album SVG pattern after album is guessed</div>
                 </div>
                 <ToggleSwitch checked={enableBackgrounds} onChange={handleToggleBackgrounds} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium">Enable Landmark Map</div>
+                  <div className="text-xs text-neutral-500">Show the visual map feature to players</div>
+                </div>
+                <ToggleSwitch checked={enableMap} onChange={handleToggleMap} />
               </div>
               <div className="flex items-center justify-between">
                 <div>

@@ -393,7 +393,7 @@ export default function GamePage() {
           skipDisabled={true}
           onChangeDifficulty={() => navigate(`/${artistSlug}`)}
           levelSlug={levelSlug ?? undefined}
-          showMapButton={!!game.artist?.map_image_url && game.hasMapElements}
+          showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
           onMapNavigate={() => navigate(`/${artistSlug}/map?level=${levelSlug}`)}
         />
         {noSongs ? (
@@ -426,7 +426,7 @@ export default function GamePage() {
             albums={game.albums}
             showAlbumFilters={game.showAlbumFilters}
             showFlagIcon={game.enableLyricFlag}
-            showMapButton={!!game.artist?.map_image_url && game.hasMapElements}
+            showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
             levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
             onClose={() => setShowInfo(false)}
           />
@@ -480,7 +480,7 @@ export default function GamePage() {
         onSkip={() => setShowSkipConfirm(true)}
         levelSlug={levelSlug ?? undefined}
         onMapNavigate={() => setShowMapConfirm(true)}
-        showMapButton={!!game.artist.map_image_url && game.hasMapElements}
+        showMapButton={game.enableMap && !!game.artist.map_image_url && game.hasMapElements}
       />
 
       <main className="min-w-2xs md:max-w-11/12 lg:max-w-4/5 w-full mx-auto md:px-4 py-3 md:py-6 flex-1 min-h-0 md:overflow-y-visible">
@@ -612,8 +612,8 @@ export default function GamePage() {
           artist={game.artist}
           puzzleWords={game.puzzleWords}
           onNext={game.nextSong}
-          mapDiscoveryCount={mapDiscoveryCount}
-          onGoToMap={handleGoToMap}
+          mapDiscoveryCount={game.enableMap ? mapDiscoveryCount : 0}
+          onGoToMap={game.enableMap ? handleGoToMap : undefined}
         />
       )}
       {showFailedModal && (
@@ -678,7 +678,7 @@ export default function GamePage() {
         albums={game.albums}
         showAlbumFilters={game.showAlbumFilters}
         showFlagIcon={game.enableLyricFlag}
-        showMapButton={!!game.artist?.map_image_url && game.hasMapElements}
+        showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
         levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
         onClose={() => { autoLaunchRef.current = false; setShowInfo(false) }}
       />
