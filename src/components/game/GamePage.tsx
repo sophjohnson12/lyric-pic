@@ -641,7 +641,7 @@ export default function GamePage() {
           message="Are you sure you want to leave this song? We'll keep it in the queue so you can try again later."
           confirmLabel="Continue"
           cancelLabel="Cancel"
-          onConfirm={() => { setShowMapConfirm(false); navigate(`/${artistSlug}/map?level=${levelSlug}&song_id=${game.currentSong?.id}`) }}
+          onConfirm={() => { navigate(`/${artistSlug}/map?level=${levelSlug}&song_id=${game.currentSong?.id}`) }}
           onCancel={() => setShowMapConfirm(false)}
           showEaseIn={true}
         />
