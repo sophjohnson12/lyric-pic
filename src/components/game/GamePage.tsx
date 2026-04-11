@@ -33,9 +33,6 @@ export default function GamePage() {
 
   const showInfoOnLoad = localStorage.getItem(SHOW_INFO_KEY) === 'true'
   const [showInfo, setShowInfo] = useState(showInfoOnLoad)
-  // Tracks whether the modal was auto-launched on this page load (not user-triggered).
-  // Used to hide game content while the modal is open, preventing a flash of the underlying UI.
-  const autoLaunchRef = useRef(showInfoOnLoad)
 
   useEffect(() => {
     if (showInfoOnLoad) {
@@ -472,7 +469,7 @@ export default function GamePage() {
 
   return (
     <>
-    <div className={`md:h-auto flex flex-col max-md:min-h-[calc(100lvh+64px)]${autoLaunchRef.current && showInfo ? ' opacity-0' : ''}`}>
+    <div className="md:h-auto flex flex-col max-md:min-h-[calc(100lvh+64px)]">
       <Header
         artistName={game.artist.name}
         onInfo={() => setShowInfo(true)}
@@ -680,7 +677,7 @@ export default function GamePage() {
         showFlagIcon={game.enableLyricFlag}
         showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
         levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
-        onClose={() => { autoLaunchRef.current = false; setShowInfo(false) }}
+        onClose={() => setShowInfo(false)}
       />
     )}
     </>
