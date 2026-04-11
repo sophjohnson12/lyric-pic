@@ -2911,6 +2911,7 @@ export async function getCopywriterSongs(
   page: number,
   pageSize: number,
   search: string,
+  needsMessages: 'all' | 'yes' | 'no' = 'all',
 ): Promise<PaginatedResult<CopywriterSongRow>> {
   let query = supabase
     .from('playable_song')
@@ -2927,6 +2928,12 @@ export async function getCopywriterSongs(
 
   if (search) {
     query = query.ilike('name', `%${search}%`)
+  }
+
+  if (needsMessages === 'yes') {
+    query = query.or('success_message.is.null,failure_message.is.null')
+  } else if (needsMessages === 'no') {
+    query = query.not('success_message', 'is', null).not('failure_message', 'is', null)
   }
 
   const { data, count, error } = await query

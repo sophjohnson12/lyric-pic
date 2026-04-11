@@ -49,6 +49,7 @@ export default function CopywriterCorner() {
   const [songsPageSize, setSongsPageSize] = useState(10)
   const [songsSearch, setSongsSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [songsNeedsMessages, setSongsNeedsMessages] = useState<'all' | 'yes' | 'no'>('all')
   const [loadingSongs, setLoadingSongs] = useState(false)
 
   // ── Toast ─────────────────────────────────────────────
@@ -116,8 +117,8 @@ export default function CopywriterCorner() {
 
   useEffect(() => {
     if (!artistId) return
-    loadSongs(artistId, songsPage, songsPageSize, debouncedSearch)
-  }, [artistId, songsPage, songsPageSize, debouncedSearch])
+    loadSongs(artistId, songsPage, songsPageSize, debouncedSearch, songsNeedsMessages)
+  }, [artistId, songsPage, songsPageSize, debouncedSearch, songsNeedsMessages])
 
   async function loadMessages(id: number) {
     setLoadingMessages(true)
@@ -142,10 +143,10 @@ export default function CopywriterCorner() {
     }
   }
 
-  async function loadSongs(id: number, page: number, pageSize: number, search: string) {
+  async function loadSongs(id: number, page: number, pageSize: number, search: string, needsMessages: 'all' | 'yes' | 'no' = 'all') {
     setLoadingSongs(true)
     try {
-      const result = await getCopywriterSongs(id, page, pageSize, search)
+      const result = await getCopywriterSongs(id, page, pageSize, search, needsMessages)
       setSongs(result.rows)
       setSongsTotal(result.total)
     } catch (err) {
@@ -212,7 +213,7 @@ export default function CopywriterCorner() {
         failure_message: editingSongFailure || null,
       })
       setEditingSong(null)
-      await loadSongs(artistId, songsPage, songsPageSize, debouncedSearch)
+      await loadSongs(artistId, songsPage, songsPageSize, debouncedSearch, songsNeedsMessages)
       showToast('Song messages saved')
     } catch (err) {
       showToast(`Error: ${err instanceof Error ? err.message : 'Failed to save'}`)
@@ -279,6 +280,7 @@ export default function CopywriterCorner() {
             setSongsPage(1)
             setSongsSearch('')
             setDebouncedSearch('')
+            setSongsNeedsMessages('all')
           }}
           className="border border-primary/30 rounded-lg px-3 py-1.5 bg-neutral-50 text-neutral-800 text-sm"
         >
@@ -385,7 +387,7 @@ export default function CopywriterCorner() {
           <span className="font-semibold"> Default Messages </span>
           configuration above.
         </p>
-        <div className="mb-3">
+        <div className="flex items-center gap-2 mb-3">
           <input
             type="text"
             placeholder="Search songs…"
@@ -393,6 +395,19 @@ export default function CopywriterCorner() {
             onChange={(e) => handleSearchChange(e.target.value)}
             className="border border-primary/30 rounded-lg px-3 py-1.5 text-base bg-neutral-50 text-neutral-800 w-full max-w-sm"
           />
+          <label className="text-sm font-medium text-neutral-600 whitespace-nowrap">Needs Message?</label>
+          <select
+            value={songsNeedsMessages}
+            onChange={(e) => {
+              setSongsNeedsMessages(e.target.value as 'all' | 'yes' | 'no')
+              setSongsPage(1)
+            }}
+            className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
+          >
+            <option value="all">-</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
         </div>
         <AdminTable
           data={songs}
@@ -446,27 +461,33 @@ export default function CopywriterCorner() {
       {editingMessage && (
         <Modal onClose={() => setEditingMessage(null)} showEaseIn>
           <h2 className="text-lg font-bold mb-4">Edit {editingMessage.label} Message</h2>
-          <textarea
-            rows={4}
+          <input
+            type="text"
             value={editingMessage.value}
+            maxLength={50}
             onChange={(e) => setEditingMessage({ ...editingMessage, value: e.target.value })}
             placeholder={editingMessage.required ? 'Required' : 'Optional'}
-            className="w-full border border-primary/30 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full border border-primary/30 rounded-lg px-3 py-2 text-base bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
-          {editingMessage.required && !editingMessage.value.trim() && (
-            <p className="text-error text-xs mt-1">This field is required</p>
-          )}
+          <div className="flex justify-between items-start mt-1">
+            {editingMessage.required && !editingMessage.value.trim()
+              ? <p className="text-error text-xs">This field is required</p>
+              : <span />}
+            <span className={`text-xs ${editingMessage.value.length >= 50 ? 'text-error' : 'text-neutral-400'}`}>
+              {editingMessage.value.length}/50
+            </span>
+          </div>
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={() => setEditingMessage(null)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-primary/10"
+              className="px-4 py-2 rounded-lg text-base font-medium text-neutral-600 hover:bg-primary/10 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveMessage}
               disabled={saving || (editingMessage.required && !editingMessage.value.trim())}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-base font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50 cursor-pointer disabled:cursor-default"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
@@ -485,15 +506,21 @@ export default function CopywriterCorner() {
           <div className="space-y-3 text-base">
             <div>
               <label className="block font-medium text-neutral-700 mb-1">Description <span className="text-error">*</span></label>
-              <textarea
-                rows={3}
+              <input
+                type="text"
                 value={editingLevelDesc}
+                maxLength={50}
                 onChange={(e) => setEditingLevelDesc(e.target.value)}
-                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
-              {!editingLevelDesc.trim() && (
-                <p className="text-error mt-1">Required</p>
-              )}
+              <div className="flex justify-between items-start mt-1">
+                {!editingLevelDesc.trim()
+                  ? <p className="text-error">Required</p>
+                  : <span />}
+                <span className={`text-xs ${editingLevelDesc.length >= 50 ? 'text-error' : 'text-neutral-400'}`}>
+                  {editingLevelDesc.length}/50
+                </span>
+              </div>
             </div>
             <div>
               <label className="block font-medium text-neutral-700 mb-1">Loading Message</label>
@@ -503,22 +530,28 @@ export default function CopywriterCorner() {
               <input
                 type="text"
                 value={editingLevelLoadMsg ?? ''}
+                maxLength={50}
                 onChange={(e) => setEditingLevelLoadMsg(e.target.value || null)}
                 className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
+              <div className="flex justify-end mt-1">
+                <span className={`text-xs ${(editingLevelLoadMsg?.length ?? 0) >= 50 ? 'text-error' : 'text-neutral-400'}`}>
+                  {editingLevelLoadMsg?.length ?? 0}/50
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={() => setEditingLevel(null)}
-              className="px-4 py-2 rounded-lg font-medium text-neutral-600 hover:bg-primary/10"
+              className="px-4 py-2 rounded-lg text-base font-medium text-neutral-600 hover:bg-primary/10 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveLevel}
               disabled={saving || !editingLevelDesc.trim()}
-              className="px-4 py-2 rounded-lg font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-base font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50 cursor-pointer disabled:cursor-default"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
@@ -553,13 +586,19 @@ export default function CopywriterCorner() {
               <p className="text-neutral-600 mb-3 text-sm">
                 If configured, this will override the artist's default success message.
               </p>
-              <textarea
-                rows={3}
+              <input
+                type="text"
                 value={editingSongSuccess}
+                maxLength={50}
                 placeholder="Optional"
                 onChange={(e) => setEditingSongSuccess(e.target.value)}
-                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
+              <div className="flex justify-end mt-1">
+                <span className={`text-xs ${editingSongSuccess.length >= 50 ? 'text-error' : 'text-neutral-400'}`}>
+                  {editingSongSuccess.length}/50
+                </span>
+              </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -579,26 +618,32 @@ export default function CopywriterCorner() {
               <p className="text-neutral-500 mb-3 text-sm">
                 If configured, this will override the artist's default failure message.
               </p>
-              <textarea
-                rows={3}
+              <input
+                type="text"
                 value={editingSongFailure}
+                maxLength={50}
                 placeholder="Optional"
                 onChange={(e) => setEditingSongFailure(e.target.value)}
-                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full border border-primary/30 rounded-lg px-3 py-2 bg-neutral-50 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
+              <div className="flex justify-end mt-1">
+                <span className={`text-xs ${editingSongFailure.length >= 50 ? 'text-error' : 'text-neutral-400'}`}>
+                  {editingSongFailure.length}/50
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={() => setEditingSong(null)}
-              className="px-4 py-2 rounded-lg font-medium text-neutral-600 hover:bg-primary/10"
+              className="px-4 py-2 rounded-lg text-base font-medium text-neutral-600 hover:bg-primary/10 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveSong}
               disabled={saving}
-              className="px-4 py-2 rounded-lg font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-base font-semibold bg-primary text-white hover:opacity-90 disabled:opacity-50 cursor-pointer disabled:cursor-default"
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
