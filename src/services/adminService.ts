@@ -2809,14 +2809,38 @@ export async function updateMapElement(id: number, data: MapElementFormData): Pr
   if (error) throw error
 }
 
+async function compressToWebP(file: File, maxWidth = 1920, quality = 0.82): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      const scale = Math.min(1, maxWidth / img.width)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * scale)
+      canvas.height = Math.round(img.height * scale)
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { reject(new Error('Canvas not available')); return }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error('WebP conversion failed')),
+        'image/webp',
+        quality,
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Image load failed')) }
+    img.src = objectUrl
+  })
+}
+
 export async function uploadMapElementImage(file: File, name: string): Promise<string> {
-  const ext = file.type === 'image/webp' ? 'webp' : 'png'
-  const contentType = file.type === 'image/webp' ? 'image/webp' : 'image/png'
+  const blob = await compressToWebP(file)
+  const filename = `${name}_${Date.now()}.webp`
   const { error } = await supabase.storage
     .from('map_elements')
-    .upload(`${name}.${ext}`, file, { contentType, upsert: true })
+    .upload(filename, blob, { contentType: 'image/webp', upsert: false })
   if (error) throw error
-  const { data } = supabase.storage.from('map_elements').getPublicUrl(`${name}.${ext}`)
+  const { data } = supabase.storage.from('map_elements').getPublicUrl(filename)
   return data.publicUrl
 }
 

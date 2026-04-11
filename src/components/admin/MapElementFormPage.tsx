@@ -181,7 +181,7 @@ export default function MapElementFormPage() {
               className={inputClass}
             />
           </FormField>
-          <FormField label="Image (PNG / WebP)">
+          <FormField label="Image">
             <div className="flex items-center gap-3">
               {previewUrl && (
                 <img src={previewUrl} alt="Preview" className="h-16 w-16 object-contain rounded border border-primary/20" />
@@ -190,7 +190,7 @@ export default function MapElementFormPage() {
                 {pendingFile ? pendingFile.name : url ? url.split('/').pop() : 'Choose file…'}
                 <input
                   type="file"
-                  accept="image/png,image/webp"
+                  accept="image/*"
                   onChange={(e) => setPendingFile(e.target.files?.[0] ?? null)}
                   className="sr-only"
                 />
