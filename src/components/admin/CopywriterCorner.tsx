@@ -266,9 +266,9 @@ export default function CopywriterCorner() {
 
   // ── Render ────────────────────────────────────────────
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 md:px-12">
       {/* Artist dropdown */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 pt-4">
         <label className="text-base font-semibold text-neutral-600">Artist:</label>
         <Dropdown
           options={artists.map((a) => ({ value: a.id, label: a.name }))}
@@ -286,7 +286,7 @@ export default function CopywriterCorner() {
 
       {/* ── Table 1: Default Messages ── */}
       <section>
-        <h2 className="text-xl font-bold mb-1">Default Messages</h2>
+        <h2 className="text-xl mb-1 font-semibold tracking-wide">Default Messages</h2>
         <p className=" text-base mb-3">These are the default messages shown for the selected artist. 
           They may be overridden for specific
           <span className="font-semibold"> Levels </span>and
@@ -340,7 +340,7 @@ export default function CopywriterCorner() {
 
       {/* ── Table 2: Levels ── */}
       <section>
-        <h2 className="text-xl font-bold mb-1">Level Messages</h2>        
+        <h2 className="text-xl font-semibold tracking-wide mb-1">Level Messages</h2>        
         <p className=" text-base mb-3">If configured, these level-specific loading messages will be shown instead of the
           <span className="font-semibold"> Default Messages </span>
           configuration above.
@@ -351,7 +351,7 @@ export default function CopywriterCorner() {
           loading={loadingLevels}
           columns={[
             { header: 'Name', className: 'w-1/5 text-base', accessor: (l) => l.name },
-            { header: 'Description', className: 'w-1/4 text-base', accessor: (l) => l.description ?? <span className="text-neutral-400">—</span> },
+            { header: 'Description', className: 'w-2/5 text-base', accessor: (l) => l.description ?? <span className="text-neutral-400">—</span> },
             { header: 'Loading Message', className: 'w-2/5 text-base', accessor: (l) => l.load_message ?? <span className="text-neutral-400">—</span> },
             {
               header: 'Edit',
@@ -376,7 +376,7 @@ export default function CopywriterCorner() {
 
       {/* ── Table 3: Songs ── */}
       <section>
-        <h2 className="text-xl font-bold mb-1">Song Messages</h2>
+        <h2 className="text-xl font-semibold tracking-wide mb-1">Song Messages</h2>
         <p className=" text-base mb-3">If configured, these song-specific success and failure messages will be shown instead of the
           <span className="font-semibold"> Default Messages </span>
           configuration above.
@@ -455,7 +455,7 @@ export default function CopywriterCorner() {
       {/* ── Modal: Edit artist message ── */}
       {editingMessage && (
         <Modal onClose={() => setEditingMessage(null)} showEaseIn>
-          <h2 className="text-lg font-bold mb-4">Edit {editingMessage.label} Message</h2>
+          <h2 className="text-lg font-semibold tracking-wide mb-4">Edit {editingMessage.label} Message</h2>
           <input
             type="text"
             value={editingMessage.value}
@@ -493,7 +493,7 @@ export default function CopywriterCorner() {
       {/* ── Modal: Edit level ── */}
       {editingLevel && (
         <Modal onClose={() => setEditingLevel(null)} showEaseIn>
-          <h2 className="text-xl font-bold mb-2">Edit Level Messages</h2>
+          <h2 className="text-xl font-semibold tracking-wide mb-2">Edit Level Messages</h2>
           <p className="text-base text-neutral-800 mb-4">
             <span className="font-semibold">Level: </span>
             {editingLevel.name}
@@ -557,7 +557,7 @@ export default function CopywriterCorner() {
       {/* ── Modal: Edit song messages ── */}
       {editingSong && (
         <Modal onClose={() => setEditingSong(null)} showEaseIn>
-          <h2 className="text-xl font-bold mb-2">Edit Song Messages</h2>
+          <h2 className="text-xl font-semibold tracking-wide mb-2">Edit Song Messages</h2>
           <p className="text-base text-neutral-800 mb-4">
             <span className="font-semibold">Song: </span>
             {editingSong.name}

@@ -4,6 +4,7 @@ import { Menu } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { AdminBreadcrumbProvider, useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import { getAppConfig } from '../../services/adminService'
+import LogoIcon from '../common/LogoIcon'
 
 type SidebarLink =
   | { to: string; label: string; end?: boolean }
@@ -95,9 +96,12 @@ function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   )
 }
 
-function AdminHeader({ onMenuToggle, isCopywriter }: { onMenuToggle: () => void; isCopywriter: boolean }) {
+function AdminHeader({ onMenuToggle, role }: { onMenuToggle: () => void; role: string }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
+  const isCopywriter = role === 'copywriter'
+
+  const roleLabel = role === 'super_admin' ? 'Super Admin' : role === 'copywriter' ? 'Copywriter' : 'Admin'
 
   async function handleSignOut() {
     await signOut()
@@ -116,8 +120,14 @@ function AdminHeader({ onMenuToggle, isCopywriter }: { onMenuToggle: () => void;
             <Menu size={20} />
           </button>
         )}
-        <Link to={isCopywriter ? '/admin/copywriter' : '/admin'} className="text-lg font-bold hover:opacity-90">
-          Lyric Pic Admin
+        <Link to={isCopywriter ? '/admin/copywriter' : '/admin'} className="flex items-center gap-3 hover:opacity-90">
+          <div className="flex gap-3 items-center">
+            <LogoIcon className="h-12 w-12 text-primary" />
+            <div>
+              <h1 className="text-xl text-neutral-50 leading-tight font-semibold tracking-wide">LYRIC PIC</h1>
+              <h3 className="text-xs text-neutral-50 leading-none pb-1">{roleLabel}</h3>
+            </div>
+          </div>
         </Link>
       </div>
       <button
@@ -174,7 +184,7 @@ export default function AdminLayout() {
   return (
     <AdminBreadcrumbProvider>
       <div className="h-screen flex flex-col text-neutral-800">
-        <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} isCopywriter={isCopywriter} />
+        <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} role={role} />
         <div className="flex flex-1 overflow-hidden">
           {!isCopywriter && <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />}
           <div className="flex-1 flex flex-col min-w-0">
