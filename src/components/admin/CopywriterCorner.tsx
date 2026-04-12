@@ -266,9 +266,9 @@ export default function CopywriterCorner() {
 
   // ── Render ────────────────────────────────────────────
   return (
-    <div className="space-y-8 md:px-12">
+    <div className="space-y-8 md:px-12 md:py-4">
       {/* Artist dropdown */}
-      <div className="flex items-center gap-2 pt-4">
+      <div className="flex items-center gap-2">
         <label className="text-base font-semibold text-neutral-600">Artist:</label>
         <Dropdown
           options={artists.map((a) => ({ value: a.id, label: a.name }))}

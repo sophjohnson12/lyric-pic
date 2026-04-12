@@ -122,7 +122,7 @@ function AdminHeader({ onMenuToggle, role }: { onMenuToggle: () => void; role: s
         )}
         <Link to={isCopywriter ? '/admin/copywriter' : '/admin'} className="flex items-center gap-3 hover:opacity-90">
           <div className="flex gap-3 items-center">
-            <LogoIcon className="h-12 w-12 text-primary" />
+            <LogoIcon className="h-12 w-12 hidden sm:inline text-primary" />
             <div>
               <h1 className="text-xl text-neutral-50 leading-tight font-semibold tracking-wide">LYRIC PIC</h1>
               <h3 className="text-xs text-neutral-50 leading-none pb-1">{roleLabel}</h3>
