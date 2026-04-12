@@ -169,6 +169,10 @@ export default function AdminLayout() {
   const isCopywriter = role === 'copywriter'
 
   useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  useEffect(() => {
     getAppConfig().then((config) => {
       document.documentElement.style.setProperty('--color-theme-primary', config.theme_primary_color)
       document.documentElement.style.setProperty('--color-theme-secondary', config.theme_secondary_color)
