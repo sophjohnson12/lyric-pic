@@ -11,6 +11,7 @@ interface AdminTableProps<T> {
   data: T[]
   keyFn: (row: T) => string | number
   loading?: boolean
+  tableClassName?: string
   // Server-side pagination
   serverPagination?: {
     total: number
@@ -34,6 +35,7 @@ export default function AdminTable<T>({
   data,
   keyFn,
   loading = false,
+  tableClassName,
   serverPagination,
   selection,
   rowClassName,
@@ -87,7 +89,7 @@ export default function AdminTable<T>({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-base">
+      <table className={`w-full text-base${tableClassName ? ` ${tableClassName}` : ''}`}>
         <thead>
           <tr className="bg-secondary">
             {selection && (
