@@ -31,5 +31,8 @@ export function useAuth() {
     if (error) throw error
   }
 
-  return { session, loading, signIn, signOut }
+  type UserRole = 'super_admin' | 'copywriter'
+  const role = (session?.user?.user_metadata?.role as UserRole) ?? 'copywriter'
+
+  return { session, loading, signIn, signOut, role }
 }

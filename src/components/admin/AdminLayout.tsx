@@ -95,7 +95,7 @@ function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   )
 }
 
-function AdminHeader({ onMenuToggle }: { onMenuToggle: () => void }) {
+function AdminHeader({ onMenuToggle, isCopywriter }: { onMenuToggle: () => void; isCopywriter: boolean }) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -107,14 +107,16 @@ function AdminHeader({ onMenuToggle }: { onMenuToggle: () => void }) {
   return (
     <header className="bg-primary text-white px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <button
-          onClick={onMenuToggle}
-          className="md:hidden -ml-2 p-1.5 rounded-lg hover:bg-white/20"
-          aria-label="Toggle menu"
-        >
-          <Menu size={20} />
-        </button>
-        <Link to="/admin" className="text-lg font-bold hover:opacity-90">
+        {!isCopywriter && (
+          <button
+            onClick={onMenuToggle}
+            className="md:hidden -ml-2 p-1.5 rounded-lg hover:bg-white/20"
+            aria-label="Toggle menu"
+          >
+            <Menu size={20} />
+          </button>
+        )}
+        <Link to={isCopywriter ? '/admin/copywriter' : '/admin'} className="text-lg font-bold hover:opacity-90">
           Lyric Pic Admin
         </Link>
       </div>
@@ -152,6 +154,8 @@ function Breadcrumbs() {
 
 export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { role } = useAuth()
+  const isCopywriter = role === 'copywriter'
 
   useEffect(() => {
     getAppConfig().then((config) => {
@@ -163,11 +167,11 @@ export default function AdminLayout() {
   return (
     <AdminBreadcrumbProvider>
       <div className="h-screen flex flex-col text-neutral-800">
-        <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} />
+        <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} isCopywriter={isCopywriter} />
         <div className="flex flex-1 overflow-hidden">
-          <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+          {!isCopywriter && <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />}
           <div className="flex-1 flex flex-col min-w-0">
-            <Breadcrumbs />
+            {!isCopywriter && <Breadcrumbs />}
             <main className="flex-1 overflow-y-auto p-6">
               <Outlet />
             </main>
