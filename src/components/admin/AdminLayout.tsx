@@ -132,7 +132,7 @@ function AdminHeader({ onMenuToggle, role }: { onMenuToggle: () => void; role: s
       </div>
       <button
         onClick={handleSignOut}
-        className="rounded-lg bg-white/20 px-4 py-1.5 text-sm font-medium hover:bg-white/30"
+        className="rounded-lg bg-white/20 px-4 py-1.5 text-sm font-medium hover:bg-white/30 hover:cursor-pointer"
       >
         Sign Out
       </button>

@@ -580,7 +580,7 @@ export default function MapPage() {
           <MapFloatingAction
             buttonText="Place a Landmark"
             messageText={`${eligibleElements.length} ready to place!`}
-            onClick={() => setModalOpen(true)}
+            onClick={() => { setTappedId(null); setModalOpen(true) }}
             disabled={modalOpen || !!revealOverlay}
           />
         ) : undiscoveredCount > 0 ? (
@@ -593,7 +593,7 @@ export default function MapPage() {
         ) : elements.filter((el) => el.song_id !== null).length > 0 ? (
           <MapFloatingAction
             buttonText={<><Award size={20} /> Claim Map</>}
-            onClick={() => setShowCompleteModal(true)}
+            onClick={() => { setTappedId(null); setShowCompleteModal(true) }}
             disabled={showCompleteModal}
           />
         ) : null
