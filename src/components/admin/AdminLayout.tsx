@@ -52,7 +52,7 @@ function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 w-52 bg-neutral-50 border-r border-primary/20 transition-transform duration-200
-          md:static md:translate-x-0 md:z-auto md:shrink-0
+          md:sticky md:top-0 md:self-start md:h-screen md:translate-x-0 md:z-auto md:shrink-0 md:overflow-y-auto
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
@@ -183,13 +183,13 @@ export default function AdminLayout() {
 
   return (
     <AdminBreadcrumbProvider>
-      <div className="h-screen flex flex-col text-neutral-800">
+      <div className="min-h-screen flex flex-col text-neutral-800">
         <AdminHeader onMenuToggle={() => setMobileOpen((o) => !o)} role={role} />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1">
           {!isCopywriter && <AdminSidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />}
           <div className="flex-1 flex flex-col min-w-0">
             {!isCopywriter && <Breadcrumbs />}
-            <main className="flex-1 overflow-y-auto p-6">
+            <main className="flex-1 p-6">
               <Outlet />
             </main>
           </div>
