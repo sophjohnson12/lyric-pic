@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Eye, Pencil } from 'lucide-react'
 import { useAdminBreadcrumbs } from './AdminBreadcrumbContext'
 import AdminTable from './AdminTable'
+import Dropdown from '../common/Dropdown'
 import Modal from '../common/Modal'
 import Toast from '../common/Toast'
 import ResultModal from '../game/ResultModal'
@@ -268,26 +269,19 @@ export default function CopywriterCorner() {
     <div className="space-y-8">
       {/* Artist dropdown */}
       <div className="flex items-center gap-2">
-        <label className="text-base font-semibold text-neutral-600" htmlFor="artist-select">
-          Artist:
-        </label>
-        <select
-          id="artist-select"
-          value={artistId ?? ''}
-          onChange={(e) => {
-            const id = Number(e.target.value)
-            setArtistId(id)
+        <label className="text-base font-semibold text-neutral-600">Artist:</label>
+        <Dropdown
+          options={artists.map((a) => ({ value: a.id, label: a.name }))}
+          value={artistId}
+          onChange={(v) => {
+            setArtistId(Number(v))
             setSongsPage(1)
             setSongsSearch('')
             setDebouncedSearch('')
             setSongsNeedsMessages('all')
           }}
-          className="border border-primary/30 rounded-lg px-3 py-1.5 bg-neutral-50 text-neutral-800 text-sm"
-        >
-          {artists.map((a) => (
-            <option key={a.id} value={a.id}>{a.name}</option>
-          ))}
-        </select>
+          className="min-w-[180px]"
+        />
       </div>
 
       {/* ── Table 1: Default Messages ── */}
@@ -319,7 +313,7 @@ export default function CopywriterCorner() {
                       <div className="font-medium text-neutral-800">{row.label}</div>
                       <div className="text-neutral-600 text-sm">{row.description}</div>
                     </td>
-                    <td className="px-4 py-2.5 text-neutral-600 max-w-sm truncate">
+                    <td className="px-4 py-2.5 text-neutral-800 max-w-sm truncate">
                       {artistData?.[row.field] ?? <span className="text-neutral-600">—</span>}
                     </td>
                     <td className="px-4 py-2.5">
@@ -393,21 +387,22 @@ export default function CopywriterCorner() {
             placeholder="Search songs…"
             value={songsSearch}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="border border-primary/30 rounded-lg px-3 py-1.5 text-base bg-neutral-50 text-neutral-800 w-full max-w-sm"
+            className="border border-primary/30 rounded-lg px-3 py-1.5 text-base bg-neutral-50 text-neutral-800 w-full max-w-sm h-12"
           />
-          <label className="text-sm font-medium text-neutral-600 whitespace-nowrap">Needs Message?</label>
-          <select
+          <label className="text-base font-medium text-neutral-600 whitespace-nowrap">Needs Message?</label>
+          <Dropdown
+            options={[
+              { value: 'all', label: '—' },
+              { value: 'yes', label: 'Yes' },
+              { value: 'no', label: 'No' },
+            ]}
             value={songsNeedsMessages}
-            onChange={(e) => {
-              setSongsNeedsMessages(e.target.value as 'all' | 'yes' | 'no')
+            onChange={(v) => {
+              setSongsNeedsMessages(v as 'all' | 'yes' | 'no')
               setSongsPage(1)
             }}
-            className="px-3 py-1.5 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm"
-          >
-            <option value="all">-</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
+            className="w-24"
+          />
         </div>
         <AdminTable
           data={songs}

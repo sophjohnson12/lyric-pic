@@ -1,32 +1,25 @@
 import { useState, useRef, useEffect } from 'react'
+import { ChevronDown } from 'lucide-react'
 
-interface DropdownOption {
-  id: number | null
+export interface DropdownOption {
+  value: string | number
   label: string
 }
 
 interface DropdownProps {
   options: DropdownOption[]
-  placeholder: string
-  onSelect: (id: number | null, label: string) => void
-  onEnterSelect?: (id: number | null, label: string) => void
+  value: string | number | null
+  onChange: (value: string | number) => void
+  placeholder?: string
   disabled?: boolean
-  excludeLabels?: string[]
+  className?: string
 }
 
-export default function Dropdown({ options, placeholder, onSelect, onEnterSelect, disabled = false, excludeLabels = [] }: DropdownProps) {
+export default function Dropdown({ options, value, onChange, placeholder = 'Select…', disabled = false, className = '' }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const [selectedLabel, setSelectedLabel] = useState('')
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const skipNextOpen = useRef(false)
 
-  const filteredOptions = options.filter(
-    (opt) =>
-      !excludeLabels.map((l) => l.toLowerCase()).includes(opt.label.toLowerCase()) &&
-      opt.label.toLowerCase().includes(search.toLowerCase())
-  )
+  const selectedOption = options.find((o) => o.value === value) ?? null
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -38,50 +31,32 @@ export default function Dropdown({ options, placeholder, onSelect, onEnterSelect
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSelect = (opt: DropdownOption) => {
-    setSelectedLabel(opt.label)
-    setSearch('')
-    setIsOpen(false)
-    onSelect(opt.id, opt.label)
-    skipNextOpen.current = true
-    inputRef.current?.focus()
-  }
-
-  const handleInputChange = (value: string) => {
-    setSearch(value)
-    setSelectedLabel('')
-    setIsOpen(true)
-  }
-
   return (
-    <div ref={wrapperRef} className="relative w-full">
-      <input
-        ref={inputRef}
-        type="text"
-        value={selectedLabel || search}
-        onChange={(e) => handleInputChange(e.target.value)}
-        onFocus={() => {
-          if (skipNextOpen.current) { skipNextOpen.current = false; return }
-          setIsOpen(true)
-        }}
-        placeholder={placeholder}
+    <div ref={wrapperRef} className={`relative ${className}`}>
+      <button
+        type="button"
         disabled={disabled}
-        className="h-12 w-full px-3 py-2 rounded-l-lg bg-white shadow-sm border border-secondary text-neutral-800 placeholder-neutral-400 disabled:opacity-50 text-base"
-      />
-      {isOpen && filteredOptions.length > 0 && (
-        <ul className="absolute z-30 w-full bg-white border border-secondary rounded-lg shadow-lg max-h-36 overflow-y-auto">
-          {filteredOptions.map((opt) => (
+        onClick={() => setIsOpen((o) => !o)}
+        className="flex items-center justify-between gap-2 w-full h-12 px-3 border border-primary/30 rounded-lg bg-neutral-50 text-base focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer disabled:cursor-default"
+      >
+        <span className={selectedOption ? 'text-neutral-800' : 'text-neutral-400'}>
+          {selectedOption?.label ?? placeholder}
+        </span>
+        <ChevronDown
+          size={15}
+          className={`text-neutral-500 shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen && (
+        <ul className="absolute z-30 mt-1 w-full min-w-max bg-white border border-primary/30 rounded-lg shadow-lg overflow-hidden">
+          {options.map((opt) => (
             <li
-              key={`${opt.id}-${opt.label}`}
-              tabIndex={0}
-              onClick={() => handleSelect(opt)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSelect(opt)
-                  onEnterSelect?.(opt.id, opt.label)
-                }
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value)
+                setIsOpen(false)
               }}
-              className="h-12 px-3 flex items-center hover:bg-primary/10 rounded-lg focus:bg-primary/10 cursor-pointer text-sm text-neutral-800"
+              className={`h-12 flex items-center px-3 text-base cursor-pointer hover:bg-primary/10 text-neutral-800 ${opt.value === value ? 'bg-primary/5 font-medium' : ''}`}
             >
               {opt.label}
             </li>
