@@ -154,6 +154,7 @@ function Breadcrumbs() {
 
 export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [configLoaded, setConfigLoaded] = useState(false)
   const { role } = useAuth()
   const isCopywriter = role === 'copywriter'
 
@@ -161,8 +162,14 @@ export default function AdminLayout() {
     getAppConfig().then((config) => {
       document.documentElement.style.setProperty('--color-theme-primary', config.theme_primary_color)
       document.documentElement.style.setProperty('--color-theme-secondary', config.theme_secondary_color)
-    }).catch(() => {/* silent — fallback to CSS defaults */})
+      document.documentElement.style.setProperty('--color-primary', config.theme_primary_color)
+      document.documentElement.style.setProperty('--color-secondary', config.theme_secondary_color)
+    }).catch(() => {/* silent — fallback to CSS defaults */}).finally(() => {
+      setConfigLoaded(true)
+    })
   }, [])
+
+  if (!configLoaded) return null
 
   return (
     <AdminBreadcrumbProvider>
