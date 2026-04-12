@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [configLoaded, setConfigLoaded] = useState(false)
   const { signIn } = useAuth()
   const navigate = useNavigate()
 
@@ -15,8 +16,14 @@ export default function LoginPage() {
     getAppConfig().then((config) => {
       document.documentElement.style.setProperty('--color-theme-primary', config.theme_primary_color)
       document.documentElement.style.setProperty('--color-theme-secondary', config.theme_secondary_color)
-    }).catch(() => {/* silent — fallback to CSS defaults */})
+      document.documentElement.style.setProperty('--color-primary', config.theme_primary_color)
+      document.documentElement.style.setProperty('--color-secondary', config.theme_secondary_color)
+    }).catch(() => {/* silent — fallback to CSS defaults */}).finally(() => {
+      setConfigLoaded(true)
+    })
   }, [])
+
+  if (!configLoaded) return null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -42,7 +49,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-neutral-800 text-center">Admin Login</h1>
 
         {error && (
-          <p className="text-red-500 text-sm text-center">{error}</p>
+          <p className="text-error text-sm text-center">{error}</p>
         )}
 
         <input
