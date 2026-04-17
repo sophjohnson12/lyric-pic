@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import GamePage from './components/game/GamePage'
 import DifficultyPage from './components/game/DifficultyPage'
 import LoginPage from './components/admin/LoginPage'
@@ -82,6 +83,7 @@ export default function App() {
       </Routes>
     </BrowserRouter>
       <Analytics />
+      <SpeedInsights />
     </>
   )
 }
