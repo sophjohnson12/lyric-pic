@@ -209,10 +209,10 @@ export interface ArtistFormData {
 
 export async function uploadMapPreviewImage(file: File, artistSlug: string): Promise<string> {
   const ext = file.type === 'image/webp' ? 'webp' : file.type === 'image/jpeg' ? 'jpg' : 'png'
-  const storageKey = `map_preview_${artistSlug}.${ext}`
+  const storageKey = `map_preview_${artistSlug}_${Date.now()}.${ext}`
   const { error } = await supabase.storage
     .from('map_elements')
-    .upload(storageKey, file, { contentType: file.type, upsert: true })
+    .upload(storageKey, file, { contentType: file.type, cacheControl: '31536000', upsert: false })
   if (error) throw error
   const { data } = supabase.storage.from('map_elements').getPublicUrl(storageKey)
   return data.publicUrl
@@ -220,10 +220,10 @@ export async function uploadMapPreviewImage(file: File, artistSlug: string): Pro
 
 export async function uploadMapCompleteImage(file: File, artistSlug: string): Promise<string> {
   const ext = file.type === 'image/webp' ? 'webp' : file.type === 'image/jpeg' ? 'jpg' : 'png'
-  const storageKey = `map_complete_${artistSlug}.${ext}`
+  const storageKey = `map_complete_${artistSlug}_${Date.now()}.${ext}`
   const { error } = await supabase.storage
     .from('map_elements')
-    .upload(storageKey, file, { contentType: file.type, upsert: true })
+    .upload(storageKey, file, { contentType: file.type, cacheControl: '31536000', upsert: false })
   if (error) throw error
   const { data } = supabase.storage.from('map_elements').getPublicUrl(storageKey)
   return data.publicUrl
@@ -2834,11 +2834,11 @@ async function compressToWebP(file: File, maxWidth = 1920, quality = 0.82): Prom
 }
 
 export async function uploadMapElementImage(file: File, name: string): Promise<string> {
-  const blob = await compressToWebP(file)
+  const blob = file.type === 'image/webp' ? file : await compressToWebP(file)
   const filename = `${name}_${Date.now()}.webp`
   const { error } = await supabase.storage
     .from('map_elements')
-    .upload(filename, blob, { contentType: 'image/webp', upsert: false })
+    .upload(filename, blob, { contentType: 'image/webp', cacheControl: '31536000', upsert: false })
   if (error) throw error
   const { data } = supabase.storage.from('map_elements').getPublicUrl(filename)
   return data.publicUrl

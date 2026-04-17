@@ -70,6 +70,7 @@ export default function ArtistMapElementsPage() {
       </div>
 
       <AdminTable
+        defaultPageSize={0}
         data={
           lyricFilter === 'all' ? elements :
           lyricFilter === 'yes' ? elements.filter((el) => el.song_line_id !== null) :
