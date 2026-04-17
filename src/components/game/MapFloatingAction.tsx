@@ -17,7 +17,7 @@ export default function MapFloatingAction({ buttonText, messageText, onClick, di
           </div>
         </div>
       )}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 bg-neutral-50 rounded-3xl shadow-sm">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 bg-neutral-50 rounded-3xl">
         <button
           onClick={onClick}
           disabled={disabled}
