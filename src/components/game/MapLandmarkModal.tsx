@@ -215,7 +215,7 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
   }
 
   return (
-    <Modal onClose={onClose} showEaseIn>
+    <Modal onClose={resolved ? undefined : onClose} showEaseIn>
       <div className="pt-1 text-center">
         <h2
           className="font-bold mb-1 mx-auto tracking-wide text-xl"
