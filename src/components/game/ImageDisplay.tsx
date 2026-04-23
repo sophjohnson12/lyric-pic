@@ -85,7 +85,7 @@ export default function ImageDisplay({ imageUrls, onIndexChange, initialIndex = 
       {imageUrls.length > 1 && activeIndex > 0 && (
         <button
           onClick={() => goTo(activeIndex - 1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center bg-white/80 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+          className="flex absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center bg-white/80 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
           type="button"
           aria-label="Previous image"
         >
@@ -95,7 +95,7 @@ export default function ImageDisplay({ imageUrls, onIndexChange, initialIndex = 
       {imageUrls.length > 1 && activeIndex < imageUrls.length - 1 && (
         <button
           onClick={() => goTo(activeIndex + 1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center bg-white/80 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+          className="flex absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center bg-white/80 hover:bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
           type="button"
           aria-label="Next image"
         >
