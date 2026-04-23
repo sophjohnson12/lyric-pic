@@ -89,10 +89,12 @@ export default function GamePage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [activeSlide, setActiveSlide] = useState(0)
   const [savedImageIndices, setSavedImageIndices] = useState<Record<number, number>>({})
+  const [savedShowFullLyric, setSavedShowFullLyric] = useState<Record<number, boolean>>({})
   const [lastSongId, setLastSongId] = useState<number | undefined>(game.currentSong?.id)
   if (game.currentSong?.id !== lastSongId) {
     setLastSongId(game.currentSong?.id)
     setSavedImageIndices({})
+    setSavedShowFullLyric({})
   }
   // Deferred focus index: immediate on first load, 500ms delayed on guess/reveal
   const [deferredFocusIndex, setDeferredFocusIndex] = useState(0)
@@ -425,6 +427,7 @@ export default function GamePage() {
             showFlagIcon={game.enableLyricFlag}
             showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
             levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
+            revealBehavior={revealBehavior}
             onClose={() => setShowInfo(false)}
           />
         )}
@@ -518,6 +521,8 @@ export default function GamePage() {
                 revealBehavior={revealBehavior}
                 initialImageIndex={savedImageIndices[activeSlide] ?? 0}
                 onImageIndexChange={(idx) => setSavedImageIndices((prev) => ({ ...prev, [activeSlide]: idx }))}
+                initialShowFullLyric={savedShowFullLyric[activeSlide] ?? false}
+                onShowFullLyricChange={(val) => setSavedShowFullLyric((prev) => ({ ...prev, [activeSlide]: val }))}
                 mobileCardSize={mobileCardSize}
                 onInputFocus={handleInputFocus}
                 onInputBlur={handleInputBlur}
@@ -677,6 +682,7 @@ export default function GamePage() {
         showFlagIcon={game.enableLyricFlag}
         showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
         levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
+        revealBehavior={revealBehavior}
         onClose={() => setShowInfo(false)}
       />
     )}

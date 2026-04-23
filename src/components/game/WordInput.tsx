@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence, useAnimate } from 'motion/react'
-import { Flag, Lock, LockOpen, KeyRound } from 'lucide-react'
+import { Flag, Lock, LockOpen, KeyRound, Eye } from 'lucide-react'
 import ImageDisplay from './ImageDisplay'
 import ConfirmPopup from '../common/ConfirmPopup'
 import HighlightedLine from './HighlightedLine'
@@ -27,6 +27,8 @@ interface WordInputProps {
   mobileCardSize?: number | null
   onInputFocus?: () => void
   onInputBlur?: () => void
+  initialShowFullLyric?: boolean
+  onShowFullLyricChange?: (val: boolean) => void
 }
 
 export default function WordInput({
@@ -45,6 +47,8 @@ export default function WordInput({
   mobileCardSize,
   onInputFocus,
   onInputBlur,
+  initialShowFullLyric = false,
+  onShowFullLyricChange,
 }: WordInputProps) {
   const [inputValue, setInputValue] = useState('')
   const [flagged, setFlagged] = useState(false)
@@ -55,6 +59,7 @@ export default function WordInput({
   const [isPending, setIsPending] = useState(false)
   const [lockScope, animateLock] = useAnimate()
   const [activeImageIndex, setActiveImageIndex] = useState(initialImageIndex)
+  const [showFullLyric, setShowFullLyric] = useState(initialShowFullLyric)
   const inputWasFocused = useRef(false)
 
   const currentImageUrl = puzzleWord.imageUrls[activeImageIndex] ?? ''
@@ -205,15 +210,50 @@ export default function WordInput({
                 animate={{ clipPath: "inset(0 0 0 0%)" }}
                 className={`absolute inset-0 bg-success flex items-center justify-center text-white rounded-b-xl border-t border-x border-secondary ${debugMode ? 'px-10' : 'px-3'}`}
               >
-                {revealBehavior === 'full_lyric' && puzzleWord.lineText
-                  ? <span className="text-sm text-center leading-snug line-clamp-2"><HighlightedLine text={puzzleWord.lineText} word={puzzleWord.word} /></span>
-                  : <span className="text-lg">{puzzleWord.word.toLowerCase()}</span>
-                }
+                <AnimatePresence mode="wait" initial={false}>
+                  {(revealBehavior === 'full_lyric' || showFullLyric) && puzzleWord.lineText
+                    ? (
+                      <motion.span
+                        key="full-lyric"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-sm text-center leading-snug line-clamp-2"
+                      >
+                        <HighlightedLine text={puzzleWord.lineText} word={puzzleWord.word} />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="word-only"
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-lg"
+                      >
+                        {puzzleWord.word.toLowerCase()}
+                      </motion.span>
+                    )
+                  }
+                </AnimatePresence>
+                <AnimatePresence>
+                  {revealBehavior === 'word_only' && !showFullLyric && (
+                    <motion.button
+                      key="eye-btn"
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      onClick={() => { setShowFullLyric(true); onShowFullLyricChange?.(true) }}
+                      className="group absolute bottom-1.5 right-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 rounded-full hover:cursor-pointer"
+                      title="Reveal full lyric"
+                      type="button"
+                    >
+                      <Eye size={20} className="drop-shadow-md transition-transform group-hover:scale-110" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
                 {debugMode && (
                   <button
                     onClick={handleFlag}
                     disabled={flagged}
-                    className={`group absolute bottom-1.5 right-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : ''}`}
+                    className={`group absolute bottom-1.5 left-1.5 p-2 text-white/80 hover:text-white transition-colors z-10 rounded-full hover:cursor-pointer ${flagged ? 'opacity-40 cursor-default' : ''}`}
                     title={flagged ? 'Flagged' : 'Flag this word'}
                   >
                     <Flag size={20} className={`drop-shadow-md transition-transform ${flagged ? '' : 'group-hover:scale-110'}`} />

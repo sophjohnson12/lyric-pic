@@ -1,6 +1,7 @@
 import Modal from '../common/Modal'
-import { KeyRound, Sliders, SkipForward, Map, Flag } from 'lucide-react';
+import { KeyRound, Sliders, SkipForward, Map, Flag, Eye } from 'lucide-react';
 import type { Album } from '../../types/database'
+import type { RevealBehavior } from './SettingsModal'
 import AlbumButtons from './AlbumButtons'
 
 interface InfoModalProps {
@@ -14,10 +15,11 @@ interface InfoModalProps {
   showFlagIcon: boolean
   showMapButton: boolean
   levelName: string
+  revealBehavior?: RevealBehavior
   onClose: () => void
 }
 
-export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, showMapButton, levelName, onClose }: InfoModalProps) {
+export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, showMapButton, levelName, revealBehavior, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary md:mb-1 tracking-wide">How to Play</h2>
@@ -28,7 +30,7 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
       <div className="space-y-1.5 md:space-y-2 text-base text-neutral-600">
         <div>
           <h3 className="font-semibold text-neutral-800 tracking-wide mb-0.5 md:mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
-          <p className="mb-0.5">
+          <p className="mb-0.5 md:mb-1">
             <span className="inline md:hidden">
               {minSongLyricCount === 1 ? 'The tab' : 'Each tab'} has {minImageCount}–{maxImageCount} pictures that represent a word from the song.
               Swipe to see all pictures. 
@@ -39,8 +41,9 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
             </span>
             <span> Press Enter to submit your guess. You have unlimited attempts!</span>
           </p>
-          <ul>
+          <ul className="space-y-0.5 md:space-y-1">
             <li className="flex items-center"><KeyRound size={15} strokeWidth={3} className="mr-2 text-primary"/>Reveal correct word</li>
+            {revealBehavior === 'word_only' && <li className="flex items-center"><Eye size={15} strokeWidth={3} className="mr-2 text-primary"/>Show full lyric</li>}
             {showFlagIcon && <li className="flex items-center"><Flag size={15} strokeWidth={3} className="mr-2 text-primary"/>Flag word for review</li>}
           </ul>
         </div>
