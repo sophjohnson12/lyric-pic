@@ -578,7 +578,7 @@ export default function MapPage() {
       {!showSpinner && (
         activeElement ? (
           <MapFloatingAction
-            buttonText="Place a Landmark"
+            buttonText="Place Landmark"
             messageText={`${eligibleElements.length} ready to place!`}
             onClick={() => { setTappedId(null); setModalOpen(true) }}
             disabled={modalOpen || !!revealOverlay}

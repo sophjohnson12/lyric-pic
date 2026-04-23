@@ -53,7 +53,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
           className="font-bold text-primary mb-3 mx-auto tracking-wide"
           style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
         >{message}</h2>
-        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-3 w-full">
+        <div className="bg-secondary/25 rounded-lg border border-primary p-4 md:p-6 mb-1 md:mb-2 w-full">
           <p className="text-lg md:text-xl font-semibold text-neutral-800">{songDisplay}</p>
           <p className={"text-sm mb-2 md:mb-3 italic"}>
             <span className="font-medium text-neutral-700">{album ? album.name : 'Single'}</span>
@@ -69,34 +69,36 @@ export default function ResultModal({ correct, message, song, album, artist, puz
             </div>
           )}
         </div>
-        {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink my-2 px-4">
+        <div className="mb-1 md:mb-2">
+          <ShareButton text={shareText} url={shareUrl} />
+        </div>
+        {!correct && <div className="text-xs text-neutral-600 text-center min-w-0 shrink mb-3 px-4">
           We'll keep this one in the queue so you can try again later.
         </div>}
-        {correct && !!mapDiscoveryCount && onGoToMap && (
-          <div className="flex items-center gap-1">
-            <p className="text-sm text-neutral-600">
-              {mapDiscoveryCount === 1 ? 'You discovered a new landmark!' : `You discovered ${mapDiscoveryCount} new landmarks!`}
+        {correct && !!mapDiscoveryCount && onGoToMap ? (
+          <div className="items-center space-y-3">
+            <p className="text-xs text-neutral-600 px-4">
+              {mapDiscoveryCount === 1 ? 'You discovered a new landmark on the map!' : `You discovered ${mapDiscoveryCount} new landmarks on the map!`}
             </p>
             <button
               onClick={onGoToMap}
-              className="w-12 h-12 flex items-center justify-center cursor-pointer group"
+              className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer"
             >
-              <div className="w-10 h-10 flex items-center justify-center text-primary border border-primary bg-neutral-50 rounded-full group-hover:bg-secondary/50 transition-colors">
+              <div className="flex gap-1.5 justify-center">
                 <Map size={24} />
+                View Map
               </div>
             </button>
           </div>
+        ) : (
+          <button
+            ref={buttonRef}
+            onClick={onNext}
+            className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer"
+          >
+            Next Song
+          </button>
         )}
-        <div className="mb-3">
-          <ShareButton text={shareText} url={shareUrl} />
-        </div>
-        <button
-          ref={buttonRef}
-          onClick={onNext}
-          className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer"
-        >
-          Next Song
-        </button>
       </div>
     </Modal>
   )
