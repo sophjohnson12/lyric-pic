@@ -76,7 +76,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
           We'll keep this one in the queue so you can try again later.
         </div>}
         {correct && !!mapDiscoveryCount && onGoToMap ? (
-          <div className="items-center space-y-3">
+          <div className="items-center space-y-3 w-full">
             <p className="text-xs text-neutral-600 px-4">
               {mapDiscoveryCount === 1 ? 'You discovered a new landmark on the map!' : `You discovered ${mapDiscoveryCount} new landmarks on the map!`}
             </p>
