@@ -11,13 +11,13 @@ export default function MapFloatingAction({ buttonText, messageText, onClick, di
   return (
     <>
       {messageText && (
-        <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-30 w-fit bg-neutral-50/65 backdrop-blur-3xl rounded-3xl p-1">
+        <div className="fixed bottom-1 inset-x-0 mx-auto z-30 w-fit bg-neutral-50/65 backdrop-blur-3xl rounded-3xl p-1" style={{ transform: 'translateZ(0)' }}>
           <div className="text-xs text-neutral-800 whitespace-nowrap">
             {messageText}
           </div>
         </div>
       )}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-30 bg-neutral-50 rounded-3xl">
+      <div className="fixed bottom-8 inset-x-0 mx-auto z-30 w-fit bg-neutral-50 rounded-3xl" style={{ transform: 'translateZ(0)' }}>
         <button
           onClick={onClick}
           disabled={disabled}
