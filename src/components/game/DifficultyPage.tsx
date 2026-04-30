@@ -6,6 +6,13 @@ import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY } from '../../util
 import type { Artist } from '../../types/database'
 import type { GameLevel } from '../../types/game'
 
+function formatLevelNames(names: string[]): string {
+  if (names.length === 0) return ''
+  if (names.length === 1) return names[0]
+  if (names.length === 2) return `${names[0]} or ${names[1]}`
+  return `${names.slice(0, -1).join(', ')}, or ${names[names.length - 1]}`
+}
+
 export default function DifficultyPage() {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const navigate = useNavigate()
@@ -46,6 +53,22 @@ export default function DifficultyPage() {
     load().catch(() => setLoading(false))
   }, [artistSlug, applyArtistTheme])
 
+  useEffect(() => {
+    if (!artist) return
+    const title = `Lyric Pic - Guess the ${artist.name} Song`
+    const levelNames = formatLevelNames(levels.map((l) => l.name))
+    const play = levelNames ? `Play ${levelNames} now!` : 'Play now!'
+    const description = artist.fanbase_name
+      ? `Ready to prove your ${artist.fanbase_name} status? Guess the ${artist.name} song based on images representing words from the lyrics. ${play}`
+      : `Guess the ${artist.name} song based on images representing words from the lyrics. ${play}`
+    document.title = title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', description)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title)
+    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', description)
+  }, [artist, levels])
+
   function handleSelect(level: GameLevel) {
     const message = level.load_message ?? artist?.load_message ?? null
     if (message) {
@@ -73,23 +96,25 @@ export default function DifficultyPage() {
         {artist?.name && (
           <h2 className="text-neutral-500 mb-6 text-xl tracking-wide">{artist.name}</h2>
         )}
-        <p className="text-lg text-neutral-800 font-medium mb-3 text-center">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
         {levels.length === 0 ? (
-          <p className="text-neutral-500 text-sm">No levels available yet.</p>
+          <p className="text-lg text-neutral-800 font-medium mb-3 text-center">Coming Soon!</p>
         ) : (
-          <div className="flex flex-col gap-4 w-full">
-            {levels.map((level) => (
-              <button
-                key={level.id}
-                onClick={() => handleSelect(level)}
-                className="items-center justify-between px-6 py-3 md:py-4 border-primary border text-primary rounded-2xl font-semibold hover:bg-secondary/50 transition-opacity cursor-pointer"
-              >
-                <h2 className="text-xl tracking-wide">{level.name}</h2>
-                {level.description && (
-                  <p className="text-base text-neutral-600 font-normal">{level.description}</p>
-                )}
-              </button>
-            ))}
+          <div className="w-full">
+            <p className="text-lg text-neutral-800 font-medium mb-3 text-center">Choose Your {artist?.fanbase_name ? `${artist.fanbase_name} ` : ''}Level:</p>
+            <div className="flex flex-col gap-4 w-full">
+              {levels.map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => handleSelect(level)}
+                  className="items-center justify-between px-6 py-3 md:py-4 border-primary border text-primary rounded-2xl font-semibold hover:bg-secondary/50 transition-opacity cursor-pointer"
+                >
+                  <h2 className="text-xl tracking-wide">{level.name}</h2>
+                  {level.description && (
+                    <p className="text-base text-neutral-600 font-normal">{level.description}</p>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -21,6 +21,13 @@ import Toast from '../common/Toast'
 import ConfirmPopup from '../common/ConfirmPopup'
 import { flagWord, flagImage, getSongMapElementIds } from '../../services/supabase'
 
+function formatLevelNames(names: string[]): string {
+  if (names.length === 0) return ''
+  if (names.length === 1) return names[0]
+  if (names.length === 2) return `${names[0]} or ${names[1]}`
+  return `${names.slice(0, -1).join(', ')}, or ${names[names.length - 1]}`
+}
+
 export default function GamePage() {
   const { artistSlug, difficulty: rawDifficulty } = useParams<{ artistSlug: string; difficulty: string }>()
   const navigate = useNavigate()
@@ -172,15 +179,20 @@ export default function GamePage() {
   // Update meta tags
   useEffect(() => {
     if (game.artist) {
-      document.title = `${game.artist.name} - Lyric Pic`
-      const desc = document.querySelector('meta[name="description"]')
-      if (desc) desc.setAttribute('content', `Guess ${game.artist.name} songs from images! A fun visual word puzzle game.`)
-      const ogTitle = document.querySelector('meta[property="og:title"]')
-      if (ogTitle) ogTitle.setAttribute('content', `${game.artist.name} - Lyric Pic`)
-      const ogDesc = document.querySelector('meta[property="og:description"]')
-      if (ogDesc) ogDesc.setAttribute('content', `Guess ${game.artist.name} songs from images!`)
+      const title = `Lyric Pic - Guess the ${game.artist.name} Song`
+      const levelNames = formatLevelNames(game.levels.map((l) => l.name))
+      const play = levelNames ? `Play ${levelNames} now!` : 'Play now!'
+      const description = game.artist.fanbase_name
+        ? `Ready to prove your ${game.artist.fanbase_name} status? Guess the ${game.artist.name} song based on images representing words from the lyrics. ${play}`
+        : `Guess the ${game.artist.name} song based on images representing words from the lyrics. ${play}`
+      document.title = title
+      document.querySelector('meta[name="description"]')?.setAttribute('content', description)
+      document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
+      document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
+      document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title)
+      document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', description)
     }
-  }, [game.artist])
+  }, [game.artist, game.levels])
 
   // Find first non-guessed word index
   const autoFocusIndex = useMemo(() => {

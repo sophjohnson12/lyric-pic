@@ -138,7 +138,7 @@ export default function ArtistFormPage() {
     }
   }
 
-  const canSubmit = !!(name.trim() && slug.trim() && successMessage.trim() && failureMessage.trim() && geniusArtistId)
+  const canSubmit = !!(name.trim() && slug.trim() && successMessage.trim() && failureMessage.trim())
 
   const inputClass = 'w-full px-3 py-2 border-2 border-primary/30 rounded-lg bg-neutral-50 text-neutral-800 focus:outline-none focus:border-primary text-sm'
 
@@ -156,7 +156,7 @@ export default function ArtistFormPage() {
             <FormField label="Slug" required>
               <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required className={inputClass} />
             </FormField>
-            <FormField label="Genius Artist ID" required>
+            <FormField label="Genius Artist ID">
               <div className="flex items-center gap-4">
                 <input type="number" value={geniusArtistId} readOnly required className={`${inputClass} bg-gray-100 cursor-not-allowed`} />
                 <button
