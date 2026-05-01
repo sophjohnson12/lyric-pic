@@ -44,16 +44,18 @@ export default function SongModal({
 
   return (
     <div className="flex justify-center">
-      <button
-        ref={triggerRef}
-        onClick={() => setShowModal(true)}
-        disabled={showModal}
-        className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-lg font-semibold
-                   hover:text-white hover:opacity-90 cursor-pointer border border-secondary
-                   flex items-center gap-1 disabled:opacity-60 disabled:cursor-default disabled:pointer-events-none"
-      >
-        Guess Song
-      </button>
+      <div className="bg-neutral-50 rounded-3xl">
+        <button
+          ref={triggerRef}
+          onClick={() => setShowModal(true)}
+          disabled={showModal}
+          className="h-12 py-2 px-4 bg-primary text-neutral-100 rounded-3xl text-lg font-semibold
+                     hover:text-white hover:opacity-90 cursor-pointer border border-secondary
+                     flex items-center gap-1 disabled:opacity-60 disabled:cursor-default disabled:pointer-events-none"
+        >
+          Guess Song
+        </button>
+      </div>
       {showModal && (
         <Modal showClose={false} onClose={closeModal} showEaseIn={true} lockTop={true}>
           {albumRevealed && correctAlbum && showAlbumFilters && (
