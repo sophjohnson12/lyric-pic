@@ -165,6 +165,10 @@ export default function MapPage() {
     if (!artistSlug) return
     async function load() {
       const artist = await getArtistBySlug(artistSlug!)
+      if (!artist.is_selectable) {
+        navigate(`/${artistSlug}`, { replace: true })
+        return
+      }
       const [config, els, fetchedLevels] = await Promise.all([
         getAppConfig(),
         getMapElements(artist.id),

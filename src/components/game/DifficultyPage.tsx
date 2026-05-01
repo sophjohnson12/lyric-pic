@@ -96,7 +96,12 @@ export default function DifficultyPage() {
         {artist?.name && (
           <h2 className="text-neutral-500 mb-6 text-xl tracking-wide">{artist.name}</h2>
         )}
-        {levels.length === 0 ? (
+        {artist && !artist.is_selectable ? (
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-primary mb-2 tracking-wide">Coming Soon</h2>
+            <p className="text-neutral-500">{artist.name} isn't available yet. Check back later!</p>
+          </div>
+        ) : levels.length === 0 ? (
           <p className="text-lg text-neutral-800 font-medium mb-3 text-center">Coming Soon!</p>
         ) : (
           <div className="w-full">

@@ -380,16 +380,7 @@ export default function GamePage() {
   }
 
   if (game.artist && !game.artist.is_selectable) {
-    return (
-      <div className="min-h-dvh flex items-center justify-center p-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-primary mb-2 tracking-wide">
-            Coming Soon
-          </h2>
-          <p className="text-neutral-500">{game.artist.name} isn't available yet. Check back later!</p>
-        </div>
-      </div>
-    )
+    return <Navigate to={`/${artistSlug}`} replace />
   }
 
   if (game.allSongsPlayed) {
