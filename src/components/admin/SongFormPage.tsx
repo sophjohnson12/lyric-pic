@@ -30,7 +30,7 @@ export default function SongFormPage() {
   const [geniusSongId, setGeniusSongId] = useState('')
   const [albumId, setAlbumId] = useState<string>('')
   const [trackNumber, setTrackNumber] = useState('')
-  const [difficultyRank, setDifficultyRank] = useState('')
+  const [difficultyRank, setDifficultyRank] = useState(isEdit ? '' : '3')
   const [featuredArtists, setFeaturedArtists] = useState('')
   const [fullLyrics, setFullLyrics] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -65,7 +65,18 @@ export default function SongFormPage() {
   }, [aid, artistName, albums, searchParams, setBreadcrumbs, isEdit, songsUrl])
 
   useEffect(() => {
-    getAlbumsForDropdown(aid).then(setAlbums)
+    getAlbumsForDropdown(aid).then((data) => {
+      setAlbums(data)
+      if (!isEdit) {
+        const albumParam = searchParams.get('album')
+        if (albumParam && albumParam !== 'none') {
+          const paramId = Number(albumParam)
+          if (!isNaN(paramId) && data.some((a) => a.id === paramId)) {
+            setAlbumId(albumParam)
+          }
+        }
+      }
+    })
   }, [aid])
 
   useEffect(() => {
