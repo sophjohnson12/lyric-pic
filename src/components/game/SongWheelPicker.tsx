@@ -6,6 +6,7 @@ interface SongWheelPickerProps {
   incorrectGuesses: string[]
   onSelectionChange?: (songId: number | null, songName: string) => void
   onSubmit?: () => void
+  songLabel?: string
   itemHeight?: number
   visibleCount?: number
   /** Fraction of window.innerHeight available to this picker's container (e.g. 0.8 for max-h-[80vh]) */
@@ -19,6 +20,7 @@ export default function SongWheelPicker({
   incorrectGuesses,
   onSelectionChange,
   onSubmit,
+  songLabel = 'song',
   itemHeight = 48,
   visibleCount = 3,
   containerFraction = 1,
@@ -121,7 +123,7 @@ export default function SongWheelPicker({
         autoFocus={window.innerWidth >= 640}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder={`Search ${filteredSongs.length} songs...`}
+        placeholder={`Search ${filteredSongs.length} ${filteredSongs.length === 1 ? songLabel : `${songLabel}s`}...`}
         className="h-12 w-full px-3 py-2 rounded-lg bg-white shadow-sm text-neutral-950
                    placeholder-neutral-600 text-base border border-secondary mb-3"
       />

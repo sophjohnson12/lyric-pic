@@ -198,6 +198,10 @@ export interface ArtistFormData {
   success_message: string
   load_message: string
   genius_artist_id: number | null
+  album_label_override: string | null
+  song_label_override: string | null
+  landmark_label_override: string | null
+  map_label_override: string | null
   theme_primary_color: string
   theme_secondary_color: string
   theme_background_color?: string

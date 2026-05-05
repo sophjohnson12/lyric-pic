@@ -6,10 +6,11 @@ import AlbumIcon from '../common/AlbumIcon'
 interface RevealAlbumHintProps {
   correctAlbum: Album | null
   albumHintRevealed: boolean
+  albumLabel: string
   onReveal: () => void
 }
 
-export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onReveal }: RevealAlbumHintProps) {
+export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, albumLabel, onReveal }: RevealAlbumHintProps) {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const revealedRef = useRef<HTMLDivElement>(null)
 
@@ -64,7 +65,7 @@ export default function RevealAlbumHint({ correctAlbum, albumHintRevealed, onRev
           className="h-12 px-2 text-primary rounded-3xl text-base font-medium cursor-pointer flex items-center gap-1 transition-transform hover:scale-110"
         >
           <Lightbulb size={20} />
-          Show Album
+          Show {albumLabel}
         </button>
       )}
     </div>

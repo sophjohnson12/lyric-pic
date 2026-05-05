@@ -9,9 +9,10 @@ interface MapCompleteModalProps {
   downloadImageUrl: string | null
   mapCompleteImageSize: { width: number; height: number } | null
   artistName: string
+  mapLabel: string
 }
 
-export default function MapCompleteModal({ onClose, previewImageUrl, downloadImageUrl, mapCompleteImageSize, artistName }: MapCompleteModalProps) {
+export default function MapCompleteModal({ onClose, previewImageUrl, downloadImageUrl, mapCompleteImageSize, artistName, mapLabel }: MapCompleteModalProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [downloading, setDownloading] = useState(false)
 
@@ -25,7 +26,7 @@ export default function MapCompleteModal({ onClose, previewImageUrl, downloadIma
       const a = document.createElement('a')
       a.href = objectUrl
       const ext = downloadImageUrl.split('.').pop()?.split('?')[0] ?? 'jpg'
-      a.download = `LyricPic_TaylorSwift_Map.${ext}`
+      a.download = `LyricPic_${artistName}_${mapLabel}.${ext}`
       a.click()
       URL.revokeObjectURL(objectUrl)
     } finally {
@@ -40,7 +41,7 @@ export default function MapCompleteModal({ onClose, previewImageUrl, downloadIma
           className="font-bold text-primary mb-3 mx-auto tracking-wide"
           style={{ fontSize: 'clamp(14px, 5.3vw, 24px)' }}
         >
-          You completed the map!
+          You completed the {mapLabel.toLowerCase()}!
         </h2>
         {previewImageUrl ? (
           <>
@@ -61,7 +62,7 @@ export default function MapCompleteModal({ onClose, previewImageUrl, downloadIma
               />
             </div>
             <div className="mb-3">
-              <ShareButton imageUrl={downloadImageUrl ?? previewImageUrl} filename={`LyricPic - ${artistName} Map`} />
+              <ShareButton imageUrl={downloadImageUrl ?? previewImageUrl} filename={`LyricPic - ${artistName} ${mapLabel}`} />
             </div>
             {downloadImageUrl && (
               <motion.button

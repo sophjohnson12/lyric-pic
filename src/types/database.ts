@@ -3,6 +3,10 @@ export interface Artist {
   name: string
   slug: string
   fanbase_name: string | null
+  album_label_override: string | null
+  song_label_override: string | null
+  landmark_label_override: string | null
+  map_label_override: string | null
   load_message: string | null
   success_message: string | null
   failure_message: string | null

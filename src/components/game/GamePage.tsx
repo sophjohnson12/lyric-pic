@@ -383,6 +383,11 @@ export default function GamePage() {
     return <Navigate to={`/${artistSlug}`} replace />
   }
 
+  const albumLabel = game.artist?.album_label_override || 'Album'
+  const songLabel = game.artist?.song_label_override || 'Song'
+  const landmarkLabel = game.artist?.landmark_label_override || 'Landmark'
+  const mapLabel = game.artist?.map_label_override || 'Map'
+
   if (game.allSongsPlayed) {
     const noSongs = game.totalPlayableSongs === 0
     return (
@@ -414,6 +419,7 @@ export default function GamePage() {
             artistName={game.artist?.name ?? ''}
             artistSlug={artistSlug ?? ''}
             confettiColors={game.albums.flatMap((a) => [a.theme_primary_color, a.theme_secondary_color]).filter((c): c is string => !!c)}
+            songLabel={songLabel}
             onChooseLevel={() => navigate(`/${artistSlug}`)}
             onShowHistory={() => setShowHistory(true)}
           />
@@ -430,6 +436,10 @@ export default function GamePage() {
             showFlagIcon={game.enableLyricFlag}
             showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
             levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
+            albumLabel={albumLabel}
+            songLabel={songLabel}
+            landmarkLabel={landmarkLabel}
+            mapLabel={mapLabel}
             revealBehavior={revealBehavior}
             onClose={() => setShowInfo(false)}
           />
@@ -443,6 +453,9 @@ export default function GamePage() {
             levelSlug={levelSlug}
             levelSongCounts={game.levelSongCounts}
             fanbaseName={game.artist?.fanbase_name ?? null}
+            songLabel={songLabel}
+            landmarkLabel={landmarkLabel}
+            mapLabel={mapLabel}
             artistLoadMessage={game.artist?.load_message ?? null}
             revealBehavior={revealBehavior}
             onRevealBehaviorChange={setRevealBehavior}
@@ -581,6 +594,7 @@ export default function GamePage() {
                   key={game.currentSong?.id}
                   correctAlbum={game.correctAlbum}
                   albumHintRevealed={game.albumHintRevealed}
+                  albumLabel={albumLabel}
                   onReveal={game.revealAlbumHint}
                 />
               </div>
@@ -594,6 +608,7 @@ export default function GamePage() {
                 correctAlbum={game.correctAlbum}
                 albumRevealed={game.albumGuessed || game.albumHintRevealed}
                 showAlbumFilters={game.showAlbumFilters}
+                songLabel={songLabel}
               />
             </div>
             <div className="md:max-w-md mx-auto">
@@ -634,8 +649,8 @@ export default function GamePage() {
       )}
       {showSkipConfirm && (
         <ConfirmPopup
-          title="Skip Song?"
-          message="Are you sure you want to skip this song? We'll keep it in the queue so you can try again later."
+          title={`Skip ${songLabel}?`}
+          message={`Are you sure you want to skip this ${songLabel.toLowerCase()}? We'll keep it in the queue so you can try again later.`}
           confirmLabel="Skip"
           cancelLabel="Cancel"
           onConfirm={() => { game.skipSong(); setShowSkipConfirm(false) }}
@@ -645,7 +660,7 @@ export default function GamePage() {
       )}
       {showMapConfirm && (
         <ConfirmPopup
-          title="Continue to Map?"
+          title={`Continue to ${mapLabel}?`}
           message="Are you sure you want to leave this song? We'll keep it in the queue so you can try again later."
           confirmLabel="Continue"
           cancelLabel="Cancel"
@@ -663,6 +678,9 @@ export default function GamePage() {
           levelSlug={levelSlug}
           levelSongCounts={game.levelSongCounts}
           fanbaseName={game.artist?.fanbase_name ?? null}
+          songLabel={songLabel}
+          landmarkLabel={landmarkLabel}
+          mapLabel={mapLabel}
           artistLoadMessage={game.artist?.load_message ?? null}
           revealBehavior={revealBehavior}
           onRevealBehaviorChange={setRevealBehavior}
@@ -685,6 +703,10 @@ export default function GamePage() {
         showFlagIcon={game.enableLyricFlag}
         showMapButton={game.enableMap && !!game.artist?.map_image_url && game.hasMapElements}
         levelName={game.levels.find((l) => l.slug === levelSlug)?.name ?? ''}
+        albumLabel={albumLabel}
+        songLabel={songLabel}
+        landmarkLabel={landmarkLabel}
+        mapLabel={mapLabel}
         revealBehavior={revealBehavior}
         onClose={() => setShowInfo(false)}
       />

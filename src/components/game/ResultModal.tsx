@@ -26,6 +26,10 @@ export default function ResultModal({ correct, message, song, album, artist, puz
     return () => clearTimeout(id)
   }, [])
 
+  const songLabel = artist?.song_label_override || 'Song'
+  const landmarkLabel = artist?.landmark_label_override?.toLowerCase() || 'landmark'
+  const mapLabel = artist?.map_label_override || 'Map'
+
   const songDisplay = song.featured_artists?.length
     ? `${song.name} ft. ${song.featured_artists.join(', ')}`
     : song.name
@@ -37,7 +41,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
   const fanbaseName = artist?.fanbase_name ?? 'fan'
   const result = correct ? 'I guessed' : 'I couldn\'t guess'
   const emoji = correct ? '😎' : '😢'
-  const shareText = `${wordLine}\n\n${result} the ${artistName} song. ${emoji} Your turn to prove your ${fanbaseName} status!`
+  const shareText = `${wordLine}\n\n${result} the ${artistName} ${songLabel.toLowerCase()}. ${emoji} Your turn to prove your ${fanbaseName} status!`
   const shareUrl = `https://playlyricpic.com/${artist?.slug ?? ''}`
 
   return (
@@ -78,7 +82,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
         {correct && !!mapDiscoveryCount && onGoToMap ? (
           <div className="items-center space-y-3 w-full">
             <p className="text-xs text-neutral-600 px-4">
-              {mapDiscoveryCount === 1 ? 'You discovered a new landmark on the map!' : `You discovered ${mapDiscoveryCount} new landmarks on the map!`}
+              {mapDiscoveryCount === 1 ? `You discovered a new ${landmarkLabel} on the ${mapLabel.toLowerCase()}!` : `You discovered ${mapDiscoveryCount} new ${landmarkLabel}s on the ${mapLabel.toLowerCase()}!`}
             </p>
             <button
               onClick={onGoToMap}
@@ -86,7 +90,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
             >
               <div className="flex gap-1.5 justify-center">
                 <Map size={24} />
-                View Map
+                View {mapLabel}
               </div>
             </button>
           </div>
@@ -96,7 +100,7 @@ export default function ResultModal({ correct, message, song, album, artist, puz
             onClick={onNext}
             className="w-full md:w-auto h-12 px-4 py-2 bg-primary border border-secondary text-white rounded-lg text-base font-semibold hover:opacity-90 cursor-pointer"
           >
-            Next Song
+            Next {songLabel}
           </button>
         )}
       </div>

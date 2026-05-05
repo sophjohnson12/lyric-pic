@@ -99,6 +99,9 @@ export default function MapPage() {
     []
   )
   const [artistName, setArtistName] = useState('')
+  const [landmarkLabel, setLandmarkLabel] = useState('Landmark')
+  const [mapLabel, setMapLabel] = useState('Map')
+  const [songLabel, setSongLabel] = useState('Song')
   const [mapCompleteImageUrl, setMapCompleteImageUrl] = useState<string | null>(null)
   const [mapPreviewImageUrl, setMapPreviewImageUrl] = useState<string | null>(null)
   const [mapCompleteImageSize, setMapCompleteImageSize] = useState<{ width: number; height: number } | null>(null)
@@ -180,6 +183,9 @@ export default function MapPage() {
       }
       applyArtistTheme(artist)
       setArtistName(artist.name)
+      setLandmarkLabel(artist.landmark_label_override || 'Landmark')
+      setMapLabel(artist.map_label_override || 'Map')
+      setSongLabel(artist.song_label_override || 'Song')
       setMapCompleteImageUrl(artist.map_image_url ?? null)
       setMapPreviewImageUrl(artist.map_image_preview_url ?? null)
       setElements(els)
@@ -459,6 +465,7 @@ export default function MapPage() {
           onBack={() => navigate(gameUrl)}
           revealedLandmarks={revealedIds.length}
           totalLandmarks={elements.filter((el) => el.song_id !== null).length}
+          landmarkLabel={landmarkLabel}
         />
       )}
       {showSpinner && (
@@ -547,7 +554,7 @@ export default function MapPage() {
                     )}
                     {hoverTooltipVisible && isLocked && (
                       <Tooltip borderColor="var(--color-theme-primary)" topMargin={64}>
-                        <p className="text-sm font-medium text-neutral-700">Keep playing to discover this landmark.</p>
+                        <p className="text-sm font-medium text-neutral-700">Keep playing to discover this {landmarkLabel.toLowerCase()}.</p>
                         <p className="text-xs mt-1">
                           <span className="text-neutral-600 font-semibold">Level: </span>
                           <span className="text-neutral-700 font-normal">{getLevelNames(element, levels)}</span>
@@ -582,7 +589,7 @@ export default function MapPage() {
       {!showSpinner && (
         activeElement ? (
           <MapFloatingAction
-            buttonText="Place Landmark"
+            buttonText={`Place ${landmarkLabel}`}
             messageText={`${eligibleElements.length} ready to place!`}
             onClick={() => { setTappedId(null); setModalOpen(true) }}
             disabled={modalOpen || !!revealOverlay}
@@ -590,13 +597,13 @@ export default function MapPage() {
         ) : undiscoveredCount > 0 ? (
           <MapFloatingAction
             buttonText="Return to Game"
-            messageText={`${undiscoveredCount} more landmark${undiscoveredCount === 1 ? '' : 's'} to discover!`}
+            messageText={`${undiscoveredCount} more ${landmarkLabel.toLowerCase()}${undiscoveredCount === 1 ? '' : 's'} to discover!`}
             onClick={() => navigate(gameUrl)}
             disabled={modalOpen || !!revealOverlay}
           />
         ) : elements.filter((el) => el.song_id !== null).length > 0 ? (
           <MapFloatingAction
-            buttonText={<><Award size={20} /> Claim Map</>}
+            buttonText={<><Award size={20} /> Claim {mapLabel}</>}
             onClick={() => { setTappedId(null); setShowCompleteModal(true) }}
             disabled={showCompleteModal}
           />
@@ -610,6 +617,7 @@ export default function MapPage() {
           downloadImageUrl={mapCompleteImageUrl}
           mapCompleteImageSize={mapCompleteImageSize}
           artistName={artistName}
+          mapLabel={mapLabel}
         />
       )}
 
@@ -617,6 +625,8 @@ export default function MapPage() {
         <MapLandmarkModal
           element={activeElement}
           distractors={distractors}
+          landmarkLabel={landmarkLabel}
+          songLabel={songLabel}
           onReveal={handleRevealStart}
           onLiftOff={handleLiftOff}
           onClose={() => setModalOpen(false)}

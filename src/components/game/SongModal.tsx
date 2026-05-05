@@ -12,6 +12,7 @@ interface SongModalProps {
   correctAlbum?: Album | null
   albumRevealed?: boolean
   showAlbumFilters?: boolean
+  songLabel: string
 }
 
 export default function SongModal({
@@ -22,6 +23,7 @@ export default function SongModal({
   correctAlbum,
   albumRevealed,
   showAlbumFilters,
+  songLabel,
 }: SongModalProps) {
   const [showModal, setShowModal] = useState(false)
   const [modalSelection, setModalSelection] = useState<{ id: number; name: string } | null>(null)
@@ -53,7 +55,7 @@ export default function SongModal({
                      hover:text-white hover:opacity-90 cursor-pointer border border-secondary
                      flex items-center gap-1 disabled:opacity-60 disabled:cursor-default disabled:pointer-events-none"
         >
-          Guess Song
+          Guess {songLabel}
         </button>
       </div>
       {showModal && (
@@ -83,6 +85,7 @@ export default function SongModal({
               visibleCount={5}
               containerFraction={0.8}
               reservedHeight={albumRevealed && correctAlbum && showAlbumFilters ? 212 : 172}
+              songLabel={songLabel.toLowerCase()}
               onSelectionChange={(id, name) =>
                 setModalSelection(id !== null ? { id, name } : null)
               }

@@ -18,6 +18,9 @@ interface SettingsModalProps {
   levelSlug: string
   levelSongCounts: Record<number, number>
   fanbaseName: string | null
+  songLabel: string
+  landmarkLabel: string
+  mapLabel: string
   artistLoadMessage: string | null
   revealBehavior: RevealBehavior
   onRevealBehaviorChange: (behavior: RevealBehavior) => void
@@ -25,7 +28,7 @@ interface SettingsModalProps {
   onClearHistory: () => void
 }
 
-export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, levelSongCounts, fanbaseName, artistLoadMessage, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
+export default function SettingsModal({ playedSongIds, playedCount, totalSongs, levels, levelSlug, levelSongCounts, fanbaseName, songLabel, landmarkLabel, mapLabel, artistLoadMessage, revealBehavior, onRevealBehaviorChange, onClose, onClearHistory }: SettingsModalProps) {
   const { artistSlug } = useParams<{ artistSlug: string }>()
   const navigate = useNavigate()
   const [songNames, setSongNames] = useState<string[]>([])
@@ -73,13 +76,13 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         <h2 className="tracking-wide text-xl font-bold text-primary mb-1">Settings & Stats</h2>
         <div className="space-y-2 md:space-y-3">
           <div className="hidden">
-            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Landmarks</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">{landmarkLabel}s</h3>
             <div>
               <button
                 onClick={() => { onClose(); navigate(`/${artistSlug}/map?level=${levelSlug}`) }}
                 className="flex w-full md:w-auto py-2 px-4 h-12 items-center justify-center gap-1 font-medium text-base text-primary border border-primary rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
               >
-                <Map size={24} className="transition-transform group-hover:scale-110" />View Map
+                <Map size={24} className="transition-transform group-hover:scale-110" />View {mapLabel}
               </button>
             </div>
           </div>
@@ -105,8 +108,8 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
                       }`}
                     >
                       {level.id === levels[levels.length - 1]?.id
-                        ? `All Songs`
-                        : `Top ${levelSongCounts[level.id]} Songs`}
+                        ? `All ${songLabel}s`
+                        : `Top ${levelSongCounts[level.id]} ${levelSongCounts[level.id] === 1 ? songLabel : `${songLabel}s`}`}
                     </span>
                   )}
                 </button>
@@ -136,7 +139,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
           <div>
             <h3 className="tracking-wide font-semibold text-neutral-800 mb-1">Level History</h3>
             <div className="mb-2">
-              <ProgressBar playedCount={playedCount} totalSongs={totalSongs} />
+              <ProgressBar playedCount={playedCount} totalSongs={totalSongs} noun={songLabel.toLowerCase()} />
             </div>
             {(loading ? playedSongIds.length > 0 : songNames.length > 0) && (
               <ul className="space-y-1">
@@ -168,7 +171,7 @@ export default function SettingsModal({ playedSongIds, playedCount, totalSongs, 
         {showConfirm && (
           <ConfirmPopup
             title={`Clear ${currentLevelName} History?`}
-            message={`Are you sure you want to clear your played songs for this level? This action cannot be undone.`}
+            message={`Are you sure you want to clear your played ${songLabel.toLowerCase()}s for this level? This action cannot be undone.`}
             confirmLabel="Clear"
             cancelLabel="Cancel"
             onConfirm={handleClear}

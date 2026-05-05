@@ -18,6 +18,10 @@ export default function ArtistFormPage() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [fanbaseName, setFanbaseName] = useState('')
+  const [albumLabelOverride, setAlbumLabelOverride] = useState('')
+  const [songLabelOverride, setSongLabelOverride] = useState('')
+  const [landmarkLabelOverride, setLandmarkLabelOverride] = useState('')
+  const [mapLabelOverride, setMapLabelOverride] = useState('')
   const [loadMessage, setLoadMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [failureMessage, setFailureMessage] = useState('')
@@ -51,6 +55,10 @@ export default function ArtistFormPage() {
         setName(a.name)
         setSlug(a.slug)
         setFanbaseName(a.fanbase_name ?? '')
+        setAlbumLabelOverride(a.album_label_override ?? '')
+        setSongLabelOverride(a.song_label_override ?? '')
+        setLandmarkLabelOverride(a.landmark_label_override ?? '')
+        setMapLabelOverride(a.map_label_override ?? '')
         setLoadMessage(a.load_message ?? '')
         setSuccessMessage(a.success_message ?? '')
         setFailureMessage(a.failure_message ?? '')
@@ -112,6 +120,10 @@ export default function ArtistFormPage() {
         name,
         slug,
         fanbase_name: fanbaseName,
+        album_label_override: albumLabelOverride.trim() || null,
+        song_label_override: songLabelOverride.trim() || null,
+        landmark_label_override: landmarkLabelOverride.trim() || null,
+        map_label_override: mapLabelOverride.trim() || null,
         load_message: loadMessage,
         success_message: successMessage,
         failure_message: failureMessage,
@@ -172,6 +184,18 @@ export default function ArtistFormPage() {
             </FormField>
             <FormField label="Fanbase Name">
               <input type="text" value={fanbaseName} onChange={(e) => setFanbaseName(e.target.value)} className={inputClass} />
+            </FormField>
+            <FormField label="Album Label Override">
+              <input type="text" value={albumLabelOverride} onChange={(e) => setAlbumLabelOverride(e.target.value)} placeholder="Album" className={inputClass} />
+            </FormField>
+            <FormField label="Song Label Override">
+              <input type="text" value={songLabelOverride} onChange={(e) => setSongLabelOverride(e.target.value)} placeholder="Song" className={inputClass} />
+            </FormField>
+            <FormField label="Landmark Label Override">
+              <input type="text" value={landmarkLabelOverride} onChange={(e) => setLandmarkLabelOverride(e.target.value)} placeholder="Landmark" className={inputClass} />
+            </FormField>
+            <FormField label="Map Label Override">
+              <input type="text" value={mapLabelOverride} onChange={(e) => setMapLabelOverride(e.target.value)} placeholder="Map" className={inputClass} />
             </FormField>
           </div>
           <h2 className="text-base font-semibold mb-3 text-neutral-600 uppercase tracking-wide text-xs">Game Behavior</h2>

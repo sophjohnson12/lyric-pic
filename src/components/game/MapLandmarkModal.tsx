@@ -140,12 +140,14 @@ const ChoiceCard = forwardRef<ChoiceCardHandle, ChoiceCardProps>(function Choice
 export interface MapLandmarkModalProps {
   element: MapElementDetails
   distractors: MapElementDetails[]
+  landmarkLabel: string
+  songLabel: string
   onReveal: (id: number) => Promise<void>
   onLiftOff: (src: string, fromRect: DOMRect) => void
   onClose: () => void
 }
 
-export default function MapLandmarkModal({ element, distractors, onReveal, onLiftOff, onClose }: MapLandmarkModalProps) {
+export default function MapLandmarkModal({ element, distractors, landmarkLabel, songLabel, onReveal, onLiftOff, onClose }: MapLandmarkModalProps) {
   const [incorrectIds, setIncorrectIds] = useState<number[]>([])
   const [resolved, setResolved] = useState(false)
   const [correctId, setCorrectId] = useState<number | null>(null)
@@ -245,7 +247,7 @@ export default function MapLandmarkModal({ element, distractors, onReveal, onLif
             ))}
           </div>
         </div>
-        <p className="text-base text-neutral-800 mt-4 mb-1">Which landmark is from this song?</p>
+        <p className="text-base text-neutral-800 mt-4 mb-1">Which {landmarkLabel.toLowerCase()} is from this {songLabel.toLowerCase()}?</p>
       </div>
     </Modal>
   )

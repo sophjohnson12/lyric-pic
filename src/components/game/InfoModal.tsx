@@ -15,11 +15,15 @@ interface InfoModalProps {
   showFlagIcon: boolean
   showMapButton: boolean
   levelName: string
+  albumLabel: string
+  songLabel: string
+  landmarkLabel: string
+  mapLabel: string
   revealBehavior?: RevealBehavior
   onClose: () => void
 }
 
-export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, showMapButton, levelName, revealBehavior, onClose }: InfoModalProps) {
+export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCount, guessCount, songCount, albums, showAlbumFilters, showFlagIcon, showMapButton, levelName, albumLabel, songLabel, landmarkLabel, mapLabel, revealBehavior, onClose }: InfoModalProps) {
   return (
     <Modal onClose={onClose} showEaseIn={true}>
       <h2 className="text-xl font-bold text-primary md:mb-1 tracking-wide">How to Play</h2>
@@ -32,11 +36,11 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
           <h3 className="font-semibold text-neutral-800 tracking-wide mb-0.5 md:mb-1">1. Guess the {minSongLyricCount === 1 ? 'Word' : `${minSongLyricCount > 0 ? `${minSongLyricCount} ` : ''}Words`}</h3>
           <p className="mb-0.5 md:mb-1">
             <span className="inline md:hidden">
-              {minSongLyricCount === 1 ? 'The tab' : 'Each tab'} has {minImageCount}–{maxImageCount} pictures that represent a word from the song.
-              Swipe to see all pictures. 
+              {minSongLyricCount === 1 ? 'The tab' : 'Each tab'} has {minImageCount}–{maxImageCount} pictures that represent a word from the {songLabel.toLowerCase()}.
+              Swipe to see all pictures.
             </span>
             <span className="hidden md:inline">
-              {minSongLyricCount === 1 ? 'The box' : 'Each box'} has {minImageCount}–{maxImageCount} pictures that represent a word from the song.
+              {minSongLyricCount === 1 ? 'The box' : 'Each box'} has {minImageCount}–{maxImageCount} pictures that represent a word from the {songLabel.toLowerCase()}.
               Click the arrows to see all pictures. 
             </span>
             <span> Press Enter to submit your guess. You have unlimited attempts!</span>
@@ -49,7 +53,7 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
         </div>
         {showAlbumFilters && (
           <div>
-            <h3 className="tracking-wide font-semibold text-neutral-800 mb-0.5 md:mb-1">2. Guess the Album</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-0.5 md:mb-1">2. Guess the {albumLabel}</h3>
             <div>
               {albums.length > 0 && <AlbumButtons albums={albums} readonly list />}
             </div>
@@ -57,23 +61,23 @@ export default function InfoModal({ minSongLyricCount, minImageCount, maxImageCo
         )}
         {!showAlbumFilters && (
           <div>
-            <h3 className="tracking-wide font-semibold text-neutral-800 mb-0.5 md:mb-1">2. Show the Album</h3>
+            <h3 className="tracking-wide font-semibold text-neutral-800 mb-0.5 md:mb-1">2. Show the {albumLabel}</h3>
             <p>
               <span className="hidden md:inline">Click </span>
               <span className="inline md:hidden">Tap </span>
-              <span className="text-primary font-semibold">Show Album </span>for a hint.
+              <span className="text-primary font-semibold">Show {albumLabel} </span>for a hint.
             </p>
           </div>
         )}
         <div>
-          <h3 className="font-semibold text-neutral-800 mb-0.5 md:mb-1">3. Guess the Song</h3>
+          <h3 className="font-semibold text-neutral-800 mb-0.5 md:mb-1">3. Guess the {songLabel}</h3>
           <p className="mb-0.5 md:mb-1">
-            You have {guessCount} chances. Play all {songCount} songs!
+            You have {guessCount} chances. {songCount === 1 ? `Play the only ${songLabel.toLowerCase()}!` : `Play all ${songCount} ${songLabel.toLowerCase()}s!`}
           </p>
           <ul className="space-y-0.5 md:space-y-1">
             <li className="flex items-center"><Sliders size={15} strokeWidth={3} className="mr-2 text-primary"/>Manage levels and game history</li>
-            {showMapButton && <li className="flex items-center"><Map size={15} strokeWidth={3} className="mr-2 text-primary"/>View landmark map</li>}
-            <li className="flex items-center"><SkipForward size={15} strokeWidth={3} className="mr-2 text-primary"/>Skip song</li>
+            {showMapButton && <li className="flex items-center"><Map size={15} strokeWidth={3} className="mr-2 text-primary"/>View {landmarkLabel.toLowerCase()} {mapLabel.toLowerCase()}</li>}
+            <li className="flex items-center"><SkipForward size={15} strokeWidth={3} className="mr-2 text-primary"/>Skip {songLabel.toLowerCase()}</li>
           </ul>
         </div>
       </div>

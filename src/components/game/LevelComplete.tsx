@@ -11,6 +11,7 @@ interface LevelCompleteProps {
   artistName: string
   artistSlug: string
   confettiColors?: string[]
+  songLabel: string
   onChooseLevel: () => void
   onShowHistory: () => void
 }
@@ -23,6 +24,7 @@ export default function LevelComplete({
   artistName,
   artistSlug,
   confettiColors,
+  songLabel,
   onChooseLevel,
   onShowHistory,
 }: LevelCompleteProps) {
@@ -41,7 +43,7 @@ export default function LevelComplete({
   const levelName = currentLevel?.name ?? ''
   const fanbaseSuffix = fanbaseName ? ` ${fanbaseName}` : ''
   const songCount = totalPlayableSongs === 1 ? 'the only' : `all ${totalPlayableSongs}`
-  const songs = totalPlayableSongs === 1 ? 'song' : `songs`
+  const songs = totalPlayableSongs === 1 ? songLabel.toLowerCase() : `${songLabel.toLowerCase()}s`
 
   const shareUrl = `https://playlyricpic.com/${artistSlug}`
   const shareText = `Just guessed ${songCount} ${artistName} ${songs} on Lyric Pic. 🎉 Your turn to prove your ${fanbaseName} status!`
