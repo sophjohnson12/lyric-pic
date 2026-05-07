@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import type React from 'react'
 
-const svgCache = new Map<string, string>()
+export const svgCache = new Map<string, string>()
 
 interface Props {
   src: string

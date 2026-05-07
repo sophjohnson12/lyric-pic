@@ -1,6 +1,6 @@
 import { Info, Sliders, SkipForward, Map } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import LogoIcon from '../common/LogoIcon';
+import InlineSvgIcon from '../common/InlineSvgIcon';
 
 interface HeaderProps {
   artistName: string | null
@@ -32,7 +32,7 @@ export default function Header({
       <div className="sm:max-w-7/8 mx-auto flex justify-between">
         <Link to={`/${artistSlug}`} className="flex flex-col justify-center">
           <div className="flex gap-3 items-center">
-            <LogoIcon className="h-12 w-12 hidden sm:inline text-primary" />
+            <InlineSvgIcon src="/favicon-current-color.svg" className="h-12 w-12 hidden sm:inline text-primary" alt="Lyric Pic" />
             <div>
               <h1 className="text-xl text-primary leading-tight font-semibold tracking-wide">LYRIC PIC</h1>
               {artistName && (

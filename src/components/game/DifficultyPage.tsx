@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getArtistBySlug, getArtistLevels } from '../../services/supabase'
 import { useTheme } from '../../hooks/useTheme'
 import { LOAD_MESSAGE_KEY, SHOW_INFO_KEY, REVEAL_BEHAVIOR_KEY } from '../../utils/constants'
+import InlineSvgIcon, { svgCache } from '../common/InlineSvgIcon'
 import type { Artist } from '../../types/database'
 import type { GameLevel } from '../../types/game'
 
@@ -42,12 +43,11 @@ export default function DifficultyPage() {
       setLevels(lvls)
       await document.fonts.ready
       await document.fonts.load('700 1em Playfair Display')
-      await new Promise<void>((resolve) => {
-        const img = new Image()
-        img.onload = () => resolve()
-        img.onerror = () => resolve()
-        img.src = '/lyric-pic-logo.svg'
-      })
+      const logoSrc = '/lyric-pic-logo-current-color.svg'
+      if (!svgCache.has(logoSrc)) {
+        const text = await fetch(logoSrc).then(r => r.text()).catch(() => '')
+        if (text) svgCache.set(logoSrc, text)
+      }
       setLoading(false)
     }
     load().catch(() => setLoading(false))
@@ -92,7 +92,7 @@ export default function DifficultyPage() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8">
       <div className="flex flex-col items-center w-full max-w-sm">
-        <img src="/lyric-pic-logo.svg" alt="Lyric Pic" width={313} height={249} className="h-auto mb-2 max-w-6/11" />
+        <InlineSvgIcon src="/lyric-pic-logo-current-color.svg" className="block w-full max-w-6/11 aspect-[467/347] mb-2 text-primary" alt="Lyric Pic" />
         {artist?.name && (
           <h2 className="text-neutral-500 mb-6 text-xl tracking-wide">{artist.name}</h2>
         )}
