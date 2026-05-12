@@ -8,9 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Build**: `npm run build` (runs `tsc -b && vite build`)
 - **Lint**: `npm run lint`
 - **Preview prod build**: `npm run preview`
-- **Deploy edge function**: `npx supabase functions deploy <function-name>`
+- **Deploy edge function**: `npx supabase functions deploy <function-name>` (functions: `genius-search`, `genius-artist-songs`, `genius-song-lyrics`)
 
-No test framework is configured.
+No test framework is configured. For initial project setup, environment variables, and deployment steps see `README.md`.
 
 ## Architecture
 

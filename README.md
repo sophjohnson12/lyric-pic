@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Lyric Pic
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A music lyric guessing game. Players are shown images representing words from song lyrics and must guess the words, then identify the album and song.
 
-Currently, two official plugins are available:
+**Stack**: React 19 + TypeScript, Vite, Tailwind CSS 4, Supabase (PostgreSQL, Auth, Edge Functions), deployed on Vercel.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Prerequisites
 
-## React Compiler
+- Node.js 18+
+- A [Supabase](https://supabase.com) project
+- [Supabase CLI](https://supabase.com/docs/guides/cli) (only needed for deploying edge functions)
+- A [Pexels](https://www.pexels.com/api/) API key (used to fetch word images during gameplay)
+- A [Genius](https://genius.com/api-clients) API access token (used by edge functions to import artist/song data)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Environment Variables
 
-## Expanding the ESLint configuration
+Create a `.env.local` file in the project root:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_PEXELS_API_KEY=your-pexels-key
+VITE_UNSPLASH_ACCESS_KEY=your-unsplash-key
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The Genius API token is used only by Supabase Edge Functions and must be set as a Supabase secret (not in `.env.local`):
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npx supabase secrets set GENIUS_ACCESS_TOKEN=your-genius-token
 ```
+
+## Install & Run
+
+```bash
+npm install
+npm run dev       # start dev server at http://localhost:5173
+```
+
+## Build
+
+```bash
+npm run build     # type-check + Vite build → dist/
+npm run preview   # serve the production build locally
+npm run lint      # run ESLint
+```
+
+## Supabase Edge Functions
+
+Three Deno-based edge functions in `supabase/functions/` proxy Genius API calls. Deploy each with:
+
+```bash
+npx supabase functions deploy genius-search
+npx supabase functions deploy genius-artist-songs
+npx supabase functions deploy genius-song-lyrics
+```
+
+All three have `verify_jwt = false` in `supabase/config.toml` so they can be called from the browser without authentication.
+
+## Deployment
+
+The app is deployed to Vercel. `vercel.json` rewrites all routes to `/` for client-side routing. `middleware.ts` intercepts artist route requests to inject per-artist meta tags server-side (for social sharing previews).
+
+When deploying to Vercel, add the same variables from `.env.local` to the Vercel project settings. The middleware reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at the edge via `process.env`, so they must be present even though they carry the `VITE_` prefix.
+
+## Admin Panel
+
+The admin panel is at `/admin` and requires a Supabase Auth user. Content (artists, albums, songs, lyrics, map elements) is managed through the admin UI. See `CLAUDE.md` for architecture details and Supabase-specific gotchas.
